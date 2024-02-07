@@ -1,0 +1,38 @@
+<form class="prices-block" id="cabinet-price">
+	<table>
+		<thead>
+			<tr>
+				<td>Услуга</td>
+				<td>Стоимость</td>
+				<td>От</td>
+				<td></td>
+			</tr>
+		</thead>
+		<tbody>
+			<!--data:cabinet_price--><!--data:cabinet_price-->
+		</tbody>
+	</table>
+	<span class="add">Добавить услугу</span>
+	<span class="mob-add">Добавить услугу</span>
+	<button type="submit" class="bottom-button" disabled>Сохранить информацию</button>
+</form>
+
+<div class="cabinet-popup" id="cabinet-prices-popup">
+	<div class="popup__close"></div>
+	<div class="popup__title">Добавление услуги</div>
+	<div class="popup__body">
+		<div class="popup__field">
+			<div class="popup__mob-subtitle">Услуга</div>
+			<input type="text" class="popup__input" id="popup-price-name" placeholder="Наименование услуги">
+		</div>
+		<div class="popup__field">
+			<div class="popup__mob-subtitle">Стоимость</div>
+			<input type="text" class="popup__input small" id="popup-price" placeholder="Цена">
+			<span class="price-from">От</span>
+			<input type="checkbox" class="checkbox" id="popup-price-from">
+            <label for="popup-price-from"></label>
+		</div>
+		<input type="hidden" id="popup-price-id">
+		<div class="mob-prices-btn">Подтвердить</div>
+	</div>
+</div>

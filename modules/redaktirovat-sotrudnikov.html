@@ -1,0 +1,54 @@
+<form class="employee flex" id="cabinet-employee">
+	<table>
+		<thead>
+			<tr>
+				<td>Имя</td>
+				<td>Фамилия</td>
+				<td>Должность</td>
+				<td>Фото</td>
+				<td></td>
+			</tr>
+		</thead>
+		<tbody>
+			<!--data:employees--><!--data:employees-->
+		</tbody>
+	</table>
+	<div class="requirements">
+	</div>
+	<span class="add">Добавить сотрудника</span>
+	<span class="mob-add">Добавить сотрудника</span>
+	<div class="refresh">
+		<button type="submit" disabled>Сохранить информацию</button>
+	</div>
+	<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+
+	<div class="cabinet-popup" id="cabinet-employee-popup">
+		<div class="popup__close"></div>
+		<div class="popup__title">Карточка сотрудника</div>
+		<div class="popup__body">
+			<div class="popup__field">
+				<div class="popup__mob-subtitle">Фото</div>
+				
+				<div class="popup-employee-photo">
+				</div>
+				<a class="employee-photo-btn"></a>
+			</div>
+			<div class="popup__field">
+				<div class="popup__mob-subtitle small-margin">Имя</div>
+				<input type="text" class="popup__input" id="popup-employee-name" placeholder="Имя сотрудника">
+			</div>
+			<div class="popup__field">
+				<div class="popup__mob-subtitle small-margin">Фамилия</div>
+				<input type="text" class="popup__input" id="popup-employee-lastname" placeholder="Фамилия сотрудника">
+			</div>
+			<div class="popup__field">
+				<div class="popup__mob-subtitle small-margin">Должность</div>
+				<input type="text" class="popup__input" id="popup-employee-post" placeholder="Должность сотрудника">
+			</div>
+			<input type="hidden" id="popup-emp-key">
+			<input type="hidden" id="popup-emp-file">
+			<input type="hidden" id="popup-emp-filename">
+			<div class="mob-employee-btn">Подтвердить</div>
+		</div>
+	</div>
+</form>

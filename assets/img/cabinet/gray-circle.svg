@@ -1,0 +1,12 @@
+<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+ <defs>
+  <filter height="200%" width="200%" y="-50%" x="-50%" id="svg_1_blur">
+   <feGaussianBlur stdDeviation="0" in="SourceGraphic"/>
+  </filter>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <ellipse stroke="#000" transform="rotate(180 25.003854751586914,24.943361282348633) " filter="url(#svg_1_blur)" ry="24.964604" rx="25" id="svg_1" cy="24.943361" cx="25.003854" stroke-width="0" fill="#BBBBBB"/>
+ </g>
+</svg>

@@ -1,0 +1,62 @@
+<div class="heading__mobile"><a href="/cabinet/"></a>Логин и пароль</div>
+<div class="heading__mobile back"><a href="/cabinet/login-i-parol"></a>Изменение пароля</div>
+
+<div class="security security-block1">
+	<div class="field">
+		<div class="field__name">Логин</div>
+		<div class="field__input login">
+			<!--data:login_field--><!--data:login_field-->
+		</div>
+	</div>
+	<div class="field">
+		<div class="field__name">Пароль</div>
+		<div class="field__input hidden-password">
+			<input type="text" disabled value="********">
+			<a class="change-pass-link pass-link">Изменить</a>
+		</div>
+	</div>
+</div>
+<form id="change-password" style="display: none;">
+	<div class="security">
+		<div class="field">
+			<div class="field__name large-margin">Изменение пароля</div>
+			<div class="field__input password">
+				<input type="password" name="password" id="password-input" placeholder="Введите текущий пароль">
+				<a class="show-pass-link pass-link">Показать</a>
+			</div>
+			<a class="forget-pass-link pass-link">Забыли пароль?</a>
+		</div>
+	</div>
+	<button type="submit">Далее</button>
+</form>
+
+<form id="new-password" style="display: none;">
+	<div class="security">
+		<div class="field">
+			<div class="field__name">Логин</div>
+			<div class="field__input login">
+				<!--data:login_field2--><!--data:login_field2-->
+			</div>
+		</div>
+		<div class="field">
+			<div class="field__name">Пароль</div>
+			<div class="field__input password">
+				<input type="text" name="new_password" id="new-password-input" placeholder="Введите новый пароль">
+			</div>
+		</div>
+	</div>
+	<button type="submit">Сохранить информацию</button>
+</form>
+
+<div class="popup recovery-pass">
+	<div class="bg"></div>
+	<div class="window">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="name">
+				Восстановление пароля
+			</div>
+			<div class="form2"><div class="field">Для восстановления пароля мы направили на указанную вами электронную почту письмо с инструкциями.</div></div>
+		</div>
+	</div>
+</div>

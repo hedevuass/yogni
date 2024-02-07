@@ -1,0 +1,72 @@
+<form class="docs flex" id="cabinet-docs">
+	<table>
+		<thead>
+			<tr>
+				<td>Описание</td>
+				<td>Файл</td>
+				<td><a class="edit-price-mobile"></a><a class="delete"></a></td>
+			</tr>
+		</thead>
+		<tbody>
+			<!--data:documents-->
+				<tr>
+					<td><input type="text" placeholder="Описание"
+							value="Диплом Московского государственного Университета"></td>
+					<td>
+						<div class="doc">Грамота Грамота Грамота</div>
+					</td>
+				</tr>
+				<tr>
+					<td><input type="text" placeholder="Описание"
+							value="Диплом Московского государственного Университета"></td>
+					<td>
+						<div class="doc">Грамота Грамота Грамота</div>
+					</td>
+				</tr>
+				<tr>
+					<td><input type="text" placeholder="Описание"
+							value="Диплом Московского государственного Университета"></td>
+					<td>
+						<div class="doc">Грамота Грамота Грамота</div>
+					</td>
+				</tr>
+				<tr>
+					<td><input type="text" placeholder="Описание"></td>
+					<td><a class="upload">Загрузить</a></td>
+				</tr>
+				<tr>
+					<td><input type="text" placeholder="Описание"></td>
+					<td><a class="upload">Загрузить</a></td>
+				</tr>
+			<!--data:documents-->
+		</tbody>
+	</table>
+	<div class="requirements">
+	</div>
+	<span class="add">Добавить документ</span>
+	<span class="mob-add">Добавить документ</span>
+	<div class="refresh">
+		<button type="submit" disabled>Сохранить информацию</button>
+	</div>
+	<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+
+	<div class="cabinet-popup" id="cabinet-docs-popup">
+		<div class="popup__close"></div>
+		<div class="popup__title">Добавление документа</div>
+		<div class="popup__body">
+			<div class="popup__field">
+				<div class="popup__mob-subtitle small-margin">Наименование</div>
+				<input type="text" class="popup__input" id="popup-docs-name" placeholder="Наименование документа">
+			</div>
+			<div class="popup__field">
+				<div class="popup__mob-subtitle small-margin">Файл</div>
+				<div class="docs-load">
+					<div class="popup-delete-doc"></div>
+				</div>
+			</div>
+			<input type="hidden" id="popup-doc-key">
+			<input type="hidden" id="popup-doc-file">
+			<div class="mob-docs-btn">Подтвердить</div>
+		</div>
+	</div>
+</form>

@@ -1,0 +1,21 @@
+<?php
+include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
+session_start();
+
+if (isset($_POST['new_password'])) {
+    $data['password'] = clean_elem_form($_POST['new_password']);
+    if (strlen($data['password']) < 6) { 
+        $json['error'] = 'Минимальная длина пароля 6 символов';
+        responseJson($json);
+    } else {
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+    }
+    $user_id = $_SESSION['user']['id'];
+    if (set_new_password($data['password'], $user_id)) {
+        $json['success'] = true;
+    } else {
+        $json['error'] = 'Произошла ошибка. Повторите попытку позже.';
+    }
+    responseJson($json);
+}
