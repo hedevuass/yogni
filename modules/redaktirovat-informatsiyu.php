@@ -101,7 +101,7 @@ function input_photo(array $user)
                         {$btn}
                     </label>
                 </div>
-                <div class="photo__rules-block">d
+                <div class="photo__rules-block">
                 </div>
             </div>
         </div>
