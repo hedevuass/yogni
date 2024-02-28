@@ -78,6 +78,24 @@ $(function () {
 	$('.cabinet-page .cabinet-content .contacts-block .block .days .day-item label').click(function () {
 		$(this).parent().find('.day').toggleClass('holliday');
 	});
+	$('.day-item .checkbox-break').click(function() {
+        $(this).toggleClass('background-for-label');
+		$('#break_submit').prop('disabled', false).text('Подтвердить');
+    });
+	$(document).ready(function() {
+		if ($('.day-item .checkbox-break').hasClass('background-for-label')) {
+			$('.day-item .checkbox-break.background-for-label').css('backgroundImage', 'url("../assets/img/cabinet/checkbox6.svg")');
+		}
+	});
+	$('.day-item .checkbox-break').click(function() {
+        if ($(this).hasClass('background-for-label')) {
+			$('#break_submit').prop('disabled', false).text('Подтвердить');
+            $(this).css('backgroundImage', 'url("../assets/img/cabinet/checkbox6.svg")');
+        } else {
+            $(this).css('backgroundImage', 'url(../assets/img/cabinet/checkbox5.svg');
+			$('#break_submit').prop('disabled', false).text('Подтвердить');
+        }
+    });
 	$('.cabinet-page .mob-header .menu-button').click(function () {
 		$(this).toggleClass('opened');
 		$('.cabinet-page .mob-nav2').fadeToggle(200);
@@ -524,9 +542,19 @@ $(function () {
 			$(".add-company-photo").fadeIn(100);
 		}, 200)
 	});
-
+	
 	$('#cabinet-contacts .day-item .jq-selectbox__dropdown ul li').on('click', function (e) {
-		$('#cabinet-contacts button[type="submit"]').prop('disabled', false).text('Сохранить информацию');
+		$('#shedule_submit').prop('disabled', false).text('Сохранить информацию');
+		$('#break_submit').prop('disabled', false).text('Подтвердить');
+	})
+	$('#cabinet-contacts .day-item-break .jq-selectbox__dropdown ul li').on('click', function (e) {
+		$('#shedule_submit').prop('disabled', true).text('Сохранить информацию');
+		$('#break_submit').prop('disabled', false).text('Подтвердить');
+	})
+	$('#break_submit').on('click', function (e) {
+		e.preventDefault();
+		$('.break__popup').fadeOut(200);
+		$('#shedule_submit').prop('disabled', false).text('Сохранить информацию');
 	})
 	if (window.innerWidth < 575) {
 		$('#cabinet-price tbody input[type="text"], #cabinet-docs tbody input[type="text"], #cabinet-employee tbody input[type="text"]').prop('readonly', true);
@@ -773,7 +801,7 @@ $('#cabinet-contacts').on('click', 'button[type="submit"]', function (e) {
 		data: $(`${popup} input[type=text], ${popup} input[type=hidden], ${popup} textarea, ${popup} input[type=radio]:checked, select, ${popup} input[type=checkbox]:checked`),
 		success: function (json) {
 			if (json['error']) {
-				$(this).text('Сохранить информацию')
+				$(this).text(' информацию')
 				if (json['error']['fatal_error']) {
 					$(`${popup}`).prepend(`<div class="invalid-feedback">${json['error']['fatal_error']}</div>`)
 				}
@@ -794,8 +822,9 @@ $('#cabinet-contacts').on('click', 'button[type="submit"]', function (e) {
 })
 
 $('#cabinet-contacts input[type=text], #cabinet-contacts input[type=hidden], #cabinet-contacts textarea, #cabinet-contacts input[type=radio]:checked, #cabinet-contacts input[type=checkbox]').on('change keyup input', function (e) {
-	$('#cabinet-contacts button[type="submit"]').prop('disabled', false).text('Сохранить информацию');
+	$('#shedule_submit').prop('disabled', false).text('Сохранить информацию');
 })
+
 
 // Metro Autocomplete
 $("input[name=metro]").on("keydown", function (event) {
@@ -1526,6 +1555,11 @@ $('.delete-theme').on('click', function(e) {
 
 $('.mobile-theme-btn').on('click', function(e) {
 	$('#article-popup-service').fadeIn(200);
+	$('body').addClass('hid');
+});
+$('.add-break-button').on('click', function (e) {
+	e.preventDefault();
+	$('.break__popup').fadeIn(200);
 	$('body').addClass('hid');
 });
 

@@ -2,7 +2,7 @@
 
 $data = [];
 
-if (!isset($_GET['reg']) && !isset($_GET['recovery'])) responseRedirect('/');
+if (!isset($_GET['reg']) && !isset($_GET['confirmation']) && !isset($_GET['recovery'])) responseRedirect('/');
 
 
 if (isset($_GET['reg'])) {
@@ -65,6 +65,47 @@ if (isset($_GET['recovery'])) {
     } else {
         responseRedirect('/');
     }
+}
+if (isset($_GET['confirmation'])) {
+    $data['title'] = 'Придумайте пароль';
+
+    $specialist_id = clean_elem_form($_GET['id']);
+    $email = clean_elem_form($_GET['email']);
+
+   
+        $data['content'] = <<<EOF
+            <form method="POST" id="rights-confirmation-popup-2">
+                <input type="hidden" name="specialist_id" value="{$specialist_id}">
+                <input type="hidden" name="email" value="{$email}">
+                <div class="field" style="position:relative;margin-bottom: 1rem;">
+                    <input  type="password" 
+                            name="password" 
+                            placeholder="Пароль*" 
+                            class="inp" 
+                            oninput="this.value=this.value.replace(/[^\w\d]*/gi,"");" 
+                            style=" width: 400px;
+                                    height: 34px;
+                                    font-weight: 300;
+                                    padding: 0 12px;
+                                    border: 1px solid #B0B0B0;
+                                    border-radius: 8px;">
+                    <div class="invalid-feedback"></div>
+                </div>
+                <div class="button">
+                    <button type="submit" style="
+                                                background: #fff;
+                                                font-weight: 500;
+                                                font-size: 16px;
+                                                color: #4F77B4;
+                                                border: 2px solid #4F77B4;
+                                                border-radius: 8px;
+                                                padding: 0.5rem 2rem;
+                                                height: 40px;
+                ">Подтвердить права</button>
+                </div>
+            </form>
+        EOF;
+    
 }
 
 // Устанавливаем title

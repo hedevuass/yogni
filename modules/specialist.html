@@ -1,13 +1,14 @@
 <div class="navi">
   <div class="wrap">
-    <a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
+    <a href="/">ЮРФАК</a><span>/</span
+    ><!--data:breadcrumbs--><!--data:breadcrumbs-->
   </div>
 </div>
 <div class="wrap">
   <div class="company-page">
     <!--data:specialist--><!--data:specialist-->
     <div class="content">
-	    <!--data:prices--><!--data:prices-->
+      <!--data:prices--><!--data:prices-->
       <!--data:mobile_contacts--><!--data:mobile_contacts-->
       <!--data:services--><!--data:services-->
     </div>
@@ -114,18 +115,27 @@
   <div class="window middle">
     <div class="close"></div>
     <div class="reg">
-      <div class="name">
-        Написать специалисту
-      </div>
+      <div class="name">Написать специалисту</div>
       <div class="form">
         <div class="field">
-          <input type="text" placeholder="Номер телефона или email" class="inp">
+          <input
+            type="text"
+            placeholder="Номер телефона или email"
+            class="inp"
+          />
         </div>
         <div class="field">
-          <textarea type="text" placeholder="Сообщение" class="popup-textarea"></textarea>
+          <textarea
+            type="text"
+            placeholder="Сообщение"
+            class="popup-textarea"
+          ></textarea>
         </div>
         <div class="button">
-          <p>Нажимая “Отправить”, я принимаю изложенное в документах, представленных в разделе сайта “О проекте”.</p>
+          <p>
+            Нажимая “Отправить”, я принимаю изложенное в документах,
+            представленных в разделе сайта “О проекте”.
+          </p>
           <button class="popup-btn">Отправить</button>
         </div>
       </div>
@@ -137,15 +147,17 @@
   <div class="window middle">
     <div class="close"></div>
     <div class="reg">
-      <div class="name">
-        Подтверждение прав
-      </div>
+      <div class="name">Подтверждение прав</div>
       <div class="form">
         <div class="field">
-          <input type="text" placeholder="Email*" class="inp">
+          <input type="text" name="email" placeholder="Email*" class="inp" />
+          <input type="hidden" name="user_id" id="user_id_input" placeholder="User_id*" value="" class="inp" />
         </div>
         <div class="button">
-          <p>Нажимая “Подтвердить права”, я принимаю изложенное в документах, представленных в разделе сайта “О проекте”.</p>
+          <p>
+            Нажимая “Подтвердить права”, я принимаю изложенное в документах,
+            представленных в разделе сайта “О проекте”.
+          </p>
           <button class="popup-btn send-confirmation">Подтвердить права</button>
         </div>
         <div class="bottom-links flex">
@@ -154,6 +166,21 @@
             <a class="reg">Зарегистрироваться</a>
           </div>
           <a class="feedback">Контакты</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="popup confirmation__popup2">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="name">Подтверждение прав</div>
+      <div class="form after_confirmation">
+        <div class="confirmation__bold info_confirmation">
+          Для подтверждения прав перейдите по ссылке из письма, которое мы
+          отправили вам на почту.
         </div>
       </div>
     </div>

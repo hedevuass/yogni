@@ -1,7 +1,23 @@
 <div class="contacts-block">
 	<form method="POST" class="block" id="cabinet-contacts">
 		<!--data:cabinet_contacts--><!--data:cabinet_contacts-->
-		<button type="submit" disabled>Сохранить информацию</button>
+		<div class="popup break__popup">
+			<div class="bg"></div>
+			<div class="window window-break middle">
+			  <div class="close"></div>
+			  <div class="reg red-break">
+				<img src="/assets/img/cabinet/break-svg-popup.svg">
+				<div class="name-break">
+				  Добавить <br>обеденный перерыв
+				</div>
+				<div class="contacts-block contacts-block-break">
+				<!--data:cabinet_contacts_break--><!--data:cabinet_contacts_break-->
+				</div>
+				<button id="break_submit" disabled>Подтвердить</button>
+			</div>
+	  		</div>
+		</div>
+		<button type="submit" id="shedule_submit" disabled>Сохранить информацию</button>
 	</form>
 	<div class="block">
 		<div class="contacts">
@@ -26,3 +42,5 @@
 		</div>
 	</div>
 </div>
+  </div>
+ 

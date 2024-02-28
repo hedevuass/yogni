@@ -113,6 +113,9 @@ $(function () {
   $("#confirmation .confirmation__close").click(function () {
     $("#confirmation").fadeOut();
   });
+  $("#confirmation .confirmation__close").click(function () {
+    $("#confirmation").fadeOut();
+  });
 
   $(".company-page .prices button").click(function () {
     if (window.innerWidth > 575) {

@@ -5,6 +5,16 @@ if (localStorage.getItem('popup')) {
     localStorage.removeItem('popup')
 }
 
+//изменение ссылки "Все темы" при наличии в юрле id
+$(document).ready(function() {
+    var currentUrl = window.location.href;
+    if (currentUrl.includes('/journal/id')) {
+        var id = currentUrl.substring(currentUrl.lastIndexOf('/') + 1);
+        var newLink = $('<li class="find_lawyer" id="journal_link_with_id"><a href="/journal/' + id + '">Все темы</a></li>');
+        $('#journal_link').before(newLink);
+        $('#journal_link').hide();
+    }
+});
 // City Autocomplete
 $("#select-city").on("keydown", function (event) {
     if (event.keyCode === $.ui.keyCode.TAB &&
@@ -344,7 +354,56 @@ $('#login-popup').on('click', 'button', function (e) {
         }
     })
 })
+$('.add-break').on('click', function (e) {
+    e.preventDefault()
+    console.log('Hello');
+})
+document.addEventListener("DOMContentLoaded", function() {
+    function getUserIdFromUrl() {
+        var url = window.location.href;
+        var idPos = url.indexOf('id');
+        if (idPos !== -1) {
+            var id = url.substr(idPos + 2);
+            return id;
+        }
+        return null;
+    }
+    var userId = getUserIdFromUrl();
+    if (userId !== null) {
+        document.getElementById('user_id_input').value = userId;
+    }
+});
+$('.send-confirmation').click(function(e) {
+    e.preventDefault();
 
+    var email = $('input[name="email"]').val();
+    var user_id = $('input[name="user_id"]').val();
+
+    // Очищаем предыдущие сообщения об ошибках
+    $('input[name="email"]').removeClass('error');
+    $('.invalid-feedback').html('');
+
+    $.ajax({
+        type: 'POST',
+        url: '/actions/mail/rights_сonfirmation.php',
+        dataType: 'json',
+        data: { email: email, user_id: user_id },
+        success: function(json) {
+            if (json['error']) {
+                $('input[name="email"]').addClass('error');
+                $('.invalid-feedback').html(json['error']);
+            } else if (json['success']) {
+                $(".confirmation__popup2").fadeIn();
+                $("body").addClass("hid");
+            }
+        },
+        error: function(xhr, status, error) {
+            $(".confirmation__popup2").fadeIn();
+            $(".confirmation__popup").fadeOut();
+            $("body").addClass("hid");
+        }
+    });
+});
 // Recovery Password
 $('#recovery-password-popup').on('click', 'button', function (e) {
     e.preventDefault()
@@ -364,11 +423,15 @@ $('#recovery-password-popup').on('click', 'button', function (e) {
                     $(`#recovery-password-popup input[name=${key}]`).siblings('.invalid-feedback').html(value)
                 });
             }
-
             if (json['success']) {
                 $('#recovery-password-popup .form2').html(`<div class="field">${json['success']}</div>`);
                 $('.popup.pass .reg .bottom-links').remove();
+                $(".recovery-password__popup2").fadeIn();
             }
+        },
+        error: function(xhr, status, error) {
+            $(".recovery-password__popup2").fadeIn();
+            $("#recovery-password-popup").fadeOut();
         }
     })
 })
@@ -389,6 +452,32 @@ $('#recovery-password-popup-2').on('click', 'button', function (e) {
                 $.each(json['error'], function (key, value) {
                     $(`#recovery-password-popup-2 input[name=${key}]`).addClass('error');
                     $(`#recovery-password-popup-2 input[name=${key}]`).siblings('.invalid-feedback').html(value)
+                });
+
+                if (json['error']['recovery']) $('.contetn').html(json['error']['recovery'])
+            }
+
+            if (json['success']) $('.content').html(json['success'])
+        }
+    })
+})
+
+$('#rights-confirmation-popup-2').on('click', 'button', function (e) {
+    e.preventDefault()
+
+    $('input').removeClass('error')
+    $('.invalid-feedback').html('')
+
+    $.ajax({
+        type: "POST",
+        url: "/actions/account/rights_confirmation.php",
+        dataType: 'json',
+        data: $('#rights-confirmation-popup-2 input[type=password], #rights-confirmation-popup-2 input[type=hidden]'),
+        success: function (json) {
+            if (json['error']) {
+                $.each(json['error'], function (key, value) {
+                    $(`#rights-confirmation-popup-2 input[name=${key}]`).addClass('error');
+                    $(`#rights-confirmation-popup-2 input[name=${key}]`).siblings('.invalid-feedback').html(value)
                 });
 
                 if (json['error']['recovery']) $('.contetn').html(json['error']['recovery'])

@@ -132,6 +132,7 @@ function block_articles(array $articles, bool $is_single = false, int $blog_id =
             $date = date("d.m.Y", strtotime($article['date']));
 			$article_title = '<div class="link nohover">' . $article['title'] . '</div>';
 			$article_content = $article['content'];
+            $article_content = nl2br($article_content);
 			$article_link = '';
 			if (!$is_single) {
 				$article_title = '<a href="/article/'.$article['id'].'" class="link">'.$article['title'].'</a>';
@@ -184,6 +185,77 @@ EOF;
                     </div>
                     <a href="/specialist/id{$specialist['id']}" class="link"></a>
 				</div>
+                <div class="article_body">
+                    <div class="date">{$date}{$themes}</div>
+                    {$article_title}
+					{$article_mobile_title}
+                    <div class="article_text">{$article_content}</div>
+                    {$article_link}
+                </div>
+            </div>
+EOF;
+        }
+    }
+    return $code;
+}
+
+//выводит пост(ы) блога в ЛИЧНОМ КАБИНЕТЕ, если переменная is_singe равна true, то выводится публикация полностью (для страницы публикации)
+/**
+ * @param array $articles
+ * @param bool $is_single
+ * @param int $blog_id
+ * @return string
+ */
+function block_articles_prosmotr(array $articles, bool $is_single = false, int $blog_id = 0): string
+{
+    $code = '';
+
+    if ($articles) {
+        foreach ($articles as $article) {
+            $specialist = get_specialist($article['specialist_id']);
+            
+
+            $date = date("d.m.Y", strtotime($article['date']));
+			$article_title = '<div class="link nohover">' . $article['title'] . '</div>';
+			$article_content = $article['content'];
+            $article_content = nl2br($article_content);
+			$article_link = '';
+			if (!$is_single) {
+				$article_title = '<a href="/article/'.$article['id'].'" class="link">'.$article['title'].'</a>';
+				$article_content = cut_text($article['content'], 650);
+			} else if ($blog_id){
+				
+			}
+			$article_mobile_title = '<div class="mobile-article_profile">
+									</div>';
+
+            $themes = '';
+            $themes_arr = get_article_themes($article['id']);
+            if ($themes_arr) {
+                $themes = '<div class="tags">';
+                foreach ($themes_arr as $theme) {
+					$class_link = get_classification_link($theme['classification']);
+                    $themes .= '<a href="/'.$class_link.'/' . ($theme['p_id'] === 0 ? '' : $theme['p_slug'] . '/') . $theme['slug'] . '">' . $theme['title'] . '</a>';
+                }
+                $themes .= '</div>';
+            }
+            $code .= <<<EOF
+            <div class="article_item">
+                    <div class="city">
+EOF;
+            if ($specialist['metro']) $code .= "<br /> м. {$specialist['metro']}";
+
+            $code .= <<<EOF
+			        </div>
+			        <div class="cats">
+EOF;
+            if ($specialist['specialization']) $code .=  mb_strimwidth($specialist['specialization'], 0, 21, '...', 'UTF-8');;
+
+
+            
+            $code .= <<<EOF
+                    </div>
+                    <a href="/specialist/id{$specialist['id']}" class="link"></a>
                 <div class="article_body">
                     <div class="date">{$date}{$themes}</div>
                     {$article_title}
@@ -431,7 +503,7 @@ function block_articles_cabinet(array $articles, bool $has_text_no_articles): st
                     {$moderation}
                     <div class="article-menu-btn">
                         <div class="article-menu">
-                            <a class="menu-point open" href="/article/{$article['id']}">
+                            <a class="menu-point edit" href="/cabinet/prosmotr-zapisi/{$article['id']}">
                                 <div class="menu-point-img"><img src="/assets/img/cabinet/open-note.svg"></div>
                                 Открыть
                             </a>

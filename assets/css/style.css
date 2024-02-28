@@ -860,11 +860,15 @@ a.blue-link :hover {
 }
 .banner__wrapper.blog-banner .banner-slide .title {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 .banner__wrapper.blog-banner .banner-slide .title .btn.btn__post {
   position: absolute;
-  top: 20px;
-  left: calc(100% + 100px);
+  left: calc(100% + 350px);
+  border-radius: 8px;
+  background-color: #00000000;
+  border: 1px solid #FF8139;
 }
 .banner__wrapper.blog-banner .banner-slide .title .btn-post-mobile {
   display: none;
@@ -971,12 +975,12 @@ a.blue-link :hover {
 .banner-slide .small-text {
   width: fit-content;
   font-weight: 400;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 21px;
   margin-top: 2px;
 }
 .banner-slide .small-text.centered {
-  margin-left: auto;
+  margin-left: 30px;
   margin-right: auto;
 }
 .banner-slide .title {
@@ -985,7 +989,9 @@ a.blue-link :hover {
   line-height: 38px;
 }
 .banner-slide .title.semibold {
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 30px;
+  margin-right: 400px;
 }
 .banner-slide .main-title {
   font-weight: 700;
@@ -2289,13 +2295,13 @@ a.blue-link :hover {
   padding-right: 40px;
 }
 .popup .window .reg {
-  padding: 13px 20px;
+  padding: 15px 20px;
 }
 .popup .window .reg .name {
   text-align: center;
   margin-bottom: 35px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 16px;
 }
 .popup .window .reg .name.tal {
@@ -2661,6 +2667,15 @@ a.blue-link :hover {
 .popup .window .select-block .button button:hover {
   color: #0F86F3;
   border: 1px solid #0F86F3;
+}
+.after_confirmation{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 140px;
+}
+.info_confirmation{
+  width: 330px;
 }
 .popup.confirmation__popup .window .bottom-links {
   margin-top: 20px;
@@ -4387,7 +4402,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
 }
 @media (max-width: 1470px) {
   .banner__wrapper.blog-banner .banner-slide .title .btn.btn__post {
-    left: calc(100% + 40px);
+    left: calc(100% + 200px);
   }
   .index-sections-block .item p span {
     padding: 0 15px;

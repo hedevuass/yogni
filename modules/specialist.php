@@ -290,38 +290,44 @@ $data['input_specialist_id'] = "<input type='hidden' name='specialist' value='{$
 $recommended_title_lawyers = match ($specialist['classification_id']) {
     1, 2, 5, 6 => 'Юристы и адвокаты с похожей специализацией',
     3, 7 => 'Юристы и адвокаты по теме',
-    4, 8 => 'Рекомендуемые юристы и адвокаты'
+    4, 8 => 'Рекомендуемые юристы и адвокаты',
+    default => 'Не передано значение'
 };
 
 // Кнопки блока Юристов и Адвокатов
 $recommended_button_lawyers = match ($specialist['classification_id']) {
     1, 2, 5, 6 => 'Посмотреть других специалистов',
     3, 4, 7, 8 => 'Найти юриста или адвоката',
+    default => 'Не передано значение'
 };
 
 // Заголовки блока экспертов
 $recommended_title_experts = match ($specialist['classification_id']) {
     1, 2, 5, 6 => 'Эксперты по теме',
     3, 7 => 'Эксперты с похожей специализацией',
-    4, 8 => 'Рекомендуемые эксперты'
+    4, 8 => 'Рекомендуемые эксперты',
+    default => 'Не передано значение'
 };
 
 // Кнопки блока Экспертов
 $recommended_button_experts = match ($specialist['classification_id']) {
     1, 2, 4, 5, 6, 8 => 'Найти эксперта',
     3, 7 => 'Посмотреть других специалистов',
+    default => 'Не передано значение'
 };
 
 // Заголовки блока Нотариусов
 $recommended_title_notaries = match ($specialist['classification_id']) {
     1, 2, 3, 5, 6, 7 => 'Нотариусы рядом',
-    4, 8 => 'Другие нотариусы рядом'
+    4, 8 => 'Другие нотариусы рядом',
+    default => 'Не передано значение'
 };
 
 // Кнопки блока Нотариусов
 $recommended_button_notaries = match ($specialist['classification_id']) {
     1, 2, 3, 5, 6, 7 => 'Найти нотариуса',
-    4, 8 => 'Посмотреть других специалистов'
+    4, 8 => 'Посмотреть других специалистов',
+    default => 'Не передано значение'
 };
 
 // Подтягиваем список юристов и адвокатов
@@ -350,7 +356,8 @@ $notaries = block($notaries);
 $block_order = match ($specialist['classification_id']) {
     1, 2, 5, 6 => ['lawyers', 'experts', 'notaries'],
     3, 7 => ['experts', 'lawyers', 'notaries'],
-    4, 8 => ['notaries', 'lawyers', 'experts']
+    4, 8 => ['notaries', 'lawyers', 'experts'],
+    default => 'Не передано значение'
 };
 
 
@@ -701,7 +708,7 @@ function block_schedule(string $schedule): string
                 $code .= "<span class='time'>{$value['start']} – {$value['end']}</span>";
             }
 
-            if (isset($value['b_start'])) $code .= "Перерыв с {$value['b_start']} до {$value['b_end']}</span>";
+            if (isset($value['b_start']) && $value['b_start'] !== false) $code .= "Перерыв с {$value['b_start']} до {$value['b_end']}</span>";
             $code .= "</div>";
         }
 

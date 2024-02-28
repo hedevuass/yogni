@@ -1,7 +1,5 @@
 <?php
 // Подключение модулей
-include $_SERVER['DOCUMENT_ROOT'] . '/heic_converter/src/HeicToJpg.php';
-use Maestroerror\HeicToJpg;
 use JetBrains\PhpStorm\NoReturn;
 
 function modules_include($HTML, $data = [])

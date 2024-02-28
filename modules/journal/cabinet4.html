@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="slick.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<link href="jquery.formstyler.css" rel="stylesheet" />
+	<script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="js/slick.min.js"></script>
+	<script src="js/common.js"></script>
+	<script src="js/jquery.formstyler.min.js"></script>
+</head>
+<body class="cabinet">
+	<div class="cabinet-page">
+		<div class="add-service">
+			<a class="back-link">Добавить услугу</a>
+			<p>Услуга</p>
+			<input type="text" placeholder="Консультация">
+			<p>Стоимость</p>
+			<input type="text" placeholder="19’990₽" class="price">
+			<span class="from">
+				От
+				<input type="checkbox" class="checkbox" id="price-from"><label for="price-from"></label>
+			</span>
+			<button>Обновить информацию</button>
+		</div>
+		<header class="mob-header">
+			<div class="logo">
+				<a href="/"><img src="img/logo.svg"></a>
+			</div>
+			<a class="menu-button"></a>
+		</header>
+		<nav class="mob-nav1">
+			<a class="top-link">Стоимость услуг</a>
+			<a class="back-link">Редактировать страницу</a>
+			<ul>
+				<li><a href="#"><img src="img/cabinet-menu8.svg"> Основная информация</a></li>
+				<li><a href="#"><img src="img/cabinet-menu9.svg"> Контакты</a></li>
+				<li><a href="#"><img src="img/cabinet-menu10.svg"> Направления работы</a></li>
+				<li><a href="#"><img src="img/cabinet-menu11.svg"> Стоимость услуг</a></li>
+				<li><a href="#"><img src="img/cabinet-menu12.svg"> Документы</a></li>
+			</ul>
+		</nav>
+		<nav class="mob-nav2">
+			<div class="name">
+				<div><img src="img/cabinet-avatar2.png"></div>
+				<div>
+					<p>Legal Group</p>
+					Юридическая компания
+					<a href="#" class="mail">legal@legalgroup.ru</a>
+				</div>
+				<a href="#" class="edit"></a>
+			</div>
+			<ul>
+				<li><a href="#"><img src="img/cabinet-menu13.svg"> Продвижение страницы</a></li>
+				<li><a href="#"><img src="img/cabinet-menu14.svg"> Статистика</a></li>
+				<li><a href="#"><img src="img/cabinet-menu15.svg"> Подключенные услуги</a></li>
+				<div class="line"></div>
+				<li><a href="#"><img src="img/cabinet-menu16.svg"> Редактировать инфо</a></li>
+				<li><a href="#"><img src="img/cabinet-menu17.svg"> Работа с отзывами</a></li>
+				<div class="line"></div>
+				<li><a href="#"><img src="img/cabinet-menu18.svg"> Настройки уведомлений</a></li>
+				<li><a href="#"><img src="img/cabinet-menu19.svg"> Данные для оплаты</a></li>
+				<li><a href="#"><img src="img/cabinet-menu20.svg"> Логин и пароль</a></li>
+			</ul>
+		</nav>
+		<nav class="left-menu">
+			<div class="logo">
+				<a href="/"><img src="img/logo.svg"></a>
+			</div>
+			<ul>
+				<li><a href="#"><img src="img/cabinet-menu1.svg"> Продвижение страницы</a></li>
+				<li><a href="#"><img src="img/cabinet-menu2.svg"> Статистика</a></li>
+				<li><a href="#"><img src="img/cabinet-menu3.svg"> Подключенные услуги</a></li>
+				<li><a href="#" class="active"><img src="img/cabinet-menu4a.svg"> Редактировать инфо</a></li>
+				<li><a href="#"><img src="img/cabinet-menu5.svg"> Работа с отзывами</a></li>
+				<li><a href="#"><img src="img/cabinet-menu6.svg"> Настройки уведомлений</a></li>
+				<li><a href="#"><img src="img/cabinet-menu7.svg"> Логин и пароль</a></li>
+			</ul>
+			<div class="faq">
+				<div class="name">
+					FAQ
+				</div>
+				<p>Мы собрали ответы на самые частые вопросы</p>
+				<a href="#">Перейти</a>
+			</div>
+			<div class="support-link">
+				<a href="#">Поддержка</a>
+			</div>
+		</nav>
+		<div class="cabinet-content">
+			<header class="flex">
+				<h1>Основная информация</h1>
+				<div class="user">
+					<a href="#" class="blog">Блог</a>
+					Добрый день, <span>Сергей</span> <img src="img/cabinet-avatar.png">
+					<a href="#" class="logout"></a>
+				</div>
+			</header>
+			<nav class="top-menu">
+				<ul>
+					<li><a href="#">Основная информация</a></li>
+					<li><a href="#">Контакты</a></li>
+					<li><a href="#">Направления работы</a></li>
+					<li><a href="#" class="active">Стоимость услуг</a></li>
+					<li><a href="#">Документы</a></li>
+				</ul>
+			</nav>
+			<div class="main-cabinet-content">
+				<div class="prices-block">
+					<table>
+						<thead>
+							<tr>
+								<td>Услуга</td>
+								<td>Стоимость</td>
+								<td>От</td>
+								<td></td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="19990"></td>
+								<td><input type="checkbox" class="checkbox" id="price1"><label for="price1"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация Консультация Консультация Консультация Консультация Консультация Консультация Консультация Консультация Консультация Консультация Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="1990"></td>
+								<td><input type="checkbox" class="checkbox" id="price2"><label for="price2"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="19990"></td>
+								<td><input type="checkbox" class="checkbox" id="price3"><label for="price3"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="190"></td>
+								<td><input type="checkbox" class="checkbox" id="price4"><label for="price4"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="19990"></td>
+								<td><input type="checkbox" class="checkbox" id="price5"><label for="price5"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="19990"></td>
+								<td><input type="checkbox" class="checkbox" id="price6"><label for="price6"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга" value="Консультация"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена" value="19990"></td>
+								<td><input type="checkbox" class="checkbox" id="price7"><label for="price7"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+							<tr>
+								<td><input type="text" placeholder="Услуга"><a class="edit"></a></td>
+								<td><input type="text" placeholder="Цена"></td>
+								<td><input type="checkbox" class="checkbox" id="price8"><label for="price8"></label></td>
+								<td><a class="delete"></a></td>
+								<td><div class="links"><a></a><a></a></div></td>
+							</tr>
+						</tbody>
+					</table>
+					<button class="add">Добавить ещё</button>
+					<button class="mob-add">Добавить ещё</button>
+					<button class="bottom-button">Обновить информацию</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

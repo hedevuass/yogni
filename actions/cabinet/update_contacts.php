@@ -54,11 +54,13 @@ if (isset($_POST['phone'])) {
     foreach ($data['schedule_start'] as $key => $value) {
         $data['schedule'][$key] = [
             'start' => $value,
-            'end'   => $data['schedule_end'][$key]
+            'end'   => $data['schedule_end'][$key],
+            'b_start' => isset($data['break_start'][$key]) && !empty($data['break_start'][$key]) ? $data['break_start'][$key] : false,
+            'b_end' => isset($data['break_end'][$key]) && !empty($data['break_end'][$key]) ? $data['break_end'][$key] : false
         ];
 
         if (($data['schedule_end'][$key] == '0' && $data['schedule_start'][$key] == '0')) {
-            $data['schedule'][$key] = ['start' => false, 'end' => false];
+            $data['schedule'][$key] = ['start' => false, 'end' => false, 'b_start' => false, 'b_end' => false];
         }
         if (!isset($data['days'][$key])) {
             $data['schedule'][$key]['vac'] = true;
@@ -67,7 +69,8 @@ if (isset($_POST['phone'])) {
 
     $data['schedule'] = json_encode($data['schedule']);
 
-    
+
+
     if (isset($json['error'])) responseJson($json);
 
     if (update_contacts($data) && update_city($data['city_id']) && update_schedule($data['schedule'])) {
@@ -78,37 +81,37 @@ if (isset($_POST['phone'])) {
             <li><a href="tel:{$data['phone']}"><img src="/assets/img/cabinet/contacts1.svg"> {$phone}</a></li>
         EOF;
         $contacts = json_decode($data['other']);
-	    foreach ($contacts as $key => $contact) {
-	    	$class = '';
-	    	if(!$contact) {
-	    		$class .= 'hidden';
-	    	}
-	    	$json['success'] .= "<li class='$class'>";
+        foreach ($contacts as $key => $contact) {
+            $class = '';
+            if (!$contact) {
+                $class .= 'hidden';
+            }
+            $json['success'] .= "<li class='$class'>";
 
-	    	switch ($key) {
-	    		case 'email':
-	    			$json['success'] .=  "<a href='mailto:{$contact}'><img src='/assets/img/cabinet/contacts2.svg'> {$contact}</a>";
-	    			break;
-	    		case 'site':
-	    			$json['success'] .=  "<a href='https://{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts3.svg'> Сайт</span></a>";
-	    			break;
-	    		case 'tg':
-	    			$json['success'] .=  "<a href='https://t.me/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts4.svg'> Телеграм</span></a>";
-	    			break;
-	    		case 'vk':
-	    			$json['success'] .=  "<a href='https://vk.com/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts5.svg'> Вконтакте</span></a>";
-	    			break;
-	    		case 'dzen':
-	    			$json['success'] .=  "<a href='https://dzen.ru/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts6.svg'> Яндекс Дзен</span></a>";
-	    			break;
-                
-	    		default:
-	    			# code...
-	    			break;
-	    	}
+            switch ($key) {
+                case 'email':
+                    $json['success'] .=  "<a href='mailto:{$contact}'><img src='/assets/img/cabinet/contacts2.svg'> {$contact}</a>";
+                    break;
+                case 'site':
+                    $json['success'] .=  "<a href='https://{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts3.svg'> Сайт</span></a>";
+                    break;
+                case 'tg':
+                    $json['success'] .=  "<a href='https://t.me/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts4.svg'> Телеграм</span></a>";
+                    break;
+                case 'vk':
+                    $json['success'] .=  "<a href='https://vk.com/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts5.svg'> Вконтакте</span></a>";
+                    break;
+                case 'dzen':
+                    $json['success'] .=  "<a href='https://dzen.ru/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts6.svg'> Яндекс Дзен</span></a>";
+                    break;
 
-	    	$json['success'] .= "</li>";
-	    }
+                default:
+                    # code...
+                    break;
+            }
+
+            $json['success'] .= "</li>";
+        }
     } else {
         $json['error']['fatal_error'] = 'Обновление информации временно не работает';
     }

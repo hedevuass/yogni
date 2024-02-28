@@ -7,7 +7,7 @@ $user = get_specialist($_SESSION['user']['id']);
 // Подставляем телефон
 if (!is_null($user['phone'])) {
 	$user['phone'] = format_phone($user['phone']);
-	$input_phone = str_replace('+7 ','',format_phone($user['phone']));
+	$input_phone = str_replace('+7 ', '', format_phone($user['phone']));
 }
 //телефон в попапе с контактами
 $data['cabinet_contacts'] = <<<EOF
@@ -61,6 +61,7 @@ EOF;
 
 // График работы
 $data['cabinet_contacts'] .= select_schedule($user['schedule']);
+$data['cabinet_contacts_break'] .= select_break_schedule($user['schedule']);
 
 
 // Превью карточки
@@ -94,7 +95,7 @@ function select_times(string $select_name, string $time, bool $empty = false): s
 	$code = "<select name='{$select_name}' class='sel'>";
 
 	if ($empty) {
-		$code .= '<option value="0" class="hidden">'.$time.'</option>';
+		$code .= '<option value="0" class="hidden">' . $time . '</option>';
 	}
 
 	for ($i = 0; $hours < 24; $i++) {
@@ -131,7 +132,7 @@ function select_schedule(string $schedule): string
 		6 => 'Сб',
 		7 => 'Вс',
 	];
-	if($schedule && !is_null($schedule)){
+	if ($schedule && !is_null($schedule)) {
 		$schedule = json_decode($schedule, true);
 	}
 
@@ -141,7 +142,7 @@ function select_schedule(string $schedule): string
 			<div class="top-text"><span>Выходной</span></div>
 	EOF;
 	//расписание
-	if($schedule && !is_null($schedule)){
+	if ($schedule && !is_null($schedule)) {
 		foreach ($schedule as $key => $day) {
 			$checked = (isset($day['vac']) && isset($day['start'])) ? '' : 'checked';
 			$holiday = (isset($day['vac']) && isset($day['start'])) ? '' : 'holliday';
@@ -153,7 +154,6 @@ function select_schedule(string $schedule): string
 						<span class="day-name">{$days[$key]}</span>
 						<div>
 			EOF;
-
 			$code .= select_times("schedule_start[$key]", $day['start'] === false ? '10:00' : $day['start'], $day['start'] === false);
 			$code .= "–";
 			$code .= select_times("schedule_end[$key]", $day['end'] === false ? '19:30' : $day['end'], $day['end'] === false);
@@ -187,18 +187,151 @@ function select_schedule(string $schedule): string
 			EOF;
 		}
 	}
-
+	$code .= "<button class='add-break-button'>Добавить перерыв<img src='/assets/img/cabinet/food.svg' alt='img'></button>";
 	$code .= "</div>";
 
 	return $code;
 }
 
 /**
+ *
+ * @param string
+ * @return string
+ */
+function select_break_schedule(string $schedule): string
+{
+	$days = [
+		1 => 'Пн',
+		2 => 'Вт',
+		3 => 'Ср',
+		4 => 'Чт',
+		5 => 'Пт',
+		6 => 'Сб',
+		7 => 'Вс',
+	];
+
+	if ($schedule && !is_null($schedule)) {
+		$schedule = json_decode($schedule, true);
+	}
+
+	$code = <<<EOF
+    <div class="days">
+    EOF;
+
+		foreach ($schedule as $key => $day) {
+			if (isset($day['b_start']) && isset($day['b_end'])) {
+			$b_start = isset($day['b_start']) ? $day['b_start'] : false;
+			$b_end = isset($day['b_end']) ? $day['b_end'] : false;
+			
+			$class = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '') ? 'holliday' : '';
+			$class_label = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '') ? '' : 'background-for-label';
+		
+			$code .= <<<EOF
+			<div class="day-item day-item-break">
+				<input type="checkbox" name="days[$key]" class="checkbox checkbox-break" id="day{$key}">
+				<label class="checkbox-break $class_label" for=""></label>
+				<div class="day day-break $class">
+					<span>{$days[$key]}</span>
+					<div id="day-time">
+		EOF;
+		
+			$code .= select_times("break_start[$key]", $b_start === false ? '12:00' : $b_start, $b_start === false);
+			$code .= "–";
+			$code .= select_times("break_end[$key]", $b_end === false ? '13:00' : $b_end, $b_end === false);
+			
+			$code .= <<<EOF
+					</div>
+				</div>
+			</div>
+		EOF;
+		}
+		else {
+			//если расписание не заполнено (пустое расписание)
+			
+				if (isset($day['b_start']) && isset($day['b_end'])) {
+					if ($day['b_start'] === false || $day['b_end'] === false || $day['b_start'] === '' || $day['b_end'] === '') {
+						$class = 'holliday';
+						$class_label = '';
+					} else {
+						$class = '';
+						$class_label = 'background-for-label';
+					}
+				} else {
+					$class = 'holliday';
+					$class_label = '';
+				}
+	
+				$code .= <<<EOF
+				<div class="day-item day-item-break">
+				<input type="checkbox" name="days[$key]" class="checkbox checkbox-break" id="day{$key}">
+				<label class="checkbox-break $class_label" for=""></label>
+				<div class="day day-break $class">
+						<span class="day-name">{$days[$key]}</span>
+						<div>
+				EOF;
+	
+				$code .= select_times("break_start[$key]", '12:00', true);
+				$code .= "–";
+				$code .= select_times("break_end[$key]", '13:00', true);
+	
+				$code .= <<<EOF
+							</div>
+						</div>
+					</div>
+				EOF;
+			
+		}		
+	} 
+
+	$code .= "</div>";
+
+	return $code;
+}
+
+/* function create_schedule(): string
+{
+	$days = [
+		1 => 'Пн',
+		2 => 'Вт',
+		3 => 'Ср',
+		4 => 'Чт',
+		5 => 'Пт',
+		6 => 'Сб',
+		7 => 'Вс',
+	];
+
+	$code = '<div class="days">';
+	foreach ($days as $key => $day) {
+		$code .= <<<HTML
+            <div class="day-item">
+                <input type="checkbox" name="days_break[$key]" class="checkbox checkbox-break" id="day_break{$key}">
+                <label for="day_break{$key}"></label>
+                <div class="day day-break">
+                    <span class="day-name">$day</span>
+                    <div>
+HTML;
+
+		$code .= select_times("schedule_start[$key]", '10:00', true);
+		$code .= "–";
+		$code .= select_times("schedule_end[$key]", '19:30', true);
+
+		$code .= <<<HTML
+                </div>
+            </div>
+        </div>
+HTML;
+	}
+	$code .= "</div>";
+
+	return $code;
+} */
+
+/**
  * @param string $contacts
  * @param array $classes
  * @return string
  */
-function cart_contacts(string $contacts, array $classes = []):string
+function cart_contacts(string $contacts, array $classes = []): string
 {
 	$contacts = json_decode($contacts, true);
 
@@ -206,7 +339,7 @@ function cart_contacts(string $contacts, array $classes = []):string
 
 	foreach ($contacts as $key => $contact) {
 		$class = '';
-		if(!$contact) {
+		if (!$contact) {
 			$class .= 'hidden';
 		}
 		$code .= "<li class='$class'>";
@@ -227,7 +360,7 @@ function cart_contacts(string $contacts, array $classes = []):string
 			case 'dzen':
 				$code .=  "<a href='https://dzen.ru/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts6.svg'> Яндекс Дзен</span></a>";
 				break;
-			
+
 			default:
 				# code...
 				break;

@@ -290,7 +290,7 @@ function get_specialist(int $id)
 {
     global $data_base;
     return $data_base->selectRow("SELECT 
-                                        s.*, 
+                                        s.*,    
                                         sc.*,
                                         sc.metro as metro_id,
                                         m.name as metro,
@@ -1295,7 +1295,7 @@ function get_email_by_id(int $id)
     return $data_base->selectRow("SELECT email FROM dt_specialist WHERE id = $id")['email'];
 }
 
-// Учтанавливает новый пароль к аккаунту
+// Устанавливает новый пароль к аккаунту
 function update_password(array $data)
 {
     global $data_base;
@@ -1311,6 +1311,28 @@ function update_password(array $data)
         $data['specialist_id'],
         $data['hash']
     ]);
+}
+
+// Функция для подтверждения пользовательских прав
+function confirmation_user(array $data) {
+    global $data_base;
+    $user = $data['specialist_id'];
+    if (!$user) {
+        return false;
+    }
+    $result = $data_base->update("UPDATE dt_specialist SET 
+                                    email = ?, 
+                                    password = ?, 
+                                    hash = ?,
+                                    active = '1'
+                                WHERE 
+                                    id = ?", [
+        $data['email'],
+        $data['password'],
+        $data['new_hash'],
+        $data['specialist_id']
+    ]);
+    return $result;
 }
 
 // Записывает отзыв

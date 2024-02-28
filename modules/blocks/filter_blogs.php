@@ -2,7 +2,7 @@
 
 $data = [];
 
-$main_theme = 'Тема блогов';
+$main_theme = 'Тема';
 $data['filter_blog_id'] = '<input type="hidden" id="spec_id" value="0">';
 if ($_SERVER['REQUEST_URI'] != '/') {
     $main_theme = 'Все темы';

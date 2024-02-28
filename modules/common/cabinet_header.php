@@ -22,7 +22,17 @@ $user['photo'] = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/asset
 
 $data['user_header'] = <<<EOF
 	<div class="user-text">
-	Привет, <span>{$user['name']}</span> 
+	Привет, <span>
+EOF;
+
+if (!empty($user['company'])) {
+    $data['user_header'] .= $user['company'];
+} else {
+    $data['user_header'] .= $user['name'];
+}
+
+$data['user_header'] .= <<<EOF
+    </span>  
 	<a href="/specialist/id{$user['id']}">Перейти на страницу</a>
 	</div>
 	<i><img src="{$user['photo']}"></i>
@@ -68,7 +78,7 @@ function top_menu(array $page, array $user): array
 		//получаем страницы меню
 		$array = get_cabinet_top_menu();
 		$menu_class = '';
-	} else if ($page['alias'] == 'moy-blog' || $page['alias'] == 'sozdat-zapis'){
+	} else if ($page['alias'] == 'moy-blog' || $page['alias'] == 'sozdat-zapis' || $page['alias'] == 'prosmotr-zapisi'){
 		//получаем страницы меню блогов
 		$array = get_cabinet_blog_top_menu();
 		$menu_class = 'blog-menu';
