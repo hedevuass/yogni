@@ -28,6 +28,10 @@ if (isset($_POST['email'])) {
         $json['error']['auth'] = 'Неправильный логин или пароль';
         responseJson($json);
     }
+    if ($user['active'] == 0) {
+        $json['error']['email_resend'] = true;
+        responseJson($json);
+    }
 
     if (password_verify($data['password'], $user['password'])) {
         if(!is_null($user['deleted_at'])) {

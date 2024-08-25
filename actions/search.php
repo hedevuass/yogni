@@ -207,7 +207,7 @@ if (isset($_POST['search'])) {
             <?php } ?>
             <div class="cat">
                 <div class="cat__title">Нет подходящего варианта?</div>
-                <div class="result_row">Больше информации в <a href="/journal" class="orange-link">блогах</a></div>
+                <div class="result_row">Больше информации в <a href="/journal" class="orange-link">журнале</a></div>
             </div>
         <?php } else { ?>
             <div class="cat">

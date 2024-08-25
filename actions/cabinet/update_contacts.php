@@ -7,7 +7,7 @@ if (isset($_POST['phone'])) {
     foreach ($_POST as $key => $value) {
         $data[$key] = clean_elem_form($value);
     }
-    $data['phone'] = '+7'.$data['phone'];
+    $data['phone'] = '+7' . $data['phone'];
     // Валидация телефонного номера
     if (!$data['phone'] = validation_phone($data['phone'])) $json['error']['phone'] = 'Укажите корректный номер телефона';
 
@@ -22,6 +22,19 @@ if (isset($_POST['phone'])) {
     if ($data['email']) {
         $data['email'] = filter_var($data['email'], FILTER_SANITIZE_EMAIL);
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $json['error']['email'] = 'Некорректный email';
+    }
+    $data['coordinates'] = '';
+    if ($data['city'] && $data['street']) {
+        $main_adress = $data['city'] . ', ' . $data['street'];
+        if ($data['house']) {
+            $main_adress .= ', ' . $data['house'];
+        }
+        // Отправляем запрос к сервису геокодирования (пример для Яндекс.Карт)
+        $geocode_response = file_get_contents('https://geocode-maps.yandex.ru/1.x/?format=json&apikey=b0c770d0-eb80-4f0e-bb33-f3d1bb289c95&geocode=' . urlencode($main_adress));
+		$geocode_data = json_decode($geocode_response, true);
+
+        // Получаем координаты из ответа
+        $data['coordinates'] = $geocode_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos'] ?? '';
     }
 
     // Валидация доп сетей

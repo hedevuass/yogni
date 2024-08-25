@@ -24,27 +24,29 @@ if (!isset($_GET['page'])) {
     // скрипт js, отправляющий запрос на получение избранных 
     $data['script'] = '
     <script>
-    window.addEventListener("DOMContentLoaded", (event) => {
-        let favorite = { lawyers: [], experts: [], notaries: [] };
-        if (localStorage.getItem("favorite")) {
-            favorite = localStorage.getItem("favorite");
-        }
-        $(".index-catalog-block .grid_flex").addClass("preload");
-        $.ajax({
-            type: "POST",
-            url: "/actions/set_favorite.php",
-            dataType: "json",
-            data: {favorite: favorite},
-            success: function (json) {
-                $(".index-catalog-block .grid_flex").append(json.specialists)
-                if (json.pagination) {
-                    $(".index-catalog-block .grid_flex").after(json.pagination)
-                }
-                $(".index-catalog-block .grid_flex").removeClass("preload");
+        window.addEventListener("DOMContentLoaded", (event) => {
+            let favorite = { lawyers: [], experts: [], notaries: [] };
+            if (localStorage.getItem("favorite")) {
+                favorite = localStorage.getItem("favorite");
             }
-        })
-    });
-</script>';
+            $(".index-catalog-block .grid_flex").addClass("preload");
+            $.ajax({
+                type: "POST",
+                url: "/actions/set_favorite.php",
+                dataType: "json",
+                data: {favorite: favorite, specialization: "'.$_GET['specialization'].'"},
+                success: function (json) {
+                    if (json) {
+                        $(".index-catalog-block .grid_flex").append(json.specialists)
+                        if (json.pagination) {
+                            $(".index-catalog-block .grid_flex").after(json.pagination)
+                        }
+                        $(".index-catalog-block .grid_flex").removeClass("preload");
+                    }
+                }
+            })
+        });
+    </script>';
 
 } else {
     $data['script'] = '';

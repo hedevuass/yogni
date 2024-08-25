@@ -11,15 +11,15 @@ function send_mail_smtp($email, $title, $body)
 {
 	$mail = new PHPMailer(true);
 	$mail->isSMTP();
-	$mail->SMTPDebug = 2;
-	$mail->CharSet = 'UTF-8';
-	$mail->Host   = 'us2.smtp.mailhostbox.com';
-	$mail->SMTPAuth   = true;
-	$mail->Username   = 'noreply@dev-a-tech.com';
-	$mail->Password   = 'nJPWSSw4';
-	$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-	$mail->Port   = 587;
-	$mail->setFrom('noreply@dev-a-tech.com', 'ЮРФАК');
+	$mail->SMTPDebug  = 0;
+	$mail->CharSet    = 'UTF-8';
+	$mail->Host 	  = 'smtp.beget.com';  // Замените на адрес вашего SMTP сервера
+    $mail->SMTPAuth   = true;
+    $mail->Username   = 'test-noreply@urfaq.ru';  // Замените на ваше имя пользователя SMTP сервера
+	$mail->Password   = '&yMUy77w';
+	$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+	$mail->Port       = 465;
+	$mail->setFrom('test-noreply@urfaq.ru', 'ЮРФАК');
 	$mail->addAddress($email);
 	$mail->isHTML(true);
 	$mail->Subject = $title;

@@ -13,10 +13,10 @@ try {
     // Настройки SMTP сервера
     $mail->isSMTP();
     $mail->CharSet = 'UTF-8';
-    $mail->Host = 'us2.smtp.mailhostbox.com';  // Замените на адрес вашего SMTP сервера
+    $mail->Host = 'smtp.beget.com';  // Замените на адрес вашего SMTP сервера
     $mail->SMTPAuth = true;
-    $mail->Username = 'legalp@lp.dat-studio.com';  // Замените на ваше имя пользователя SMTP сервера
-    $mail->Password = '4sFEwegO';  // Замените на ваш пароль SMTP сервера
+    $mail->Username = 'testnoreply@urfaq.ru';  // Замените на ваше имя пользователя SMTP сервера
+    $mail->Password = '&yMUy77w';  // Замените на ваш пароль SMTP сервера
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;  // Используйте 'tls' или 'ssl' в зависимости от настроек вашего SMTP сервера
     $mail->Port = 587;  // Замените на порт вашего SMTP сервера
 

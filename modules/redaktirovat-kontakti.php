@@ -121,7 +121,7 @@ function select_times(string $select_name, string $time, bool $empty = false): s
  * @param string $shedulle
  * @return string
  */
-function select_schedule(string $schedule): string
+function select_schedule(string|null $schedule): string
 {
 	$days = [
 		1 => 'Пн',
@@ -198,7 +198,7 @@ function select_schedule(string $schedule): string
  * @param string
  * @return string
  */
-function select_break_schedule(string $schedule): string
+function select_break_schedule(string|null $schedule): string
 {
 	$days = [
 		1 => 'Пн',

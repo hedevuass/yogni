@@ -9,35 +9,52 @@ function block(array $specialists, $class = false)
         if (!$class) $cl = '';
         else $cl = $class;
 
+        // Получаем список подключенных тарифов для специалиста
+        $connected_tariffs = get_connected_tariffs($specialist['id']);
+
+        // Проверяем наличие тарифов с ID = 2 и 3
+        $tariff2Connected = false;
+        $tariff3Connected = false;
+        foreach ($connected_tariffs as $tariff) {
+            if ($tariff['tariff_id'] == 2) {
+                $tariff2Connected = true;
+            }
+            if ($tariff['tariff_id'] == 3) {
+                $tariff3Connected = true;
+            }
+        }
+
+        // Устанавливаем стиль фона и видимость rocket в зависимости от тарифов
+        $style = $tariff2Connected || $tariff3Connected ? 'background-color: #D9EAF6;' : '';
+        $rocketStyle = $tariff3Connected ? 'display: block;' : 'display: none;';
+
+        $specialist['photo'] = $specialist['photo'] ? $specialist['photo'] : 'company.png';
         $data .= <<<EOF
-            <div class="item $cl">
+            <div class="item $cl" style="$style">
             <div class="image"><div class="image-box" style="background-image: url('/uploads/avatars/{$specialist['photo']}')"></div>
                 <div class="rating">
         EOF;
 
         if ($specialist['rating']) {
-			$data .= rating($specialist['rating']);
-		}
-
+            $data .= rating($specialist['rating']);
+        }
 
         $data .= <<<EOF
-					</div>
-				</div>
-			<a href="/specialist/id{$specialist['id']}" class="link"></a><div class="rocket"></div>
-			<div class="name">
-		EOF;
+                    </div>
+                </div>
+            <a href="/specialist/id{$specialist['id']}" class="link"></a><div class="rocket" style="$rocketStyle"></div>
+            <div class="name">
+        EOF;
 
-		if ($specialist['company_name']) {
-			$data .= $specialist['company_name'];
-			$page = 'company';
-		}
+        if ($specialist['company_name']) {
+            $data .= $specialist['company_name'];
+        }
 
-		if (!$specialist['company_name']) {
-			$data .= $specialist['name'] . ' ' . $specialist['lastname'];
-			$page = 'specialist';
-		}
+        if (!$specialist['company_name']) {
+            $data .= $specialist['name'] . ' ' . $specialist['lastname'];
+        }
 
-		$data .= <<<EOF
+        $data .= <<<EOF
                 </div>
                 <div class="prof">
                     {$specialist['classification_title']}
@@ -46,23 +63,26 @@ function block(array $specialists, $class = false)
                     {$specialist['city_name']}
         EOF;
 
-        if ($specialist['metro_name'] && $specialist['classification_title'] == 'Нотариус') $data .= "<br /> м. {$specialist['metro_name']}";
+        if ($specialist['metro_name'] && $specialist['classification_title'] == 'Нотариус') {
+            $data .= "<br /> м. {$specialist['metro_name']}";
+        }
 
         $data .= <<<EOF
-			</div>
-			<div class="cats">
-		EOF;
+            </div>
+            <div class="cats">
+        EOF;
 
+        if ($specialist['specialization_count'] > 1) {
+            if ($specialist['specialization']) {
+                $data .=  mb_strimwidth($specialist['specialization'], 0, 21, '...', 'UTF-8');
+            }
+            $specialization = num_decline(($specialist['specialization_count'] - 1), 'специализация, специализации, специализаций');
+            $data .= "<br> и ещё <a href='/specialist/id{$specialist['id']}'>$specialization</a>";
+        } else if ($specialist['specialization']) {
+            $data .=  mb_strimwidth($specialist['specialization'], 0, 42, '...', 'UTF-8');
+        }
 
-		if ($specialist['specialization_count'] > 1) {
-			if ($specialist['specialization']) $data .=  mb_strimwidth($specialist['specialization'], 0, 21, '...', 'UTF-8');
-			$specialization = num_decline(($specialist['specialization_count'] - 1), 'специализация, специализации, специализаций');
-			$data .= "<br> и ещё <a href='/specialist/id{$specialist['id']}'>$specialization</a>";
-		} else if ($specialist['specialization']) {
-			$data .=  mb_strimwidth($specialist['specialization'], 0, 42, '...', 'UTF-8');
-		}
-
-		$data .= <<<EOF
+        $data .= <<<EOF
                 </div>
             </div>
         EOF;
@@ -70,6 +90,8 @@ function block(array $specialists, $class = false)
 
     return $data;
 }
+
+
 
 // Рейтинг
 function rating($rating)
@@ -147,16 +169,17 @@ function block_articles(array $articles, bool $is_single = false, int $blog_id =
 										<span class="profile-type">/'.$specialist['classification'].'/</span>
 									</div>';
 
-            $themes = '';
-            $themes_arr = get_article_themes($article['id']);
-            if ($themes_arr) {
-                $themes = '<div class="tags">';
-                foreach ($themes_arr as $theme) {
-					$class_link = get_classification_link($theme['classification']);
-                    $themes .= '<a href="/'.$class_link.'/' . ($theme['p_id'] === 0 ? '' : $theme['p_slug'] . '/') . $theme['slug'] . '">#' . $theme['title'] . '</a>';
-                }
-                $themes .= '</div>';
-            }
+            // $themes = '';
+            // $themes_arr = get_article_tags($article['id']);
+            // if ($themes_arr) {
+            //     $themes = '<div class="tags">';
+            //     foreach ($themes_arr as $theme) {
+            //         $themes .= '<a href="/journal/' . $theme['alias'] . '">#' . $theme['title'] . '</a>';
+            //     }
+            //     $themes .= '</div>';
+            // }
+            $themes = '<div class="tags"><a href="/journal/' . $article['service_slug'] . '">' . $article['service_title'] . '</a></div>';
+            
             $code .= <<<EOF
             <div class="article_item">
                 <div class="article_profile item">
@@ -206,67 +229,38 @@ EOF;
  * @param int $blog_id
  * @return string
  */
-function block_articles_prosmotr(array $articles, bool $is_single = false, int $blog_id = 0): string
+function block_article_prosmotr(array $article): string
 {
     $code = '';
+    
+    $date = date("d.m.Y", strtotime($article['date']));
+	$article_title = '<div class="link nohover">' . $article['title'] . '</div>';
+	$article_content = nl2br($article['content']);
+	$article_mobile_title = '<div class="mobile-article_profile">
+							</div>';
 
-    if ($articles) {
-        foreach ($articles as $article) {
-            $specialist = get_specialist($article['specialist_id']);
-            
-
-            $date = date("d.m.Y", strtotime($article['date']));
-			$article_title = '<div class="link nohover">' . $article['title'] . '</div>';
-			$article_content = $article['content'];
-            $article_content = nl2br($article_content);
-			$article_link = '';
-			if (!$is_single) {
-				$article_title = '<a href="/article/'.$article['id'].'" class="link">'.$article['title'].'</a>';
-				$article_content = cut_text($article['content'], 650);
-			} else if ($blog_id){
-				
-			}
-			$article_mobile_title = '<div class="mobile-article_profile">
-									</div>';
-
-            $themes = '';
-            $themes_arr = get_article_themes($article['id']);
-            if ($themes_arr) {
-                $themes = '<div class="tags">';
-                foreach ($themes_arr as $theme) {
-					$class_link = get_classification_link($theme['classification']);
-                    $themes .= '<a href="/'.$class_link.'/' . ($theme['p_id'] === 0 ? '' : $theme['p_slug'] . '/') . $theme['slug'] . '">' . $theme['title'] . '</a>';
-                }
-                $themes .= '</div>';
-            }
-            $code .= <<<EOF
-            <div class="article_item">
-                    <div class="city">
+    // $themes = '';
+    // $themes_arr = get_article_tags($article['id']);
+    // if ($themes_arr) {
+    //     $themes = '<div class="tags">';
+    //     foreach ($themes_arr as $theme) {
+    //         $themes .= '<a href="/journal/' . $theme['alias'] . '">#' . $theme['title'] . '</a>';
+    //     }
+    //     $themes .= '</div>';
+    // }
+    $themes = '<div class="tags"><a href="/journal/' . $article['service_slug'] . '">' . $article['service_title'] . '</a></div>';
+    $code .= <<<EOF
+    <div class="article_item prosmotr">
 EOF;
-            if ($specialist['metro']) $code .= "<br /> м. {$specialist['metro']}";
-
-            $code .= <<<EOF
-			        </div>
-			        <div class="cats">
+    $code .= <<<EOF
+        <div class="article_body">
+            <div class="date">{$date}{$themes}</div>
+            {$article_title}
+			{$article_mobile_title}
+            <div class="article_text">{$article_content}</div>
+        </div>
+    </div>
 EOF;
-            if ($specialist['specialization']) $code .=  mb_strimwidth($specialist['specialization'], 0, 21, '...', 'UTF-8');;
-
-
-            
-            $code .= <<<EOF
-                    </div>
-                    <a href="/specialist/id{$specialist['id']}" class="link"></a>
-                <div class="article_body">
-                    <div class="date">{$date}{$themes}</div>
-                    {$article_title}
-					{$article_mobile_title}
-                    <div class="article_text">{$article_content}</div>
-                    {$article_link}
-                </div>
-            </div>
-EOF;
-        }
-    }
     return $code;
 }
 
@@ -483,22 +477,23 @@ function block_articles_cabinet(array $articles, bool $has_text_no_articles): st
             if ($article['moderation'] == 1) {
                 $moderation = '<div class="moderation">на модерации</div>';
             }
-            $themes = '';
-            $themes_arr = get_article_themes($article['id']);
-            if ($themes_arr) {
-                $themes = '<div class="tags">';
-                foreach ($themes_arr as $theme) {
-                    $class_link = get_classification_link($theme['classification']);
-                    $themes .= '<a href="/'.$class_link.'/' . ($theme['p_id'] === 0 ? '' : $theme['p_slug'] . '/') . $theme['slug'] . '">#' . $theme['title'] . '</a>';
-                }
-                $themes .= '</div>';
-            }
+            // $themes = '';
+            // $themes_arr = get_article_tags($article['id']);
+            // if ($themes_arr) {
+            //     $themes = '<div class="tags">';
+            //     foreach ($themes_arr as $theme) {
+            //         $themes .= '<a href="/journal/' . $theme['alias'] . '">#' . $theme['title'] . '</a>';
+            //     }
+            //     $themes .= '</div>';
+            // }
+            $themes = '<div class="tags"><a href="/journal/' . $article['service_slug'] . '">' . $article['service_title'] . '</a></div>';
+            $short_content = cut_text($article["content"], 300);
             $code .= <<<EOF
-                <div class="article__item">
+                <div class="article__item" data-article-id="{$article['id']}">
                     <div class="article_body">
                         <div class="date">{$date}{$themes}</div>
-                        <a href="/article/{$article['id']}" class="link">{$article['title']}</a>
-                        <div class="article_text">{$article['content']}</div>
+                        <a href="/cabinet/prosmotr-zapisi/{$article['id']}" class="link">{$article['title']}</a>
+                        <div class="article_text">{$short_content}</div>
                     </div>
                     {$moderation}
                     <div class="article-menu-btn">

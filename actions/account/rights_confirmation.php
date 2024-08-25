@@ -9,13 +9,13 @@ if (isset($_POST['password'])) {
 
     if (strlen($data['password']) < 6) $json['error']['password'] = 'Минимальная длинна пароля 6 символов';
 
+    if (empty($data['email'])) $json['error']['email'] = 'Email не указан';
+
     if (isset($json['error'])) responseJson($json);
 
     $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
     $data['specialist_id'] = clean_elem_form($_POST['specialist_id']);
-
-    $data['email'] = clean_elem_form($_POST['email']);
 
     $data['new_hash'] = md5(bin2hex(random_bytes(10)));
 

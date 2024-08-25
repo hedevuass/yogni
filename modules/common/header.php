@@ -2,8 +2,10 @@
 
 // Личный кабинет
 if (isset($_SESSION['user'])) {
+	$user = get_specialist($_SESSION['user']['id']);
+	$name = $user['company'] ?? $user['name'] . " " . $user['lastname'];
     $data['user_links1'] = '<a href="/actions/account/logout.php" class="logout"><i></i>Выйти</a>';
-    $data['user_links2'] = '<div class="header__profile-greeting">Привет, <a href="/cabinet" class="profile-link">'.$_SESSION['user']['name'].'</a></div>';
+    $data['user_links2'] = '<div class="header__profile-greeting">Привет, <a href="/cabinet" class="profile-link">'. $name .'</a></div>';
 } else {
     $data['user_links1'] = <<<EOF
         <a class="login"><i></i>Войти</a>
@@ -41,7 +43,7 @@ $data['mobile_bottom_header'] = '
 				<span>Все разделы</span>
 			</div>
 			<a href="/journal" class="bottom-header__item'.$journal.'" id="blog-item">
-				<span>Блоги</span>
+				<span>Журнал</span>
 			</a>
 			<a href="/izbrannoe" class="bottom-header__item'.$izbrannoe.'" id="favorite-item">
 				<span>Избранное</span>

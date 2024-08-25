@@ -18,6 +18,7 @@ if (isset($_REQUEST['path'])) {
 	$cabinet_pages = get_all_cabinet_pages();
 	$requested_vars = explode('/', $_SERVER['REQUEST_URI']);
 	$requested_page = strtok($requested_vars[1], '?') ?: 'index';
+	$requested_page = $requested_page == 'show_login' ? 'index' : $requested_page;
 	if ($requested_page == "yuristy-i-advokaty" || $requested_page == "experty" || $requested_page == "notariusy") {
 		$requested_page = "catalog";
 	} else if ($requested_page == "cabinet") {

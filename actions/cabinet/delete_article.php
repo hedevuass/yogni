@@ -10,7 +10,6 @@ if (isset($_POST['article_id']) && isset($_POST['blog_id'])) {
     if (intval($blog) == intval($_SESSION['user']['id'])) {
         $article_id = intval($data['article_id']);
         delete_article($article_id);
-        unset_article_themes($article_id);
         $json['success'] = true;
         responseJson($json);
     }

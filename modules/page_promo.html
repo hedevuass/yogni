@@ -1,0 +1,785 @@
+
+<style>
+.reg {
+  padding: 16px 40px !important;
+}
+
+.name-tariff {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.form-tariff {
+  margin-top: 20px;
+}
+
+.text-only-tariff {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.right-side {
+  float: right;
+}
+
+.confirm-btn-tariff {
+  background-color: #ff7f27;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  margin-top: 80px;
+}
+.confirm-btn-option {
+  margin-top: 80px;
+}
+
+.confirm-btn-tariff:hover {
+  background-color: #ff9f57;
+}
+
+.confirm-btn-tariff.inactive-button {
+  background-color: #fbcbae;
+  color: #ffffff;
+  cursor: not-allowed;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-btn-tariff,
+.confirm-btn-tariff.inactive-button {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.for-pay {
+  margin: 100px 0 0 0;
+}
+.reklam-text {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #373737;
+}
+.popup-body-succes {
+  height: 400px;
+  text-align: center;
+  padding: 25px;
+}
+.popup-body-succes .bold {
+  margin: 100px 0 30px 0;
+}
+
+.select-toggle {
+  cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+    display: block;
+    position: relative;
+    margin-top: 10px;
+    color: #373737;
+}
+
+.input {
+  border-radius: 8px !important;
+}
+
+.select-toggle:after {
+  content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 16px;
+    height: 10px;
+    transform: translateY(-50%) rotate(-90deg);
+    background: url(../img/cabinet/mob-menu-arrow.svg) no-repeat center / cover;
+}
+
+.select-dropdown {
+    display: none;
+    background-color: white;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 360px;
+    overflow-y: auto;
+    border-radius: 8px !important;
+}
+.select-option {
+    display: flex !important;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 2px 10px;
+    cursor: pointer;
+    font-size: unset !important; 
+    font-weight: unset !important; 
+    margin-top: unset !important; 
+    margin-bottom: unset !important;
+}
+
+.select-option input[type="checkbox"] {
+    appearance: none;
+    background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
+    border: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    order: 2;
+}
+
+.select-option input[type="checkbox"]:checked {
+    background: url(../assets/img/cabinet/checkbox_checked_orange.svg) no-repeat center center;
+}
+
+.select-option input[type="radio"] {
+    appearance: none;
+    background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
+    border: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    order: 2;
+}
+
+.select-option input[type="radio"]:checked {
+    background: url(../assets/img/cabinet/checkbox_checked_orange.svg) no-repeat center center;
+}
+
+.option-label {
+  font-weight: 500;
+  padding: 5px 0 5px 15px;
+  font-size: unset !important; 
+    margin-top: unset !important; 
+    margin-bottom: unset !important;
+}
+
+.promo-icon.special-padding {
+    padding: 4px;
+}
+
+.promo-icon {
+    padding: 20px 0;
+}
+
+.promo-description {
+  font-size: 12px;
+}
+
+.popup-content .button .add-more-promo {
+  margin-bottom: 10px;
+}
+
+.popup-content .selected-promo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.popup-content .selected-promo .promo-number {
+  width: 5%;
+  font-weight: bold;
+  margin-bottom: auto;
+}
+
+.popup-content .selected-promo .promo-details {
+  display: flex;
+  align-items: center;
+  width: 65%;
+}
+
+.popup-content .selected-promo .promo-info {
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
+.popup-content .selected-promo .promo-title {
+  font-weight: 500;
+  margin-right: 5px;
+}
+
+.popup-content .selected-promo .promo-dates {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.popup-content .selected-promo .promo-icon {
+  width: 48px;
+  height: 48px;
+  margin-right: 10px;
+}
+
+.popup-content .selected-promo .promo-price {
+  margin-right: 10px;
+}
+
+.popup-content .selected-promo .delete-promo {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.popup-content .selected-promo .delete-promo img {
+  width: 24px;
+  height: 24px;
+}
+
+.popup-content .selected-promo .promo-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 50%;
+}
+
+.total-price {
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+#total-price2 {
+  font-weight: 400;
+}
+
+</style>
+<div id="obzor-href" class="heading__mobile support-heading">
+  <a href="/cabinet/"></a>
+  <div class="text">Продвижение страницы</div>
+</div>
+<div class="promo-page">
+  <nav class="top-menu-promo">
+    <ul class="blog-menu desktop-blog-menu">
+      <li><a href="#obzor-href" class="">ОБЗОР</a></li>
+      <li><a href="#tariff-href" class="">ТАРИФЫ</a></li>
+      <li><a href="#promo-href" class="">ПРОМО-БЛОКИ</a></li>
+      <li><a href="#option-href" class="">ОПЦИИ</a></li>
+    </ul>
+
+    <ul class="blog-menu mobile-blog-menu">
+      <li><button data-target="#obzor-href" class="promo-button-mob active">ОБЗОР</button></li>
+      <li><button data-target="#tariff-href" class="promo-button-mob">ТАРИФЫ</button></li>
+      <li><button data-target=".promo-section" class="promo-button-mob">ПРОМО-БЛОКИ</button></li>
+      <li><button data-target="#option-href" class="promo-button-mob">ОПЦИИ</button></li>
+    </ul>
+  </nav>
+
+<div class="obzor-mobile">
+  <div id="cards-block" class="cards-container">
+    <!--data:top_cards--><!--data:top_cards-->
+</div>
+
+  
+  <div id="banner-block" class="banner-promo">
+    <span class="name-promo">Мощный старт вашей страницы</span><br>
+    <span>Эффективные инструменты для продвижения ваших услуг</span>
+    <!-- Desktop version container -->
+    <div class="container-promo hidden-comp">
+        <div class="element-promo">
+            <div class="icon-promo"></div>
+            <div class="promo-tariffs">Тарифы</div>
+            <p>Наборы опций для максимально эффективного продвижения страницы</p>
+            <a href="#tariff-href">Подробнее</a>
+        </div>
+        <div class="element-promo">
+            <div class="icon-promo"></div>
+            <div class="promo-blocks">Промо-блоки</div>
+            <p>Карточки и баннеры на самых заметных позициях сайта</p>
+            <a href="#promo-href">Подробнее</a>
+        </div>
+        <div class="element-promo">
+            <div class="icon-promo"></div>
+            <div class="promo-banners">Баннеры</div>
+            <p>Крупный формат в ключевых точках каталога</p>
+            <a href="#promo-banners">Подробнее</a>
+        </div>
+        <div class="element-promo">
+            <div class="icon-promo"></div>
+            <div class="promo-options">Опции</div>
+            <p>Отдельные опции для индивидуальной настройки продвижения</p>
+            <a href="#option-href">Подробнее</a>
+        </div>
+    </div>
+    <!-- Mobile version swiper -->
+    <div class="swiper-container mobile-only">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+                <div class="element-promo promo-tariffs">
+                    <div class="icon-promo"></div>
+                    <div class="promo-tariffs">Тарифы</div>
+                    <p>Наборы опций для максимально эффективного продвижения страницы</p>
+                    <a class="promo-button-mob" data-target="#tariff-href">Подробнее</a>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="element-promo promo-blocks">
+                    <div class="icon-promo"></div>
+                    <div class="promo-blocks">Промо-блоки</div>
+                    <p>Карточки и баннеры на самых заметных позициях сайта</p>
+                    <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="element-promo promo-banners">
+                    <div class="icon-promo"></div>
+                    <div class="promo-banners">Баннеры</div>
+                    <p>Крупный формат в ключевых точках каталога</p>
+                    <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="element-promo promo-options">
+                    <div class="icon-promo"></div>
+                    <div class="promo-options">Опции</div>
+                    <p>Отдельные опции для индивидуальной настройки продвижения</p>
+                    <a class="promo-button-mob" data-target="#option-href">Подробнее</a>
+                </div>
+            </div>
+        </div>
+       
+        <div class="swiper-pagination"></div>
+    </div>
+</div>
+</div>
+  <div id="tariff-href" class="tariff-section section hidden-comp">
+    <h2>Выберите <span class="highlight">подходящий тариф</span></h2>
+    <p>Наборы опций для максимально эффективного продвижения страницы.</p>
+    <div class="switch-container">
+        <span>На месяц</span>
+        <label class="switch">
+            <input type="checkbox" id="duration-switch">
+            <span class="slider round"></span>
+        </label>
+        <span>На 3 месяца</span>
+    </div>
+    <div class="tariff-cards hidden-comp">
+      <!--data:tariff_cards--><!--data:tariff_cards-->
+  </div>
+  <div class="swiper-container mobile-only">
+      <div class="swiper-wrapper">
+          <!--data:mobile_tariff_cards--><!--data:mobile_tariff_cards-->
+      </div>
+      <div class="swiper-pagination"></div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<div class="promo-section white-mobile-promo mobile-only">
+  <div style="margin-bottom: 20px;" class="promo-text">
+    <h2>Промо-блоки и баннеры</h2>
+    <p>
+      Размещения на <span class="highlight">самых заметных позициях</span> в каталоге и журнале.
+    </p>
+  </div>
+  <div style="text-align: center;" class="img-block">
+  <img style="max-width: 400px; width: 100%;" src="../assets/img/cabinet/promoblock-banners.png" alt="Image 1" />
+</div>
+</div>
+<div id="promo-href" class="promo-section hidden-comp">
+  <div class="promo-text">
+    <h2>Размещение карточки в <span class="highlight">промо-блоках</span></h2>
+    <div class="connected-banners">
+      <!--data:promo_connected--><!--data:promo_connected-->
+    </div>
+    <p>
+      Размещение карточки на самых заметных позициях каталога. Выберите первое место или позиции со второй по восьмую. Доступно на страницах разделов и подразделов, а также на главной странице.
+    </p>
+    <p class="bold">Подробнее – в карусели.</p>
+    <button class="promo-button promo-card-button hidden-comp">Подключить</button>
+  </div>
+  <button class="promo-button promo-card-button mobile-only">Подключить</button>
+  <div class="promo-slider swiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide1.svg" alt="Image 1" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide2.svg" alt="Image 2" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide3.svg" alt="Image 3" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide4.svg" alt="Image 4" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide5.svg" alt="Image 5" /></div>
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+</div>
+
+<div id="promo-banners" class="promo-section white-mobile-promo hidden-comp">
+  <div class="promo-text">
+    <h2>Рекламные <span class="highlight">баннеры</span></h2>
+    
+      <!--data:banners--><!--data:banners-->
+    
+    <p>
+      Крупный формат на главной странице. Отличный выбор для проведения имиджевых кампаний, продвижения по широким запросам и повышения узнаваемости.
+    </p>
+    <p class="bold">Подробнее – в карусели.</p>
+    <button class="promo-button reklama-button hidden-comp">Подключить</button>
+  </div>
+  <button class="promo-button reklama-button mobile-only">Подключить</button>
+  <div class="promo-slider swiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide1.svg" alt="Image 1" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide2.svg" alt="Image 2" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide3.svg" alt="Image 3" /></div>
+      
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+</div>
+
+<div class="promo-section hidden-comp">
+  <div class="promo-text">
+    <h2>Продвижение в <span class="highlight">журнале</span></h2>
+    
+      <!--data:journal--><!--data:journal-->
+  
+    <p>
+      Журнал – медиа с новостями, статьями, а также блогами специалистов и компаний, рассчитанное на широкую аудиторию. Промо-блоки расположены в ленте журнала и позволяют продвигать статьи или привлекать трафик непосредственно на свою страницу.
+    </p>
+    <p class="bold">Подробнее – в карусели.</p>
+    <button class="promo-button journal-button hidden-comp">Подключить</button>
+  </div>
+  <button class="promo-button journal-button mobile-only">Подключить</button>
+  <div class="promo-slider swiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide1.svg" alt="Image 1" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide2.svg" alt="Image 2" /></div>
+      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide3.svg" alt="Image 3" /></div>
+    </div>
+    <div class="swiper-pagination"></div>
+  </div>
+</div>
+
+<div id="option-href" class="options-section hidden-comp">
+    <h2><span class="highlight">Опции</span> страницы</h2>
+    <p>Отдельные опции для повышения эффективности работы с каталогом.</p>
+    <hr class="divider" />
+    <div class="options-table">
+      <div class="table-row table-header">
+        <div class="table-cell">Опция</div>
+        <div class="table-cell center-status">Статус</div>
+        <div class="table-cell hidden-comp"></div>
+      </div>
+      <!--data:options--><!--data:options-->
+    </div>
+  </div>
+
+  <div id="photo-block" class="order-photo-section">
+    <div class="order-photo-text">
+      <h2>Заказать фотосъёмку</h2>
+      <p>Самый очевидный способ <span class="highlight">продвижения страницы</span>.</p>
+      <a href="/pro-photo"><button class="order-photo-btn">Подробнее</button></a>
+    </div>
+    <div class="order-photo-images">
+      <img src="../assets/img/cabinet/ellipse1.png" alt="Image 1" class="circle-image">
+      <img src="../assets/img/cabinet/ellipse2.png" alt="Image 2" class="circle-image">
+      <img src="../assets/img/cabinet/ellipse3.png" alt="Image 3" class="circle-image">
+    </div>
+  </div>
+  
+
+  <div id="faq-block" class="faq-section">
+  <h2>Ответы на частые вопросы</h2>
+  <div class="faq-item">
+    <button class="faq-question"><div>Как проходит съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"Как проходит съёмка?" здесь.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-question"><div>Как заказать съёмку?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"Как заказать съёмку?" здесь.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-question"><div>Нужно ли специально готовиться к съёмке?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"Нужно ли специально готовиться к съёмке?" здесь.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-question"><div>Не нашли нужный вопрос или требуется помощь в решении проблемы?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"Не нашли нужный вопрос или требуется помощь в решении проблемы?" здесь.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-question"><div>Если у меня это первая съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"Если у меня это первая съёмка?" здесь.</p>
+    </div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-question"><div>В чём отличие профессиональной съёмки от любительской?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+    <div class="faq-answer">
+      <p>"В чём отличие профессиональной съёмки от любительской?" здесь.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+<div class="popup tariff-popup" id="tariff-popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+      <form method="POST" id="tariff-popup-form">
+        <div class="name">
+          Подключение тарифа
+        </div>
+        <div class="form-tariff">
+          <p class="text-only-tariff">
+            <!--data:connected_tariff--><!--data:connected_tariff-->
+            <span class="popup-connected-tariff-bold">Тариф <span id="popup-tariff-name"></span></span> <span class="right-side" id="popup-tariff-price"></span><br>
+            <hr>
+            <p class="text-only-tariff-p"><span class="popup-connected-tariff-bold">Период <span class="right-side" id="popup-tariff-period"></span></span></p>
+            <span class="right-side thin" id="popup-tariff-duration"></span><br>
+           
+            <div class="switch-container right-side">
+              <span class="one-month thin">На месяц</span>
+              <label class="switch">
+                  <input type="checkbox" id="duration-switch-popup">
+                  <span class="slider round"></span>
+              </label>
+              <span class="three-month thin">На 3 месяца</span>
+            </div>
+          </div>
+          </p> 
+          <input type="hidden" name="specialist_id" id="popup-specialist-id">
+          <input type="hidden" name="tariff_id" id="popup-tariff-id">
+          <input type="hidden" name="duration" id="popup-duration" value="1">
+          <div class="for-pay"><span class="popup-connected-tariff-bold">К оплате: </span><span id="popup-tariff-total"></span></div>
+          <div class="button">
+            <button type="submit" class="confirm-btn-tariff">Подключить за <span id="popup-tariff-total-button"></span></button>
+            <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="popup option-popup" id="option-popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <form method="POST" id="option-popup-form">
+          <div class="name">
+            Подключение опции
+          </div>
+          <div class="form-option">
+            <p class="text-only-option">
+              <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price"></span><br>
+              <hr>
+              Период <span class="right-side" id="popup-option-period"></span><br>
+              <span class="right-side" id="popup-option-duration"></span><br>
+            </p> 
+            <input type="hidden" name="specialist_id" id="popup-specialist-option-id">
+            <input type="hidden" name="option_id" id="popup-option-id">
+            <input type="hidden" name="duration" id="popup-duration" value="1 month">
+            <div class="for-pay">К оплате: <span id="popup-option-total"></span></div>
+            <div class="button">
+              <button type="submit" class="confirm-btn-option">Подключить за <span id="popup-option-total-button"></span></button>
+              <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+ <!--data:banner-popup--><!--data:banner-popup-->
+ <!--data:banner-popup2--><!--data:banner-popup2-->
+
+ <!--data:journal-popup--><!--data:journal-popup-->
+ <!--data:journal-popup2--><!--data:journal-popup2-->
+
+ <!--data:promo-popup--><!--data:promo-popup-->
+
+ <div class="popup promo-popup" id="promo-popup-2">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <div class="name">Промо-размещение</div>
+        <div class="popup-content">
+          <form method="POST" id="promo-confirm-form">
+            <div id="second-popup-content">
+
+            </div>
+            <div class="total-price">
+              К оплате: <span id="total-price2"></span>
+            </div>
+            <div class="button">
+              <button type="button" class="add-more-promo">Добавить ещё размещение</button>
+              <button type="submit" class="confirm-promo"><span id="confirm-price"></span></button>
+              <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+ <div class="popup successful-popup" id="successful-popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body popup-body-succes">
+        <form method="POST" id="successful-popup-form">
+          <div class="form-successful">
+            <div class="text">
+            <div class="bold">
+            </div>
+            <div class="middle-text">
+            </div>
+          </div>
+            <div class="button">
+              <a href="/cabinet/page_promo" type="submit" class="confirm-btn-option connect-button popup-link">Перейти в раздел <span id="popup-successful-total-button"></span></a>
+              <p>Чек по операции придет на электронную почту</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+
+<script>
+
+  $(document).ready(function(){
+    console.log($.ui);
+    flatpickr('#date-select', {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru', 
+    weekNumbers: true, 
+  });
+
+  flatpickr('#date-select-journal', {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru', 
+    weekNumbers: true, 
+  });
+
+  flatpickr('#promo-date-select', {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru', 
+    weekNumbers: true, 
+  });
+  
+    $('a[href^="#"]').on('click', function(event) {
+        var target = $(this.getAttribute('href'));
+        if( target.length ) {
+            event.preventDefault();
+            $('html, body').stop().animate({
+                scrollTop: target.offset().top
+            }, 1000);
+        }
+    });
+});
+
+  const swiper = new Swiper('.swiper', {
+    slidesPerView: 1,
+    centeredSlides: true,
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+  });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const buttons = document.querySelectorAll('.promo-button-mob');
+  const allSections = document.querySelectorAll('.obzor-mobile, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
+
+  function showSections(sectionSelectors) {
+    allSections.forEach(section => section.classList.add('hidden-comp'));
+    sectionSelectors.forEach(selector => {
+      const sections = document.querySelectorAll(selector);
+      sections.forEach(section => section.classList.remove('hidden-comp'));
+    });
+  }
+
+  buttons.forEach(button => {
+    button.addEventListener('click', function() {
+      buttons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      const target = button.getAttribute('data-target');
+      let sectionsToShow = [];
+
+      if (target === '#obzor-href') {
+        sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block'];
+      } else if (target === '#tariff-href') {
+        sectionsToShow = ['#tariff-href'];
+      } else if (target === '.promo-section') {
+        sectionsToShow = ['.promo-section'];
+      } else if (target === '#option-href') {
+        sectionsToShow = ['#option-href'];
+      }
+
+      showSections(sectionsToShow);
+    });
+  });
+
+  showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block']);
+
+  if (window.innerWidth <= 768) {
+    const swiper = new Swiper('.swiper-container', {
+      slidesPerView: 1.1,
+      spaceBetween: 5, 
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+    });
+  }
+});
+
+window.addEventListener('DOMContentLoaded', function() {
+    const scrollTarget = localStorage.getItem('scrollTarget');  // Получаем цель скролла
+
+    if (scrollTarget) {
+        const targetElement = document.querySelector(scrollTarget);
+        if (targetElement) {
+            // Выполняем плавный скролл к элементу
+            window.scrollTo({
+                top: targetElement.offsetTop,
+                behavior: 'smooth'
+            });
+        }
+        localStorage.removeItem('scrollTarget');  // Очищаем localStorage после использования
+    }
+});
+
+</script>

@@ -20,8 +20,55 @@ $notaries = get_specialists_by_classification([4, 8], 8);
 $data['index_notaries'] = block($notaries);
 
 // Обрабатываем список блогов
-$articles = get_main_blog_articles(0, 6);
-$data['articles'] = block_articles($articles);
+/* $articles = get_main_blog_articles(0, 6);
+$data['articles'] = block_articles($articles); */
+
+//Список новостей
+$news_titles = fillNewsList();
+$data['news_list'] = '';
+if (is_array($news_titles)) {
+    $data['news_list'] .= '<div class="list">
+    <div class="name">
+        Лента новостей
+    </div>';
+    foreach ($news_titles as $title_array) {
+        $data['news_list'] .= '<a href="/journal/' . $title_array['alias'] . '" class="link">' . $title_array['title'] . '</a>';
+    }
+    $data['news_list'] .= '<a href="/journal/news" class="bottom-link">Смотреть все новости</a>
+    </div>';
+}
+
+$data['posts'] = '';
+$posts = get_actual_posts_main();
+foreach ($posts as $post) {
+    $post_alias = '/journal/'.$post['alias'];
+    $data['posts'] .= '<div class="item2">
+    <div class="flex post-data">
+        <a href="/journal/'.$post['post_type'].'" class="cat_'.$post['post_type'].'"><span>'.$post['service_title'].'</span></a>
+        <div class="date">'.date('d.m.Y', strtotime($post['date'])).'</div>
+    </div>
+    <a href="'.$post_alias.'" class="name">'.$post['title'].'</a>';
+    if ($post['photo'] != '' && !is_null($post['photo'])) {
+    $data['posts'] .= '<a href="'.$post_alias.'" class="image" style="background-image: url(/uploads/articles/'.$post['photo'].');">
+    </a>';
+    }
+    $data['posts'] .= '<a href="'.$post_alias.'">'.cut_text($post['content'], 300).'</a>';
+    $article_tags = get_article_tags($post['id']);
+    if ($post['post_type'] != 'blogs' && $article_tags) {
+        $data['posts'] .= '<div class="tags">';
+        foreach ($article_tags as $tag) {
+            $data['posts'] .= '<a href="/journal/'.$tag['alias'].'">#'.$tag['title'].'</a>';
+        }
+        $data['posts'] .= '</div>';
+    }
+    $data['posts'] .= '</div>';
+}
+
+$data['actual_articles_list'] = '';
+$actual_articles = get_actual_posts('articles', 0, 0, 4);
+foreach ($actual_articles as $article) {
+    $data['actual_articles_list'] .= '<a href="/journal/'.$article['alias'].'" class="item"><div class="item-img_wrapper" style="background-image:url(/uploads/articles/'.$article['photo'].');"></div><div><span>'.$article['title'].'</span></div></a>';
+}
 
 $HTML = html_explode($data, $HTML);
 

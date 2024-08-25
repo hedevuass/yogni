@@ -3,7 +3,6 @@ include $_SERVER['DOCUMENT_ROOT'] . '/heic_converter/src/HeicToJpg.php';
 use Maestroerror\HeicToJpg;
 
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
-include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
  
 // Разрешенные расширения файлов.
@@ -39,13 +38,13 @@ if (!isset($_FILES['photo_file'])) {
 			$json['error'] = 'Загрузите файл в форме jpeg, jpg, png или heic.';
 		} elseif (!empty($deny) && in_array(strtolower($ext), $deny)) {
 			$json['error'] = 'Загрузите файл в форме jpeg, jpg, png или heic.';
-		} elseif (intval($file['size']) > 1.1 * 1024 * 1024) {
-			$json['error'] = 'Файл слишком большой. Выберите файл размером менее 1мб.';
+		} elseif (intval($file['size']) > 3 * 1024 * 1024) {
+			$json['error'] = 'Файл слишком большой. Выберите файл размером менее 3мб.';
         } elseif (intval(getimagesize($file['tmp_name'])[0]) < 250 || intval(getimagesize($file['tmp_name'])[1]) < 250) {
 			$json['error'] = 'Ширина или высота изображения слишком маленькое.';
 		} else {
 			//создаем имя файла по формуле "avatar" + id + '_' + дата + расширение файла
-			$name = 'avatar' . $_SESSION['user']['id'] . '_'. date('d-m-y_H-i-s') .'.' . $ext;
+			$name = 'avatar' . $_SESSION['user']['id'] . '_'. date('d-m-y_H-i-s') . '.' . $ext;
 			if (file_exists($path . $name)){
 				// удаляем старое фото с сервера
 				unlink($path . $name);
@@ -71,5 +70,5 @@ if (!isset($_FILES['photo_file'])) {
 }
  
 header('Content-Type: application/json');
-responseJson($json);
+echo json_encode($json);
 die();

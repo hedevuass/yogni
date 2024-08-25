@@ -14,7 +14,12 @@ $(document).ready(function() {
         $('#journal_link').before(newLink);
         $('#journal_link').hide();
     }
+    var queryString = window.location.search;
+    if (queryString.indexOf('show_login') !== -1) {
+        $('.popup.login').fadeIn();
+    }
 });
+
 // City Autocomplete
 $("#select-city").on("keydown", function (event) {
     if (event.keyCode === $.ui.keyCode.TAB &&
@@ -274,20 +279,56 @@ $('#registration-popup').on('click', 'button', function () {
 
             if (json['fatal_error']) {
                 $('.popup.error activate').html(json['fatal_error'])
-                $('.popup.reg').fadeOut();
                 $('.popup.error').fadeIn();
             }
 
             if (json['success']) {
                 $('.popup.reg').fadeOut();
                 $('.popup.reg2').fadeIn();
+                // var nameValue = $('input[name="name"]').val();
+                // var greeting = nameValue + ", ваша страница подтверждена!";
+                // $('#new_name').text(greeting);
+            }
+        }
+    });
+    // $.ajax({
+    //     type: "POST",
+    //     url: "/actions/mail/registration.php",
+    //     dataType: 'json',
+    //     data: { email: $(`${popup} input[name=email]`).val() },
+    //     success: function (json) {
+    //         if (json['success']) {
+    //             $('#registration-popup').fadeOut();
+    //             $('.reg2').fadeIn();
+    //         }
+    //     }
+    // });
+})
+$('#login-popup-resend').on('submit', function (e) {
+    e.preventDefault();
+
+    $.ajax({
+        type: "POST",
+        url: "/actions/account/registration.php",
+        dataType: 'json',
+        data: {email: $(`#login-popup-resend input[name=email]`).val(), type: 'resend-confirmation'},
+        success: function (json) {
+
+            if (json['fatal_error']) {
+                $('.popup.error .activate').html(json['fatal_error'])
+                $('.popup.login-not-confirmed').fadeOut();
+                $('.popup.error').fadeIn();
+            }
+
+            if (json['success']) {
+                $('.popup.login-not-confirmed').fadeOut();
+                $('.popup.login').fadeIn();
             }
         }
     })
 })
-
 // Переотправить письмо с подтверждением
-$('#registration-popup').on('click', '.resend-confirmation', function () {
+$('#registration-popup').on('click', '.resend-confirmation', function (e) {
     $('input').removeClass('error')
     $('.invalid-feedback').html('')
 
@@ -301,11 +342,11 @@ $('#registration-popup').on('click', '.resend-confirmation', function () {
         type: "POST",
         url: "/actions/account/registration.php",
         dataType: 'json',
-        data: $(`${popup} input[name=email]`),
+        data: {email: $(`${popup} input[name=email]`).val(), type: 'resend-confirmation'},
         success: function (json) {
 
             if (json['fatal_error']) {
-                $('.popup.error activate').html(json['fatal_error'])
+                $('.popup.error .activate').html(json['fatal_error'])
                 $('.popup.reg').fadeOut();
                 $('.popup.error').fadeIn();
             }
@@ -332,6 +373,7 @@ $('#login-popup').on('click', 'button', function (e) {
         data: $('#login-popup input[type=text], #login-popup input[type=password]'),
         success: function (json) {
             if (json['error']) {
+                
                 if (json['error']['auth']) {
                     let button = $('#login-popup button').html()
 
@@ -339,11 +381,17 @@ $('#login-popup').on('click', 'button', function (e) {
 
                     setTimeout(function () {
                         $('#login-popup button').html(button)
-                    }, 1500);
+                    }, 2000);
                 }
 
                 if (!json['error']['auth']) {
                     $.each(json['error'], function (key, value) {
+                        if (key == 'email_resend') {
+                            let email = $('#login-popup input[name="email"]').val();
+                            $('#login-popup-resend input[name="email"]').val(email);
+                            $('.popup.login').fadeOut();
+                            $('.popup.login-not-confirmed').fadeIn();
+                        }
                         $(`#login-popup input[name=${key}]`).addClass('error');
                         $(`#login-popup input[name=${key}]`).siblings('.invalid-feedback').html(value)
                     });
@@ -375,32 +423,30 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 $('.send-confirmation').click(function(e) {
     e.preventDefault();
-
     var email = $('input[name="email"]').val();
     var user_id = $('input[name="user_id"]').val();
 
     // Очищаем предыдущие сообщения об ошибках
-    $('input[name="email"]').removeClass('error');
-    $('.invalid-feedback').html('');
+    $('.confirmation__popup input[name="email"]').removeClass('error');
+    $('.confirmation__popup .invalid-feedback').html('');
 
     $.ajax({
         type: 'POST',
-        url: '/actions/mail/rights_сonfirmation.php',
+        url: '/actions/mail/rights_confirmation.php',
         dataType: 'json',
         data: { email: email, user_id: user_id },
         success: function(json) {
             if (json['error']) {
-                $('input[name="email"]').addClass('error');
-                $('.invalid-feedback').html(json['error']);
+                $('.confirmation__popup input[name="email"]').addClass('error');
+                $('.confirmation__popup .invalid-feedback').html(json['error']);
             } else if (json['success']) {
+                $(".confirmation__popup").fadeOut();
                 $(".confirmation__popup2").fadeIn();
                 $("body").addClass("hid");
             }
         },
-        error: function(xhr, status, error) {
-            $(".confirmation__popup2").fadeIn();
-            $(".confirmation__popup").fadeOut();
-            $("body").addClass("hid");
+        error: function() {
+            $('.confirmation__popup .invalid-feedback').html('Что-то пошло не так. Повторите попытку позже.');
         }
     });
 });
@@ -421,17 +467,19 @@ $('#recovery-password-popup').on('click', 'button', function (e) {
                 $.each(json['error'], function (key, value) {
                     $(`#recovery-password-popup input[name=${key}]`).addClass('error');
                     $(`#recovery-password-popup input[name=${key}]`).siblings('.invalid-feedback').html(value)
+                    $('.popup.pass').fadeOut();
                 });
             }
             if (json['success']) {
                 $('#recovery-password-popup .form2').html(`<div class="field">${json['success']}</div>`);
-                $('.popup.pass .reg .bottom-links').remove();
                 $(".recovery-password__popup2").fadeIn();
+                $('.popup.pass').fadeOut();
             }
         },
         error: function(xhr, status, error) {
             $(".recovery-password__popup2").fadeIn();
             $("#recovery-password-popup").fadeOut();
+            $('.popup.pass').fadeOut();
         }
     })
 })
@@ -462,57 +510,92 @@ $('#recovery-password-popup-2').on('click', 'button', function (e) {
     })
 })
 
-$('#rights-confirmation-popup-2').on('click', 'button', function (e) {
-    e.preventDefault()
+document.addEventListener("DOMContentLoaded", function() {
+    $('.recovery2').fadeIn();
+});
+$('#reset_password').on('click', function (e) {
+    e.preventDefault();
+    $('.recovery2').fadeOut();
+});
+$('.recovery-button').on('click', function(e) {
+    e.preventDefault();
 
-    $('input').removeClass('error')
-    $('.invalid-feedback').html('')
+    var currentUrl = window.location.href;
 
-    $.ajax({
-        type: "POST",
-        url: "/actions/account/rights_confirmation.php",
-        dataType: 'json',
-        data: $('#rights-confirmation-popup-2 input[type=password], #rights-confirmation-popup-2 input[type=hidden]'),
-        success: function (json) {
-            if (json['error']) {
-                $.each(json['error'], function (key, value) {
-                    $(`#rights-confirmation-popup-2 input[name=${key}]`).addClass('error');
-                    $(`#rights-confirmation-popup-2 input[name=${key}]`).siblings('.invalid-feedback').html(value)
-                });
+    var urlParts = currentUrl.split('?');
+    var path = urlParts[0];
+    var queryString = urlParts[1];
 
-                if (json['error']['recovery']) $('.contetn').html(json['error']['recovery'])
-            }
+    var newPath = '/cabinet/login-i-parol';
 
-            if (json['success']) $('.content').html(json['success'])
-        }
-    })
-})
+    var newUrl = newPath;
+    if (queryString) {
+        newUrl += '?' + queryString;
+    }
+
+    window.location.href = newUrl;  
+});
+
+$('.confirmation-button').on('click', function(e) {
+    e.preventDefault();
+
+    var currentUrl = window.location.href;
+
+    var urlParts = currentUrl.split('?');
+    var path = urlParts[0];
+    var queryString = urlParts[1];
+
+    var newPath = '/cabinet/login-i-parol';
+
+    var newUrl = newPath;
+    if (queryString) {
+        newUrl += '?' + queryString;
+    }
+
+    window.location.href = newUrl;  
+});
+
 
 // Feedback
-$('#feedback-popup').on('click', 'button', function (e) {
-    e.preventDefault()
-
-    $('input, textarea').removeClass('error')
-    $('.invalid-feedback').html('')
+$('#support-popup, #support-popup-header').on('click', 'button[type="submit"]', function (e) {
+	e.preventDefault();
+	let form = $(this).closest('form').attr('id');
+	$(`#${form} textarea[name="content"]`).removeClass('error');
+	$(`#${form} .invalid-feedback`).remove();
+	if ($(`#${form} textarea[name="content"]`).val() == '') {
+		$(`#${form} textarea[name="content"]`).addClass('error');
+		$(`#${form} textarea[name="content"]`).after(`<div class="invalid-feedback">Введите сообщение.</div>`);
+		return;
+	}
+    let message_type = $(`#${form} .support-type`).text();
+    let message = $(`#${form} textarea[name="content"]`).val();
+    let email = $(`#${form} input[name="user_email"]`).val();
+    let user_name = $(`#${form} input[name="user_name"]`).val();
 
     $.ajax({
         type: "POST",
         url: "/actions/mail/feedback.php",
         dataType: 'json',
-        data: $('#feedback-popup input[type=text], #feedback-popup textarea'),
+        data: {message_type: message_type, message: message, email: email, user_name: user_name},
         success: function (json) {
-            if (json['error']) {
-                if (json['error']['contact']) {
-                    $(`#feedback-popup input[name=contact]`).addClass('error');
-                    $(`#feedback-popup input[name=contact]`).siblings('.invalid-feedback').html(json['error']['contact'])
-                }
-                if (json['error']['message']) {
-                    $(`#feedback-popup textarea[name=message]`).addClass('error');
-                    $(`#feedback-popup textarea[name=message]`).siblings('.invalid-feedback').html(json['error']['message'])
-                }
+            if (json['fatal_error']) {
+                let error_message = json['fatal_error'];
+                $(`#${form} textarea`).after(`<div class="invalid-feedback">` + error_message +`</div>`);
             }
 
-            if (json['success']) $('#feedback-popup .form1').html(`<div class="field">${json['success']}</div>`)
+            if (json['success']) {
+                $('.popup.support-write, .popup.support-write-header').fadeOut(200);
+				
+				if (form == 'support-popup-header') {
+					setTimeout(function() {
+						$('.popup.support-idea-end').fadeIn(200);
+					}, 200)
+				} else {
+					setTimeout(function() {
+						$('.popup.support-end').fadeIn(200);
+					}, 200)
+				}
+            }
         }
     })
 })

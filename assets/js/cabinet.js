@@ -554,6 +554,7 @@ $(function () {
 	$('#break_submit').on('click', function (e) {
 		e.preventDefault();
 		$('.break__popup').fadeOut(200);
+		$('.hid').css('overflow', 'auto');
 		$('#shedule_submit').prop('disabled', false).text('Сохранить информацию');
 	})
 	if (window.innerWidth < 575) {
@@ -589,52 +590,16 @@ $('.support-block ul .open-popup').on('click', function (e) {
 	$('.support-write button[type="submit"]').removeClass('open-idea');
 	// if(type == 3) {
 	if($(this).hasClass('idea')) {
-		$('.support-write button[type="submit"]').addClass('open-idea');
+		$('.popup.support-write-header').fadeIn(200);
+	} else {
+		$('.popup.support-write').fadeIn(200);
 	}
-	$('.support-write').fadeIn(200);
 	$('body').addClass('hid');
 })
 
 $('.mob-menu__nav .idea-suggestion').on('click', function (e) {
-	$('.support-write-header').fadeIn(200);
+	$('.popup.support-write-header').fadeIn(200);
 	$('body').addClass('hid');
-})
-
-$('#support-popup, #support-popup-header').on('click', 'button[type="submit"]', function (e) {
-	e.preventDefault();
-	let form = $(this).closest('form').attr('id');
-	$(`#${form} textarea`).removeClass('error');
-	$(`#${form} .invalid-feedback`).remove();
-	if ($(`#${form} textarea`).val() == '') {
-		$(`#${form} textarea`).addClass('error');
-		$(`#${form} textarea`).after(`<div class="invalid-feedback">Заполните данное поле.</div>`);
-		return;
-	}
-	//сохранение обращения/предложения (в админке)
-	// $.ajax({
-	// 	type: "POST",
-	// 	url: "/actions/cabinet/save_support_note.php",
-	// 	dataType: 'json',
-	// 	data: $(`#support-popup textarea, #support-popup input[type=hidden]`),
-	// 	success: function (json) {
-	// 		if (json['success']) {
-				$('.support-write, .support-write-header').fadeOut(200);
-				
-				if ($(this).hasClass('open-idea')) {
-					setTimeout(function() {
-						$('.support-idea-end').fadeIn(200);
-					}, 200)
-				} else {
-					setTimeout(function() {
-						$('.support-end').fadeIn(200);
-					}, 200)
-				}
-				
-// 			} else {
-// 				$('#support-popup button[type="submit"]').after(`<div class="invalid-feedback">Что-то пошло не так. Повторите попытку позже.</div>`)
-// 			}
-// 		}
-// 	})
 })
 
 $('#buy-photo-popup').on('click', 'button[type="submit"]', function (e) {
@@ -670,13 +635,18 @@ $('#buy-photo-popup').on('click', 'button[type="submit"]', function (e) {
 // 		}
 // 	})
 })
+$('#photo_file').change(function() {
+	var fileName = $(this).val().split('\\').pop(); // Получаем имя файла
+	$('.photo__rules-block').text('Выбран файл: ' + fileName); 
+});
 
-$('#photo_file').on('change', function (e) {
+$('#main-info').on('click', 'button[type="submit"]', function (e) {
 	if (window.FormData === undefined) {
 		alert('В вашем браузере FormData не поддерживается')
 	} else {
 		e.preventDefault()
 
+		$('.photo__rules-block').text('');
 		$('.photo__item .invalid-feedback, #change-photo-mobile .popup__body .photo__wrapper .invalid-feedback').remove();
 		$('.photo__item .valid-feedback, #change-photo-mobile .popup__body .photo__wrapper .valid-feedback').remove();
 
@@ -696,6 +666,7 @@ $('#photo_file').on('change', function (e) {
 				}
 
 				if (json['success']) {
+					$('.photo__rules-block').remove();
 					$(".photo__item, #change-photo-mobile .popup__body .photo__wrapper").append(`<div class="valid-feedback">Фото успешно сохранено.</div>`);
 					$(".cabinet-page .cabinet-content .main-info-block .block1 .item .photo__btn").html('<i></i>Изменить').addClass('refresh');
 					$("#change-photo-mobile .popup__body .photo__btn").html('<img src="/assets/img/cabinet/refresh-file-mob.svg">Изменить');
@@ -750,7 +721,7 @@ $('#main-info').on('click', 'button[type="submit"]', function (e) {
 	})
 })
 
-$('#main-info').on('change keyup input', 'input[type=text], input[type=hidden], textarea, input[type=radio]:checked',function (e) {
+$('#main-info').on('change keyup input', 'input[type=text], input[type=hidden], textarea, input[type=radio]:checked, input[type=file]',function (e) {
 	$('#main-info button[type="submit"]').prop('disabled', false).text('Сохранить информацию');
 })
 
@@ -958,7 +929,8 @@ function digits_int(target){
 }
 
 $('#cabinet-price').on('click', '.delete', function() {
-	$(this).closest('tr').remove()
+	$(this).closest('tr').next('.invalid-feedback').remove();
+	$(this).closest('tr').remove();
 	$('#cabinet-price .bottom-button').prop('disabled', false).text("Сохранить информацию");
 })
 
@@ -1163,11 +1135,13 @@ $('#cabinet-docs table').on('change', 'input[type=file]', function(e) {
 
 	if(!file || !file.type.match('image')) return
 
+	let filePath = URL.createObjectURL(file);
+
 	$(this).closest('td').append(`
 		<div class="doc">
-			<a>${file.name}</a>
+			<a href="${filePath}" target="_blank">${file.name}</a>
 		</div>
-	`)
+	`);
 
 	$(this).siblings('a').remove()
 })
@@ -1192,7 +1166,8 @@ $('#cabinet-docs').on('click', '.add', function() {
 })
 
 $('#cabinet-docs').on('click', '.delete', function() {
-	$(this).closest('tr').remove()
+	$(this).closest('tr').next('.invalid-feedback').remove();
+	$(this).closest('tr').remove();
 	$('#cabinet-docs .refresh button').prop('disabled', false).text("Сохранить информацию");
 })
 
@@ -1248,13 +1223,15 @@ var files_count = 0;
 $('#cabinet-employee table').on('change', 'input[type=file]', function(e) {
 	let key = $(this).closest('tr').children('td:first-child').children('input[type="text"]').attr('data-key');
 
-	let file = e.target.files[0]
+	let file = e.target.files[0];
 
 	if(!file || !file.type.match('image')) return
 
+	let filePath = URL.createObjectURL(file);
+
 	$(this).closest('td').append(`
 		<div class="doc">
-			<a>${file.name}</a>
+			<a href="${filePath}" target="_blank">${file.name}</a>
 		</div>
 	`);
 	files_count++;
@@ -1303,22 +1280,24 @@ $('#cabinet-employee').on('click', '.mob-add', function(e) {
 })
 
 $('#cabinet-employee').on('click', '.employee-info-mobile, .edit-employee-mobile, .doc', function(e) {
-	$('input').removeClass('error')
-	$('.invalid-feedback').remove()
-	let key = $(this).closest('tr').children('td:first-child').children('input[type=text]').attr('data-key');
-	let name = $(this).closest('tr').children('td:first-child').children('input[type=text]').val();
-	let lastname = $(this).closest('tr').children('td:nth-child(2)').children('input[type=text]').val();
-	let post = $(this).closest('tr').children('td:nth-child(3)').children('input[type=text]').val();
-	let image_url = $(this).closest('tr').children('td:nth-child(4)').children('.doc').children('a').attr('href');
-	$('#cabinet-employee-popup .popup-employee-photo').removeClass('empty').css('background-image', 'url('+image_url+')');
-	$('#cabinet-employee-popup .employee-photo-btn').html('<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить');
-	$('#popup-employee-name').val(name);
-	$('#popup-employee-lastname').val(lastname);
-	$('#popup-employee-post').val(post);
-	$('#popup-emp-key').val(key);
-	$('#popup-emp-file').val('1');
-	$('#cabinet-employee-popup').fadeIn(200);
-	$('body').addClass('hid');
+	if (window.innerWidth < 575) {
+		$('input').removeClass('error')
+		$('.invalid-feedback').remove()
+		let key = $(this).closest('tr').children('td:first-child').children('input[type=text]').attr('data-key');
+		let name = $(this).closest('tr').children('td:first-child').children('input[type=text]').val();
+		let lastname = $(this).closest('tr').children('td:nth-child(2)').children('input[type=text]').val();
+		let post = $(this).closest('tr').children('td:nth-child(3)').children('input[type=text]').val();
+		let image_url = $(this).closest('tr').children('td:nth-child(4)').children('.doc').children('a').attr('href');
+		$('#cabinet-employee-popup .popup-employee-photo').removeClass('empty').css('background-image', 'url('+image_url+')');
+		$('#cabinet-employee-popup .employee-photo-btn').html('<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить');
+		$('#popup-employee-name').val(name);
+		$('#popup-employee-lastname').val(lastname);
+		$('#popup-employee-post').val(post);
+		$('#popup-emp-key').val(key);
+		$('#popup-emp-file').val('1');
+		$('#cabinet-employee-popup').fadeIn(200);
+		$('body').addClass('hid');
+	}
 })
 
 $('#cabinet-employee-popup').on('click', '.employee-photo-btn', function(e) {
@@ -1418,7 +1397,8 @@ $('#cabinet-employee-popup').on('click', '.mob-employee-btn', function() {
 })
 
 $('#cabinet-employee').on('click', '.delete', function() {
-	$(this).closest('tr').remove()
+	$(this).closest('tr').next('.invalid-feedback').remove();
+	$(this).closest('tr').remove();
 	$('#cabinet-employee .refresh button').prop('disabled', false).text("Сохранить информацию");
 })
 
@@ -1467,6 +1447,7 @@ $('#cabinet-employee').on('click', 'button[type="submit"]', function(e) {
         contentType: false,
         processData: false,
         success: function (json) {
+			console.log(json);
             if (json['error']) {
 				$(this).text('Сохранить информацию')
 				if (json['error']['fatal_error']) {
@@ -1476,6 +1457,12 @@ $('#cabinet-employee').on('click', 'button[type="submit"]', function(e) {
 				$.each(json['error'], function (key, value) {
 					$(`${form} input[data-key=${key}]`).addClass('error')
 					$(`${form} input[data-key=${key}]`).closest('tr').after(`<div class="invalid-feedback">${value}</div>`)
+				});
+			}
+
+			if (json['img_info']) {
+				$.each(json['img_info'], function (key, value) {
+					$(`${form} tr td:nth-child(4) input[name=${key}] + .doc a`).attr('href', '/uploads/employee/' + value)
 				});
 			}
 
@@ -1577,8 +1564,16 @@ $('.pro-photo__questions').on('click', '.question', function() {
 });
 
 $('.articles__wrapper').on('click', '.article-menu-btn', function() {
-	$(this).children('.article-menu').fadeToggle(200);
-	$(this).toggleClass('opened');
+	let was_opened = false;
+	if ($(this).hasClass('opened')) {
+		was_opened = true;
+	}
+	$(".article-menu").fadeOut(200);
+	$( ".article-menu-btn" ).removeClass('opened');
+	if (!was_opened) {
+		$(this).children('.article-menu').fadeIn(200);
+		$(this).addClass('opened');
+	}
 });
 $('.articles__wrapper').on('click', '.more-articles', function() {
 	let start = $('.articles__wrapper input[name="start"]').val();
@@ -1629,7 +1624,8 @@ $('.delete-article').on('click', '#delete-article-btn', function() {
         processData: false,
         success: function (json) {
 			if (json['success']) {
-				location.reload();
+				$('.articles__block .article__item[data-article-id='+article_id+']').remove();
+				console.log($('.articles__block .article__item[data-article-id='+article_id+']'));
 			}
         }
     })
@@ -1688,45 +1684,102 @@ $('#buttons-scroll').on('click', 'button', function() {
 })
 
 $('#change-password').on('click', 'button[type="submit"]', function (e) {
-	e.preventDefault()
+    e.preventDefault();
 
-	$('.invalid-feedback').remove()
+	if (userId) {
+        $('#change-password').slideUp(200);
+        setTimeout(function() {
+            $('#new-password').slideDown(200);
+        }, 200);
+    }
 
-	if($('#password-input').val() == '')  {
-		$(`#password-input`).after(`<div class="invalid-feedback">Введите текущий пароль</div>`);
-		return;
-	}
+    $('.invalid-feedback').remove();
 
-	$.ajax({
-		type: "POST",
-		url: "/actions/cabinet/check_password.php",
-		dataType: 'json',
-		data: $(`input#password-input`),
-		success: function (json) {
-			if (json['error']) {
-				$(`#password-input`).after(`<div class="invalid-feedback">Пароль неверный</div>`)
-			}
+    // Получаем id из URL
+    var urlParams = new URLSearchParams(window.location.search);
+    var id = urlParams.get('user_id');
 
-			if (json['success']) {
-				$('#change-password').slideUp(200);
-				setTimeout(function () {
-					$('#new-password').slideDown(200);
-				}, 200);
-			}
-		}
-	})
+    if ($('#password-input').val() == '')  {
+        $(`#password-input`).after(`<div class="invalid-feedback">Введите текущий пароль</div>`);
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/actions/cabinet/check_password.php",
+        dataType: 'json',
+        // Добавляем id в данные запроса
+        data: { id: id, password: $('#password-input').val() },
+        success: function (json) {
+            if (json['error']) {
+                $(`#password-input`).after(`<div class="invalid-feedback">Пароль неверный</div>`)
+            }
+
+            if (json['success']) {
+                $('#change-password').slideUp(200);
+                setTimeout(function () {
+                    $('#new-password').slideDown(200);
+                }, 200);
+            }
+        }
+    });
+});
+
+//Подтверждение прав
+$(document).on('click', '#rights-confirmation-popup-2 .button-confirm', function (e) {
+    e.preventDefault()
+
+    $('input').removeClass('error')
+    $('.invalid-feedback').html('')
+
+    $.ajax({
+        type: "POST",
+        url: "/actions/account/rights_confirmation.php",
+        dataType: 'json',
+        data: $('#rights-confirmation-popup-2 input[type=password], #rights-confirmation-popup-2 input[type=hidden], #rights-confirmation-popup-2 input[name=email]'),
+        success: function (json) {
+            if (json['error']) {
+                $.each(json['error'], function (key, value) {
+                    $(`#rights-confirmation-popup-2 input[name=${key}]`).addClass('error');
+                    $(`#rights-confirmation-popup-2 input[name=${key}]`).siblings('.invalid-feedback').html(value)
+                });
+
+                if (json['error']['recovery']) $('.contetn').html(json['error']['recovery'])
+            }
+
+            if (json['success']) $('.content').html(json['success'])
+        }
+    })
 })
+
+$(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var userId = urlParams.get('user_id');
+    var hash = urlParams.get('hash');
+
+	if (userId) {
+        $('.security.security-block1').slideUp(0);
+    }
+
+    if (hash && userId) {
+        $('#change-password').slideUp(0);
+        setTimeout(function() {
+            $('#new-password').slideDown(200);
+        }, 200);
+    } 
+});
 
 $('#new-password').on('click', 'button[type="submit"]', function (e) {
 	e.preventDefault()
 
 	$('.invalid-feedback').remove()
-
+	var urlParams = new URLSearchParams(window.location.search);
+    var id = urlParams.get('id');
 	$.ajax({
 		type: "POST",
 		url: "/actions/cabinet/set_new_password.php",
 		dataType: 'json',
-		data: $(`input#new-password-input`),
+		data: {id: id, new_password: $('#new-password-input').val()},
 		success: function (json) {
 			if (json['error']) {
 				$(`#new-password-input`).after(`<div class="invalid-feedback">${json['error']}</div>`)
@@ -1757,13 +1810,577 @@ $('.forget-pass-link').click(function (e) {
         dataType: 'json',
         data: {email: email},
         success: function (json) {
+			console.log(json);
 			if(json['success']) {
             	$('.popup.recovery-pass').fadeIn(200);
 				$("body").addClass("hid");
 			}
 			if (json['error']){
 				$('.forget-pass-link').after(`<div class="invalid-feedback">${json['error']}</div>`);
+				$('.popup.recovery-pass').fadeIn(200);
+			} 
+			else {
+				$('.popup.recovery-pass').fadeIn(200);
 			}
         }
     })
 })
+
+$(document).ready(function() {
+	var isSyncing = false;
+	
+    $('.tariff-card .active-button').click(function() {
+        var tariffId = $(this).data('tariff-id');
+        var tariffName = $(this).data('tariff-name');
+        var tariffPrice = $(this).data('tariff-price');
+        var tariffPriceOld = $(this).data('tariff-old-price');
+        var specialistId = $(this).data('specialist-id');
+        
+        $('#popup-tariff-id').val(tariffId);
+        $('#popup-specialist-id').val(specialistId);
+        $('#popup-tariff-name').text(tariffName);
+        $('#popup-tariff-name').text(tariffName.toUpperCase());
+        $('#popup-tariff-price').text(tariffPriceOld + ' ₽ в мес.');
+        $('#popup-tariff-total').text(tariffPriceOld + ' руб.');
+        $('#popup-tariff-total-button').html('&nbsp;' + tariffPriceOld + ' руб.');
+        
+        updateDates(1);
+        
+        $('#tariff-popup').fadeIn();
+		
+    });
+
+    $('#tariff-popup-form').submit(function(event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: 'POST',
+            url: '', 
+            data: form.serialize(),
+            success: function(response) {
+                $('#successful-popup .bold').html('Отлично!<br>Вы подключили тариф.');
+                $('#successful-popup .middle-text').text('Информация появится в разделе "Продвижение" в течении 60 минут.');
+                $('#successful-popup').fadeIn();
+            },
+            error: function(response) {
+                alert('Произошла ошибка. Попробуйте снова.');
+            }
+        });
+    });
+
+	var isChecked = $('#duration-switch').is(':checked') || $('#duration-switch-popup').is(':checked');
+	$('#popup-duration').val(isChecked ? 3 : 1);
+
+	$('.one-month').removeClass('thin');
+
+	function togglePrice(tariffPrice, tariffPriceOld) {
+        var isChecked = $('#duration-switch').is(':checked') || $('#duration-switch-popup').is(':checked');
+        
+        if (isChecked) {
+            $('#popup-tariff-price').text(tariffPrice + ' ₽ в мес.');
+            $('#popup-tariff-total').text(tariffPrice + ' руб.');
+            $('#popup-tariff-total-button').html('&nbsp;' + tariffPrice + ' руб.');
+            $('.new-price').css('display', 'inline-block');
+            $('.price-old').addClass('old-price');
+			$('.three-month').removeClass('thin');
+			$('.one-month').addClass('thin');
+        } else {
+            $('#popup-tariff-price').text(tariffPriceOld + ' ₽ в мес.');
+            $('#popup-tariff-total').text(tariffPriceOld + ' руб.');
+            $('#popup-tariff-total-button').html('&nbsp;' + tariffPriceOld + ' руб.');
+            $('.new-price').css('display', 'none');
+            $('.price-old').removeClass('old-price');
+			$('.one-month').removeClass('thin');
+			$('.three-month').addClass('thin');
+        }
+    }
+
+	$('#duration-switch').change(function() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        var isChecked = $(this).is(':checked');
+        $('#duration-switch-popup').prop('checked', isChecked);
+        updateDates(isChecked ? 3 : 1);
+
+        var tariffPrice = $('.active-button').data('tariff-price');
+        var tariffPriceOld = $('.active-button').data('tariff-old-price');
+        togglePrice(tariffPrice, tariffPriceOld);
+
+        isSyncing = false;
+    });
+
+    $('#duration-switch-popup').change(function() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        var isChecked = $(this).is(':checked');
+        $('#duration-switch').prop('checked', isChecked);
+        updateDates(isChecked ? 3 : 1);
+
+        var tariffPrice = $('.active-button').data('tariff-price');
+        var tariffPriceOld = $('.active-button').data('tariff-old-price');
+        togglePrice(tariffPrice, tariffPriceOld);
+
+        isSyncing = false;
+    });
+
+    togglePrice();
+
+    function updateDates(months) {
+        var startDate = new Date();
+        var endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + months);
+
+        $('#popup-duration').val(months + ' month' + (months > 1 ? 's' : ''));
+        $('#popup-tariff-period').text(months + ' месяц' + (months > 1 ? 'а' : ''));
+        $('#popup-tariff-duration').text("с " + startDate.toLocaleDateString('ru-RU') + " по " + endDate.toLocaleDateString('ru-RU'));
+    }
+});
+
+$(document).ready(function() {
+	$('.table-row').on('click', '.connect-button, .switch input', function(event) {
+
+		if ($(event.target).is('input[type="checkbox"]')) {
+            event.preventDefault();
+        }
+
+        var $label = $(this).closest('label');
+        var optionId = $label.data('option-id');
+        var optionName = $(this).closest('.table-row').find('.table-cell:first-child').text();
+        var optionPriceText = $(this).closest('.table-row').find('.connect-button').text();
+        var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
+        var specialistId = $label.data('specialist-id');
+
+        $('#popup-option-id').val(optionId);
+        $('#popup-specialist-option-id').val(specialistId);
+        $('#popup-option-name').text(optionName);
+        $('#popup-option-price').text(optionPrice + ' ₽');
+        $('#popup-option-total').text(optionPrice + ' ₽');
+        $('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
+        
+        updatePopupDates(1);
+        $('#option-popup').fadeIn();
+    });
+
+    function updatePopupDates(months) {
+        var startDate = new Date();
+        var endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + months);
+
+        $('#popup-duration').val(months + ' month' + (months > 1 ? 's' : ''));
+        $('#popup-option-period').text(months + ' месяц' + (months > 1 ? 'а' : ''));
+        $('#popup-option-duration').text("с " + startDate.toLocaleDateString('ru-RU') + " по " + endDate.toLocaleDateString('ru-RU'));
+    }
+
+    $('#option-popup-form').submit(function(event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: 'POST',
+            url: '', 
+            data: form.serialize(),
+            success: function(response) {
+                $('#successful-popup .bold').html('Отлично!<br>Вы подключили опции.');
+				$('#successful-popup .middle-text').text('Информация появится в разделе “Продвижение” в течение 60 минут.');
+				$('#successful-popup').fadeIn();
+            },
+            error: function(response) {
+                console.log(response); 
+                alert('Произошла ошибка. Попробуйте снова.');
+            }
+        });
+    });
+});
+
+$(document).ready(function() {
+	// Открытие первого попапа и установка значений
+	$('.reklama-button').click(function() {
+        var bannerName = $(this).closest('.table-row').find('.table-cell:first-child').text();
+        var specialistId = $(this).data('specialist-id');
+
+        $('#popup-specialist-id').val(specialistId);
+        $('#popup-banner-name').text(bannerName);
+        
+        $('#banner-popup').fadeIn();
+    });
+
+    // Обработка клика по кнопке "Продолжить"
+    $('.reklama-continue-btn').click(function(event) {
+        event.preventDefault(); 
+
+        let isFormValid = true;
+
+        // Проверяем, что все поля заполнены, включая радиокнопки
+        $('#banner-popup-form input, #banner-popup-form .select-option input[type="radio"]').each(function() {
+            if ($(this).val() === '' || !$('input[name="banner_id"]:checked').length) {
+                isFormValid = false;
+                return false; 
+            }
+        });
+
+        if (isFormValid) {
+            var selectedDates = $('#date-select').val().split('—');
+            console.log('Selected Dates:', selectedDates);
+
+            if (selectedDates.length < 2) {
+                alert('Пожалуйста, выберите обе даты.');
+                return;
+            }
+
+            var startDate = moment(selectedDates[0].trim(), "DD.MM.YYYY").toDate();
+            var endDate = moment(selectedDates[1].trim(), "DD.MM.YYYY").toDate();
+            console.log('Start Date:', startDate);
+            console.log('End Date:', endDate);
+
+            if (!moment(startDate).isValid() || !moment(endDate).isValid()) {
+                alert('Пожалуйста, выберите корректные даты.');
+                return;
+            }
+
+            // Получаем выбранный баннер из радиокнопок
+            var selectedBannerId = $('input[name="banner_id"]:checked').val();
+            var selectedBannerOption = $('input[name="banner_id"]:checked').closest('label').text().trim();
+            var daysCount = calculateDays(startDate, endDate);
+            var pricePerMonth = parseFloat($('#popup-banner-price').val());
+            var pricePerDay = pricePerMonth / 30;
+            var totalPrice = daysCount * pricePerDay;
+
+            console.log('Days Count:', daysCount);
+            console.log('Price Per Month:', pricePerMonth);
+            console.log('Price Per Day:', pricePerDay);
+            console.log('Total Price:', totalPrice);
+
+            // Устанавливаем данные во второй попап перед его отображением
+            $('#banner-name').text(selectedBannerOption);
+            $('#banner-price').text('7590 ₽ в мес.');
+            $('#banner-period').text(Math.ceil(daysCount / 7) + ' недели');
+            $('#start-date').text(selectedDates[0].trim());
+            $('#end-date').text(selectedDates[1].trim());
+            $('#total-price').text(totalPrice.toFixed(2));
+
+            // Скрытые поля
+            $('#popup-banner-id-2').val(selectedBannerId);
+            $('#popup-start-date').val(startDate.toISOString().split('T')[0]);
+            $('#popup-end-date').val(endDate.toISOString().split('T')[0]);
+
+            $('#banner-popup').fadeOut(function() {
+                $('#banner-popup-2').fadeIn();
+            });
+            $('.popup-footer').addClass('hidden');
+        } else {
+            $('.reklama-continue-btn').prop('disabled', true);
+            $('.popup-footer').removeClass('hidden');
+        }
+    });
+  
+	
+	function calculateDays(startDate, endDate) {
+	  var oneDay = 1000 * 60 * 60 * 24;
+	  var differenceInTime = endDate.getTime() - startDate.getTime();
+	  return Math.round(differenceInTime / oneDay) + 1; 
+	}
+  
+	// Обработка отправки формы второго попапа
+	$('#banner-popup-form-2').submit(function(event) {
+        event.preventDefault();
+
+        var adLine1 = $('input[name="ad_line1"]').val();
+        var adLine2 = $('input[name="ad_line2"]').val();
+        var adLine3 = $('input[name="ad_line3"]').val();
+        var description = JSON.stringify({ ad_line1: adLine1, ad_line2: adLine2, ad_line3: adLine3 });
+        $('#popup-description').val(description);
+
+        let formData = $(this).serialize();
+        console.log('Form data:', formData);
+
+        $.ajax({
+            type: 'POST',
+            url: '',
+            data: formData,
+            success: function(response) {
+                $('#successful-popup .bold').html('Отлично!<br>Вы направили баннер на модерацию.');
+                $('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
+                $('#successful-popup').fadeIn();
+            },
+            error: function(xhr, status, error) {
+                console.log('Error:', xhr.responseText);
+                alert('Произошла ошибка. Попробуйте снова.');
+            }
+        });
+    });
+  });
+
+  $(document).ready(function() {
+    // Открытие первого попапа и установка значений
+    $('.journal-button').click(function() {
+        var journalName = $(this).closest('.table-row').find('.table-cell:first-child').text();
+        var specialistId = $(this).data('specialist-id');
+
+        $('#popup-specialist-id').val(specialistId);
+        $('#popup-journal-name').text(journalName);
+        $('#journal-popup').fadeIn();
+    });
+
+    $('.reklama-continue-btn').click(function(event) {
+        event.preventDefault();
+
+        let isFormValid = true;
+
+        $('#journal-popup-form input, #journal-popup-form .select-option input[type="radio"]').each(function() {
+            if ($(this).val() === '' || !$('input[name="journal_id"]:checked').length) {
+                isFormValid = false;
+                return false;
+            }
+        });
+
+        if (isFormValid) {
+            var selectedDates = $('#date-select-journal').val().split('—');
+            if (selectedDates.length < 2) {
+                alert('Пожалуйста, выберите обе даты.');
+                return;
+            }
+
+            var startDate = moment(selectedDates[0].trim(), "DD.MM.YYYY").toDate();
+            var endDate = moment(selectedDates[1].trim(), "DD.MM.YYYY").toDate();
+
+            if (!moment(startDate).isValid() || !moment(endDate).isValid()) {
+                alert('Пожалуйста, выберите корректные даты.');
+                return;
+            }
+
+            var selectedJournalId = $('input[name="journal_id"]:checked').val();
+            var selectedJournalOption = $('input[name="journal_id"]:checked').closest('label').text().trim();
+            var daysCount = calculateDays(startDate, endDate);
+            var pricePerMonth = parseFloat($('#popup-journal-price').val());
+            var pricePerDay = pricePerMonth / 30;
+            var totalPrice = daysCount * pricePerDay;
+
+            $('#journal-name').text(selectedJournalOption);
+            $('#journal-price').text('7590 ₽ в мес.');
+            $('#journal-period').text(Math.ceil(daysCount / 7) + ' недели');
+            $('#start-date').text(selectedDates[0].trim());
+            $('#end-date').text(selectedDates[1].trim());
+            $('#total-price').text(totalPrice.toFixed(2));
+
+            $('#popup-journal-id-2').val(selectedJournalId);
+            $('#popup-start-date-journal').val(startDate.toISOString().split('T')[0]);
+            $('#popup-end-date-journal').val(endDate.toISOString().split('T')[0]);
+
+            $('#journal-popup').fadeOut(function() {
+                $('#journal-popup-2').fadeIn();
+            });
+            $('.popup-footer').addClass('hidden');
+        } else {
+            $('.reklama-continue-btn').prop('disabled', true);
+            $('.popup-footer').removeClass('hidden');
+        }
+    });
+
+    function calculateDays(startDate, endDate) {
+        var oneDay = 1000 * 60 * 60 * 24;
+        var differenceInTime = endDate.getTime() - startDate.getTime();
+        return Math.round(differenceInTime / oneDay) + 1; 
+    }
+
+    // Обработка отправки формы второго попапа
+    $('#journal-popup-form-2').submit(function(event) {
+        event.preventDefault();
+
+        var adLine1 = $('input[name="ad_line1"]').val();
+        var adLine2 = $('input[name="ad_line2"]').val();
+        var adLine3 = $('input[name="ad_line3"]').val();
+        var description = JSON.stringify({ ad_line1: adLine1, ad_line2: adLine2, ad_line3: adLine3 });
+        $('#popup-description-journal').val(description);
+
+        let formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '',
+            data: formData,
+            success: function(response) {
+                $('#successful-popup .bold').html('Отлично!<br>Вы направили блок на модерацию.');
+                $('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
+                $('#successful-popup').fadeIn();
+            },
+            error: function(xhr, status, error) {
+                console.log('Error:', xhr.responseText);
+                alert('Произошла ошибка. Попробуйте снова.');
+            }
+        });
+    });
+});
+
+
+  $(document).ready(function() {
+    $('.user').hover(function() {
+        $('.dropdown-content').toggle();
+    });
+});
+
+$(document).ready(function() {
+	$('.promo-card-button').click(function() {
+		$('#promo-popup').fadeIn();
+	  });
+	let selectedPromos = []; // Хранит все выбранные опции
+  
+	function updateSecondPopup() {
+	  // Очистка содержимого второго попапа
+	  $('#second-popup-content').empty();
+  
+	  // Добавление всех выбранных опций во второй попап
+	  selectedPromos.forEach((promo, index) => {
+		const promoHtml = `
+		  <div class="selected-promo">
+			<div class="promo-number">${index + 1}.</div>
+			<div class="promo-details">
+			  <div class="promo-info">
+				<span class="promo-title">${promo.title}</span>
+				<span class="promo-dates">${promo.dates}</span>
+			  </div>
+			  <img src="${promo.icon}" alt="Icon" class="promo-icon">
+			</div>
+			<div class="promo-right">
+			  <div class="promo-price">${promo.price} ₽</div>
+			  <button class="delete-selected-promo" data-index="${index}">
+				<img src="../assets/img/cabinet/delete2.svg" alt="Delete">
+			  </button>
+			</div>
+		  </div>`;
+		$('#second-popup-content').append(promoHtml);
+	  });
+  
+	  // Обновление общей стоимости
+	  const totalPrice = selectedPromos.reduce((total, promo) => total + parseFloat(promo.price), 0);
+	  $('#total-price2').text(`${totalPrice} руб.`);
+	  $('#confirm-price').text(`Подключить за ${totalPrice} ₽`);
+	}
+  
+	// Обработка нажатия кнопки "Далее" в первом попапе
+	$(document).on('click', '.promo-continue-btn', function(event) {
+	  event.preventDefault();
+  
+	  // Получаем выбранные опции
+	  let selectedPromoId = $('input[name="promo_id"]:checked').val();
+	  let selectedServiceIds = $('input[name="service_ids[]"]:checked').map(function() {
+		return $(this).val();
+	  }).get();
+	  console.log('Selected Service IDs:', selectedServiceIds); // Отладочное сообщение
+	  let selectedDates = $('#promo-date-select').val().split('—');
+	  let specialistId = $('#popup-specialist-id-promo').val();
+  
+	  if (!selectedPromoId || selectedServiceIds.length === 0 || selectedDates.length < 2) {
+		alert('Пожалуйста, заполните все поля.');
+		return;
+	  }
+  
+	  let startDate = selectedDates[0].trim();
+	  let endDate = selectedDates[1].trim();
+  
+	  // Сохранение выбранных данных из services
+	  let selectedServiceTitles = $('input[name="service_ids[]"]:checked').map(function() {
+		return $(this).closest('label').text().trim();
+	  }).get().join(', ');
+  
+	  // Сохранение выбранных данных из promo_options
+	  let selectedPromoTitle = $('input[name="promo_id"]:checked').closest('label').find('.promo-title').text();
+	  let selectedPromoDescription = $('input[name="promo_id"]:checked').closest('label').find('.promo-description').text();
+	  let selectedPromoIcon = $('input[name="promo_id"]:checked').closest('label').find('img').attr('src');
+	  let selectedPromoPrice = $('input[name="promo_id"]:checked').closest('label').find('.promo-price').text();
+  
+	  // Добавление выбранной опции в массив
+	  selectedPromos.push({
+		id: selectedPromoId,
+		title: selectedServiceTitles,
+		dates: `с ${startDate} по ${endDate}`,
+		icon: selectedPromoIcon,
+		price: selectedPromoPrice,
+		specialistId: specialistId,
+		service_ids: selectedServiceIds // Добавляем service_ids
+	  });
+  
+	  // Обновление второго попапа
+	  updateSecondPopup();
+  
+	  // Открытие второго попапа
+	  $('#promo-popup').fadeOut(function() {
+		$('#promo-popup-2').fadeIn();
+	  });
+	});
+  
+	// Обработка нажатия кнопки "Добавить ещё размещение"
+	$(document).on('click', '.add-more-promo', function() {
+	  // Очистка первого попапа
+	  $('input[name="promo_id"]:checked').prop('checked', false);
+	  $('input[name="service_ids[]"]:checked').prop('checked', false);
+	  $('#promo-date-select').val('');
+  
+	  $('#promo-popup-2').fadeOut(function() {
+		$('#promo-popup').fadeIn();
+	  });
+	});
+  
+	// Закрытие попапа
+	$(document).on('click', '.close, #delete-selected-promo', function() {
+	  $('#promo-popup-2').fadeOut();
+	});
+  
+	// Обработка удаления опции
+	$(document).on('click', '.delete-selected-promo', function() {
+	  const index = $(this).data('index');
+	  selectedPromos.splice(index, 1); // Удаление опции из массива
+	  updateSecondPopup(); // Обновление второго попапа
+	});
+  
+	// Обработка подтверждения
+	$(document).on('submit', '#promo-confirm-form', function(event) {
+	  event.preventDefault();
+  
+	  const promoData = selectedPromos.map(promo => ({
+		promo_id: promo.id,
+		service_ids: promo.service_ids,
+		start_date: promo.dates.split(' по ')[0].replace('с ', '').trim(),
+		end_date: promo.dates.split(' по ')[1].trim(),
+		price: promo.price.replace(' ₽', ''),
+		specialist_id: promo.specialistId // Добавляем specialistId к данным, отправляемым на сервер
+	  }));
+  
+	  // Вывод отладочной информации в консоль
+	  console.log('Отправка данных на сервер:', promoData);
+  
+	  // Отправка данных на сервер
+	  $.ajax({
+		type: 'POST',
+		url: '', // замените на ваш конечный URL
+		data: { promos: promoData },
+		success: function(response) {
+		  console.log('Ответ сервера:', response);
+		  // Отображение третьего попапа при успешной обработке
+		  $('#successful-popup .bold').html('Отлично!<br>Вы подключили промо-блоки.');
+		  $('#successful-popup .middle-text').text('Информация появится в разделе "Продвижение" в течении 60 минут.');
+		  $('#successful-popup').fadeIn();
+		},
+		error: function(xhr, status, error) {
+		  console.log('Ошибка запроса:', xhr.responseText);
+		  alert('Произошла ошибка. Попробуйте снова.');
+		}
+	  });
+	});
+  });
+
+  document.querySelectorAll('.faq-question').forEach(button => {
+	button.addEventListener('click', () => {
+	  const faqItem = button.parentElement;
+	  faqItem.classList.toggle('active');
+  
+	  const faqAnswer = button.nextElementSibling;
+	  if (faqItem.classList.contains('active')) {
+		faqAnswer.style.maxHeight = faqAnswer.scrollHeight + 'px';
+	  } else {
+		faqAnswer.style.maxHeight = '0';
+	  }
+	});
+  });
+
+  

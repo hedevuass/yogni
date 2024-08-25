@@ -160,6 +160,17 @@ function get_services_by_parrent_id(int $p_id = 0)
     return $result;
 }
 
+function check_alias(string $alias, int $post_id = 0) {
+    global $data_base;
+    $and = '';
+    if ($post_id != 0) {
+        $and = ' AND id != '.$post_id;
+    }
+    $result = $data_base->selectRow("SELECT * FROM dt_post WHERE alias = ? $and", [$alias]);
+    if (!is_null($result) && $result) return true;
+    else return false;
+}
+
 
 // Устанавливает slug для категорий
 function update_service_slug(int $service_id, string $slug)
@@ -214,10 +225,16 @@ function get_services_by_classification($classification, int|bool $p_id = false)
 function get_services_for_menu()
 {
     global $data_base;
+    
     $services = $data_base->selectAll("SELECT s.id as id, s.title as title, s.p_id, s.slug,
-                                            c.id as classification_id
-                                            FROM dt_service s
-                                            LEFT JOIN dt_classification c ON s.classification = c.id ORDER BY s.title");
+                                            c.id as classification_id,
+                                            CASE 
+                                                WHEN s.title = 'Миграционные вопросы' THEN 30
+                                                ELSE ROW_NUMBER() OVER (ORDER BY s.title)
+                                            END as sort_order
+                                       FROM dt_service s
+                                       LEFT JOIN dt_classification c ON s.classification = c.id
+                                       ORDER BY sort_order, s.title");
 
     $data = [];
 
@@ -228,6 +245,14 @@ function get_services_for_menu()
     return $data;
 }
 
+
+// Возвращает тег по alias
+function get_tag_by_alias(string $alias)
+{
+    global $data_base;
+    $tag = $data_base->selectRow("SELECT * FROM dt_tags WHERE alias = ?", [$alias]);
+    return $tag;
+}
 
 // Возвращает категорию по slug
 function get_service_by_slug(string $slug)
@@ -291,7 +316,12 @@ function get_specialist(int $id)
     global $data_base;
     return $data_base->selectRow("SELECT 
                                         s.*,    
-                                        sc.*,
+                                        sc.street,
+                                        sc.house,
+                                        sc.how_to_get,
+                                        sc.coordinates,
+                                        sc.phone,
+                                        sc.other,
                                         sc.metro as metro_id,
                                         m.name as metro,
                                         c.title as classification, 
@@ -447,6 +477,13 @@ function get_blog_filter_themes()
     return $data_base->selectAll("SELECT * FROM dt_service WHERE p_id = 0 ORDER BY title");
 }
 
+// Возвращает теги блогов
+function get_blog_filter_tags()
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_tags ORDER BY title");
+}
+
 // Возвращает блог специалиста
 function get_specialist_blog(int $specialist_id)
 {
@@ -461,20 +498,105 @@ function get_blog_by_id(int $id)
     return $data_base->selectRow("SELECT * FROM dt_blog WHERE id = $id");
 }
 
+// Возвращает актуальные записи для журнала
+function get_actual_posts(string $post_type = '', int $post_theme = 0, int $post_tag = 0, int $limit = 5, int $start = 0)
+{
+    global $data_base;
+    $where_post_type = '';
+    if ($post_type != '') {
+        $where_post_type = " AND ar.post_type='$post_type'";
+    }
+    $where_post_theme = '';
+    if ($post_theme != 0) {
+        $where_post_theme = " AND ar.theme_id=$post_theme";
+    }
+    $where_post_tag = '';
+    if ($post_tag != 0) {
+        $where_post_tag = " AND ar.id IN (SELECT article_id from dt_post_tags WHERE tag_id = $post_tag)";
+    }
+    return $data_base->selectAll("SELECT ar.*,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
+                                    LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE ar.moderation=0 $where_post_type $where_post_theme $where_post_tag
+                                    ORDER BY date DESC LIMIT $start, $limit");
+}
+
+function get_actual_posts_main()
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT ar.*,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
+                                    LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE ar.moderation=0 AND ar.post_type='articles'
+                                    ORDER BY date DESC LIMIT 2");
+}
+
+// Возвращает актуальные записи для блога специалиста
+function get_blog_posts(int $blog_id, int $limit = 5, int $start = 0)
+{
+    global $data_base;
+    $posts = $data_base->selectAll("SELECT ar.*,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
+                                    LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE ar.moderation=0 AND ar.blog_id = $blog_id
+                                    ORDER BY date DESC LIMIT $start, $limit");
+
+    if (count($posts) < $limit) {
+        $more_posts = $data_base->selectAll("SELECT ar.*,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
+                                    LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE ar.moderation=0 AND ar.post_type = 'blogs' AND ar.blog_id != $blog_id
+                                    ORDER BY date DESC LIMIT $start, $limit");
+        $i = 0;
+        while (count($posts) < $limit && $i < count($more_posts)) {
+            if (isset($more_posts[$i])) {
+                $posts[] = $more_posts[$i];
+            }
+            $i++;
+        }
+    }
+
+    return $posts;
+}
+
+
+
+
 // Возвращает записи общего блога
 function get_main_blog_articles(int $theme_id = 0, int $limit = 0, int $start = 0)
 {
     global $data_base;
 
-    $where = '';
+    $and = '';
     if ($theme_id != 0) {
-        $where = "WHERE ar.id IN (SELECT article_id FROM dt_article_themes WHERE theme_id = $theme_id OR theme_id IN (SELECT id from dt_service WHERE p_id = $theme_id))";
+        $and .= " AND ar.theme_id = $theme_id ";
+        //$and .= " AND ar.id IN (SELECT article_id FROM dt_post_themes WHERE theme_id = $theme_id OR theme_id IN (SELECT id from dt_service WHERE p_id = $theme_id))";
     }
     return $data_base->selectAll("SELECT ar.*,
-                                    bl.specialist_id
-                                    FROM dt_article ar
+                                    bl.specialist_id,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
                                     LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
-                                    $where
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE moderation=0 $and
                                     ORDER BY date DESC LIMIT $start, $limit");
 }
 
@@ -482,96 +604,137 @@ function get_main_blog_articles(int $theme_id = 0, int $limit = 0, int $start = 
 function count_main_blog_articles()
 {
     global $data_base;
-    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_article");
+    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_post");
 }
 
 // Возвращает записи блога юзера
-function get_blog_articles(int $id, int $theme_id = 0, int $limit = 0, int $start = 0)
+function get_blog_articles(int $id, int $theme_id = 0, int $limit = 0, int $start = 0, int $moderation = 0)
 {
     global $data_base;
 
     $and = '';
     if ($theme_id != 0) {
-        $and = "AND ar.id IN (SELECT article_id FROM dt_article_themes WHERE theme_id = $theme_id OR theme_id IN (SELECT id from dt_service WHERE p_id = $theme_id))";
+        $and = " AND ar.theme_id = $theme_id ";
     }
-
-    $limit_cond = '';
-    if ($limit != 0 && $start != 0) {
-        $and = "LIMIT $start, $limit";
+    if ($moderation == 0) {
+        $and .= " AND ar.moderation = 0 ";
     }
     
     return $data_base->selectAll("SELECT ar.*,
-                                    bl.specialist_id
-                                    FROM dt_article ar
+                                    bl.specialist_id,
+                                    se.id as service_id,
+                                    se.title as service_title,
+                                    se.slug as service_slug
+                                    FROM dt_post ar
                                     LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
-                                    WHERE blog_id = $id $and
-                                    ORDER BY date DESC $limit_cond");
+                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                    WHERE ar.blog_id = $id $and
+                                    ORDER BY date DESC LIMIT $start, $limit");
 }
 
-// Возвращает записи блога юзера
+// Возвращает кол-во записей блога юзера
 function count_blog_articles(int $id)
 {
     global $data_base;
-    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_article WHERE blog_id = $id");
+    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_post WHERE blog_id = $id AND moderation = 0");
 }
 
 // Возвращает кол-во просмотров всех записей блога юзера
 function count_blog_views(int $id)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT SUM(views) FROM dt_article WHERE blog_id = $id");
+    return $data_base->selectAll("SELECT SUM(views) FROM dt_post WHERE blog_id = $id AND moderation = 0");
 }
 
 // Возвращает запись
 function get_article(int $id)
 {
     global $data_base;
-    return $data_base->selectRow("SELECT ar.*, bl.specialist_id FROM dt_article ar LEFT JOIN dt_blog bl ON ar.blog_id = bl.id WHERE ar.id = $id");
+    return $data_base->selectRow("SELECT ar.*, 
+                                bl.specialist_id,
+                                se.id as service_id,
+                                se.title as service_title,
+                                    se.slug as service_slug
+                                FROM dt_post ar 
+                                LEFT JOIN dt_blog bl ON ar.blog_id = bl.id 
+                                LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                WHERE ar.id = $id AND moderation = 0");
 }
-
-// Возвращает темы (теги) записи
-function get_article_themes(int $id)
+// Возвращает запись (даже если на модерации)
+function get_article_cabinet(int $id)
 {
     global $data_base;
-    $themes = $data_base->selectAll("SELECT * FROM dt_service WHERE id IN (SELECT theme_id FROM dt_article_themes WHERE article_id = $id)");
-    foreach ($themes as $theme) {
-        if ($theme['p_id']) {
-            $parrent = get_service($theme['p_id']);
-            $theme['p_slug'] = $parrent['slug'];
-        }
-        $themes_res[$theme['id']] = $theme;
-    }
+    return $data_base->selectRow("SELECT ar.*, 
+                                bl.specialist_id,
+                                se.id as service_id,
+                                se.title as service_title,
+                                    se.slug as service_slug
+                                FROM dt_post ar 
+                                LEFT JOIN dt_blog bl ON ar.blog_id = bl.id 
+                                LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                WHERE ar.id = $id");
+}
+// Возвращает запись
+function get_article_by_alias(string $alias)
+{
+    global $data_base;
+    return $data_base->selectRow("SELECT ar.*, 
+                                bl.specialist_id,
+                                se.id as service_id,
+                                se.title as service_title,
+                                se.slug as service_slug
+                                FROM dt_post ar 
+                                LEFT JOIN dt_blog bl ON ar.blog_id = bl.id 
+                                LEFT JOIN dt_service se ON se.id = ar.theme_id
+                                WHERE ar.alias = ? AND moderation = 0", [$alias]);
+}
 
-    return $themes_res;
+// Возвращает теги записи
+function get_article_tags(int $id)
+{
+    global $data_base;
+    $themes = $data_base->selectAll("SELECT * FROM dt_tags WHERE id IN (SELECT tag_id FROM dt_post_tags WHERE article_id = $id)");
+    return $themes;
 }
 
 // Добавляет просмотр на запись блога
 function add_article_views(int $id)
 {
     global $data_base;
-    return $data_base->update("UPDATE dt_article SET views = views + 1 WHERE id = ?", [$id]);
+    return $data_base->update("UPDATE dt_post SET views = views + 1 WHERE id = ?", [$id]);
 }
 
 // Создает запись
 function create_article(array $data)
 {
     global $data_base;
-    return $data_base->add(
-        "INSERT INTO dt_article (blog_id, title, content, keywords, moderation) VALUES (?, ?, ?, ?, 1)", [$data['blog_id'], $data['title'], $data['content'], $data['keywords']]);
+    $alias = generateAlias($data['title']);
+    $article_id = $data_base->add(
+        "INSERT INTO dt_post (blog_id, author_id, theme_id, post_type, title, alias, content, keywords, moderation) VALUES (?, ?, ?, 'blogs', ?, ?, ?, ?, 1)", [$data['blog_id'], $data['author_id'], $data['theme_id'], $data['title'], $alias, $data['content'], $data['keywords']]);
+    if (check_alias($alias)) {
+        $new_alias = $alias . $article_id;
+        $data_base->update("UPDATE dt_post SET alias = ? WHERE id = $article_id", [$new_alias]);
+    }
+    return $article_id;
 }
 
 // Обновляет запись
 function update_article(int $article_id, array $data)
 {
     global $data_base;
-    return $data_base->update("UPDATE dt_article SET title = ?, content = ?, keywords = ? WHERE id =?", [$data['title'], $data['content'], $data['keywords'], $article_id]);
+    $theme_id = intval($data['theme_id']);
+    $alias = generateAlias($data['title']);
+    if (check_alias($alias, $article_id)) {
+        $alias = $alias . $article_id;
+    }
+    return $data_base->update("UPDATE dt_post SET title = ?, alias = ?, theme_id = $theme_id, content = ?, keywords = ? WHERE id =?", [$data['title'], $alias, $data['content'], $data['keywords'], $article_id]);
 }
 
 // Удаляет запись
 function delete_article(int $article_id)
 {
     global $data_base;
-    return $data_base->delete("DELETE FROM `dt_article` WHERE id = ?", [$article_id]);
+    return $data_base->delete("DELETE FROM `dt_post` WHERE id = ?", [$article_id]);
 }
 
 
@@ -579,14 +742,14 @@ function delete_article(int $article_id)
 function set_article_theme(int $article_id, int $theme_id)
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_article_themes (article_id, theme_id) VALUES (?, ?)", [$article_id, $theme_id]);
+    return $data_base->add("INSERT INTO dt_post_themes (article_id, theme_id) VALUES (?, ?)", [$article_id, $theme_id]);
 }
 
 // Удаляет тему записи
 function unset_article_themes(int $article_id)
 {
     global $data_base;
-    return $data_base->delete("DELETE FROM `dt_article_themes` WHERE article_id = ?", [$article_id]);
+    return $data_base->delete("DELETE FROM `dt_post_themes` WHERE article_id = ?", [$article_id]);
 }
 
 // Возвращает всех работников компании
@@ -772,7 +935,7 @@ function full_search_specialists(string $search, int $start = 0, int $limit = 12
                                                 WHERE (s.name $condition ? AND s.lastname $condition ? AND s.active = 1 AND s.city_id = ? AND s.company_id IS NULL $and) 
                                                 OR (s.name $condition ? AND s.lastname $condition ? AND s.active = 1 AND s.city_id = ? AND s.company_id IS NULL $and)
                                                 LIMIT $start, $limit", 
-                                                [$search_name, $search_lastname, $search_lastname, $search_name, $_SESSION['city']['id']]);
+                                                [$search_name, $search_lastname, $_SESSION['city']['id'], $search_lastname, $search_name, $_SESSION['city']['id']]);
     } else if (!empty($search[0]) && empty($search[1])) {
         if (mb_strlen($search[0]) < 4) {
             $condition = '=';
@@ -1022,23 +1185,30 @@ function get_specialists_by_service(string $services, int $limit, int $start = 0
     return $specialists;
 }
 
+// Добавляет запись в таблицу блогов
+function set_specialist_email(int $specialist_id, string $email)
+{
+    global $data_base;
+    return $data_base->add("UPDATE dt_specialist SET email= ? WHERE id=$specialist_id", [$email]);
+}
+
 // Добавляет запись в таблицу описания юзера
 function set_specialist_description(int $specialist_id)
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_specialist_description (specialist_id) VALUE (?)", [$specialist_id]);
+    return $data_base->add("INSERT INTO dt_specialist_description (specialist_id) VALUES (?)", [$specialist_id]);
 }
 // Добавляет запись в таблицу контактов юзера
 function set_specialist_contacts(int $specialist_id, string $phone)
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_specialist_contacts (specialist_id, phone) VALUE (?, ?)", [$specialist_id, $phone]);
+    return $data_base->add("INSERT INTO dt_specialist_contacts (specialist_id, phone) VALUES (?, ?)", [$specialist_id, $phone]);
 }
 // Добавляет запись в таблицу блогов
 function set_specialist_blog(int $specialist_id)
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_blog (specialist_id, description) VALUE (?, '')", [$specialist_id]);
+    return $data_base->add("INSERT INTO dt_blog (specialist_id) VALUES (?)", [$specialist_id]);
 }
 
 // Возвращает описание специалиста
@@ -1046,6 +1216,131 @@ function get_specialist_description(int $specialist_id)
 {
     global $data_base;
     return $data_base->selectRow("SELECT * FROM dt_specialist_description WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Возвращает данные о тарифе
+function get_tariff_data(int $tariff_id)
+{
+    global $data_base;
+    return $data_base->selectRow("SELECT id, name, price, price_old, options FROM dt_tariff WHERE id = ?", [$tariff_id]);
+}
+
+function add_tariff_to_specialist(int $specialist_id, int $tariff_id, string $end_date, int $duration)
+{
+    global $data_base;
+
+    // Проверяем, есть ли уже тариф для данного специалиста
+    $existing_tariff = $data_base->selectRow("SELECT id FROM dt_tariff_list WHERE specialist_id = ?", [$specialist_id]);
+
+    if ($existing_tariff) {
+        // Обновляем запись, если она существует
+        $data_base->update("UPDATE dt_tariff_list SET tariff_id = ?, end_date = ?, duration = ? WHERE specialist_id = ?", [$tariff_id, $end_date, $duration, $specialist_id]);
+    } else {
+        // Добавляем новый тариф, если записи нет
+        $data_base->add("INSERT INTO dt_tariff_list (specialist_id, tariff_id, end_date, duration) VALUES (?, ?, ?, ?)", [$specialist_id, $tariff_id, $end_date, $duration]);
+    }
+}
+
+// Функция для получения данных о подключенных тарифах
+function get_connected_tariffs(int $specialist_id)
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT tariff_id, end_date, duration FROM dt_tariff_list WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Функция для получения имени тарифа по ID
+function get_tariff_name(int $tariff_id)
+{
+    global $data_base;
+    $result = $data_base->selectRow("SELECT name FROM dt_tariff WHERE id = ?", [$tariff_id]);
+    return $result['name'] ?? ''; // Возвращает имя тарифа или пустую строку
+}
+
+// Функция для получения всех опций
+function get_all_options() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_option");
+}
+
+// Функция для получения данных о подключенных поциях
+function get_connected_options(int $specialist_id)
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT option_id, end_date FROM dt_options_list WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Функция для добавления записи в таблицу dt_option_list
+function add_options_to_specialist(int $specialist_id, int $option_id, string $end_date)
+{
+    global $data_base;
+    $data_base->add("INSERT INTO dt_options_list (specialist_id, option_id, end_date) VALUES (?, ?, ?)", [$specialist_id, $option_id, $end_date]);
+}
+
+// Функция для получения всех баннеров
+function get_all_banners() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_banners");
+}
+
+// Функция для получения данных о подключенных баннерах
+function get_connected_banners(int $specialist_id)
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT banner_id, start_date, end_date FROM dt_banners_list WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Функция для добавления записи в таблицу dt_banners_list
+function add_banners_to_specialist($specialist_id, $banner_id, string $start_date, string $end_date, string $description)
+{
+    global $data_base;
+    $data_base->add("INSERT INTO dt_banners_list (specialist_id, banner_id, start_date, end_date, description) VALUES (?, ?, ?, ?, ?)", [$specialist_id, $banner_id, $start_date, $end_date, $description]);
+}
+
+// Функция для получения всех подключений в журнале
+function get_all_journals() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_journal");
+}
+
+// Функция для получения данных в журнал
+function get_connected_journals(int $specialist_id)
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT journal_id, start_date, end_date FROM dt_journal_list WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Функция для добавления записи в таблицу dt_journal_list
+function add_journal_to_specialist($specialist_id, $journal_id, string $start_date, string $end_date, string $description)
+{
+    global $data_base;
+    $data_base->add("INSERT INTO dt_journal_list (specialist_id, journal_id, start_date, end_date, description) VALUES (?, ?, ?, ?, ?)", [$specialist_id, $journal_id, $start_date, $end_date, $description]);
+}
+
+// Функция для получения promo
+function get_all_promo() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_promo_placement");
+}
+
+// Функция для добавления записи в таблицу dt_journal_list
+function add_promo_placement($specialist_id, $promo_id, $service_id, string $start_date, string $end_date, string $price)
+{
+    global $data_base;
+    $data_base->add("INSERT INTO dt_promo_placement_list (specialist_id, promo_id, service_id, start_date, end_date, price) VALUES (?, ?, ?, ?, ?)", [$specialist_id, $promo_id, $service_id, $start_date, $end_date, $price]);
+}
+
+// Функция для получения данных из промо
+function get_connected_promo(int $specialist_id)
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_promo_placement_list WHERE specialist_id = ?", [$specialist_id]);
+}
+
+// Функция для получения деталей промо по promo_id
+function get_promo_details(int $promo_id)
+{
+    global $data_base;
+    return $data_base->selectRow("SELECT title, url FROM dt_promo_placement WHERE id = ?", [$promo_id]);
 }
 
 // Добавляет компанию
@@ -1166,6 +1461,12 @@ function check_email(string $email)
     //return $data_base->exists("SELECT EXISTS(SELECT 1 FROM dt_specialist WHERE email = ?)", [$email]);
 }
 
+// Проверяет есть ли email у пользователя
+function account_has_email(int $id) {
+    global $data_base;
+    return $data_base->selectRow("SELECT id FROM dt_specialist WHERE id = $id");
+}
+
 // Проверяет существует ли название компании
 function check_сompany(string $company)
 {
@@ -1202,7 +1503,7 @@ function registration(array $data)
 {
     global $data_base;
     return $data_base->add("INSERT INTO dt_specialist (name, lastname, email, password, hash, classification_id, city_id, company_id, active)
-                                VALUE (?, ?, ?, ?, ?, ?, ?, ?, 1)", [
+                                VALUE (?, ?, ?, ?, ?, ?, ?, ?, 0)", [
         $data['name'],
         $data['lastname'],
         $data['email'],
@@ -1414,6 +1715,7 @@ function update_contacts(array $data)
                                                                 house = ?,
                                                                 how_to_get = ?,
                                                                 phone = ?,
+                                                                coordinates = ?,
                                                                 other = ?
                                                             WHERE
                                                                 specialist_id = ?", [
@@ -1422,6 +1724,7 @@ function update_contacts(array $data)
         $data['house'],
         $data['how_to_get'],
         $data['phone'],
+        $data['coordinates'],
         $data['other'],
         (int)$_SESSION['user']['id']
     ]);
@@ -1527,3 +1830,11 @@ function get_blocks(): array
     global $data_base;
     return $data_base->selectAll("SELECT * FROM dt_blocks");
 }
+
+//Получаем новости
+
+function fillNewsList() {
+    global $data_base;
+    return $data_base->selectAll("SELECT alias, title FROM dt_post WHERE post_type='news' ORDER BY id DESC LIMIT 4");
+}
+

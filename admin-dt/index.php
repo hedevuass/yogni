@@ -13,9 +13,9 @@ $routes = include $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'routes.php';
 // Подключаемые файлы
 $urn = strtok($_SERVER['REQUEST_URI'], '?');
 
-require $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF .'modules/header.php';
+require $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF .'modules/common/header.php';
 
 if (isset($routes[$urn]['module']) && $routes[$urn]['module'])
     require $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'modules/' . $routes[$urn]['module'] . '.php';
 
-require $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'modules/footer.php';
+require $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'modules/common/footer.php';

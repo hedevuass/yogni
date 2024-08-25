@@ -259,6 +259,30 @@ img {
   -o-transition: all 200ms ease;
   transition: all 200ms ease;
 }
+.specialist_adress_map{
+  height: 100%;
+}
+.name{
+  Margin: 0;
+  line-height: 22px;
+  mso-line-height-rule: exactly;
+  font-family: helvetica, 'helvetica neue', arial, verdana, sans-serif;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: normal;
+  color: #373737;
+  text-align: left;
+}
+.es-button:hover{
+  filter: brightness(90%);
+}
+.after_reg{
+  padding: 30px;
+  Margin: 0;
+  background-color: #ffffff;
+  border-radius: 0px 0px 25px 25px;
+  text-align: -webkit-center;
+}
 .btn:hover {
   color: #0F86F3;
 }
@@ -267,6 +291,12 @@ img {
   background-color: #FF8139;
   color: #fff;
   padding: 0 12px;
+}
+.btn__orange_reg{
+  width: auto;
+  background-color: #FF8139;
+  color: #fff;
+  padding: 0 182px;
 }
 .btn__orange:hover {
   color: #fff;
@@ -463,6 +493,9 @@ nav,
 main {
   display: block;
 }
+.blog-page{
+  background-color: #F6F6F6;
+}
 .wrap {
   margin: 0 auto;
   padding: 0 32px;
@@ -471,6 +504,12 @@ main {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+}
+.blog-page {
+  padding: 16px 32px 256px;
+}
+.blog-page.blog-page-main {
+  margin: 0 -32px -126px;
 }
 * {
   outline: none !important;
@@ -608,6 +647,7 @@ a.blue-link :hover {
   justify-content: space-between;
   gap: 16px;
 }
+
 .topbar__wrapper .menu2 li a {
   font-weight: 400;
   font-size: 14px;
@@ -1024,14 +1064,7 @@ a.blue-link :hover {
 .banner-slide .main-slide__left-text .orange-text {
   margin-top: 0;
 }
-@media (max-width: 1200px) {
-  .banner-slide__wrapper {
-    padding: 0 82px;
-  }
-  .btn__main-slide {
-    display: none;
-  }
-}
+
 .rocket {
   position: absolute;
   bottom: 8px;
@@ -1111,6 +1144,10 @@ a.blue-link :hover {
   font-size: 12px;
   line-height: 14px;
 }
+.after-mail__content {
+  font-size: 12px;
+  line-height: 14px;
+}
 .index-catalog-block .top-text p.favorite-page,
 .index-catalog-block .top-text p.about-page,
 .index-catalog-block .top-text p.blog-page {
@@ -1142,11 +1179,14 @@ a.blue-link :hover {
 .index-catalog-block .top-text .about-links li + li {
   margin-top: 7px;
 }
-.index-catalog-block .block-name {
+.index-catalog-block .block-name, .after-mail__title {
   margin-bottom: 24px;
   font-weight: 500;
   font-size: 24px;
   line-height: 28px;
+}
+.after-mail__title {
+  margin-bottom: 16px;
 }
 .index-catalog-block .block-name.small {
   font-size: 16px;
@@ -1603,7 +1643,7 @@ a.blue-link :hover {
   background: rgba(1, 1, 1, 0.65);
   height: calc(100% - 205px);
 }
-.site-menu {
+.site-menu.wrap {
   padding: 32px 36px 0;
   position: relative;
 }
@@ -1686,11 +1726,14 @@ a.blue-link :hover {
 .site-menu .flex2 .nav ul li a:hover {
   color: #0F86F3;
 }
-.footer {
+.footer:not(.cabinet) {
   background: #222222;
-  margin-top: 236px;
   padding-bottom: 127px;
+  margin-top: 52px;
   color: #fff;
+}
+.big-mobile-popup.mobile-journal-themes + .footer:not(.cabinet) {
+  margin-top: -28px;
 }
 .footer__reg-wrapper {
   background: #FF9E68;
@@ -1797,8 +1840,8 @@ a.blue-link :hover {
 }
 .footer .copy {
   margin: 20px auto 0;
-  font-weight: 300;
-  font-size: 16px;
+  font-weight: 400;
+  font-size: 12px;
   line-height: 19px;
   width: 100%;
   max-width: 455px;
@@ -1828,7 +1871,7 @@ a.blue-link :hover {
   font-weight: 900;
   font-size: 24px;
   line-height: 28px;
-  margin-left: -25px;
+  margin-left: -40px;
 }
 .mobile-header__wrapper {
   align-items: center;
@@ -1836,7 +1879,7 @@ a.blue-link :hover {
 .mobile-header .menu-button2 {
   width: 24px;
   height: 20px;
-  background: url('../img/menu-button1.svg') no-repeat center / cover;
+  background: url('../img/menu-button1.svg') no-repeat center;
 }
 .mobile-header .city {
   padding: 1px 0 0 17px;
@@ -2217,6 +2260,35 @@ a.blue-link :hover {
   padding: 48px 0;
   font-size: 14px;
   line-height: 16px;
+  text-align: center;
+}
+.reg_discrip{
+    padding-top: 30px;
+    padding-bottom: 30px;
+    Margin: 0;
+    line-height: 17px;
+    font-family: helvetica, 'helvetica neue', arial, verdana, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: normal;
+    color: #373737;
+    text-align: left;
+}
+.window_reg{
+  width: 600px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  background: #fff;
+  max-width: calc(100% - 20px);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  border: 1px solid #DADADA;
+  border-radius: 16px;
 }
 .popup .window p.text-only {
   text-align: center;
@@ -2295,7 +2367,7 @@ a.blue-link :hover {
   padding-right: 40px;
 }
 .popup .window .reg {
-  padding: 15px 20px;
+  padding: 15px 20px 50px 20px;
 }
 .popup .window .reg .name {
   text-align: center;
@@ -2600,7 +2672,7 @@ a.blue-link :hover {
 }
 .popup .window .select-block .name {
   margin-bottom: 32px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 16px;
   line-height: 19px;
 }
@@ -2676,6 +2748,7 @@ a.blue-link :hover {
 }
 .info_confirmation{
   width: 330px;
+  text-align: center;
 }
 .popup.confirmation__popup .window .bottom-links {
   margin-top: 20px;
@@ -2828,6 +2901,7 @@ a.blue-link :hover {
   line-height: 16px;
   color: #222222;
   padding-left: 20px;
+  margin-bottom: 0;
   background-repeat: no-repeat;
   background-position: center left;
 }
@@ -2849,7 +2923,7 @@ a.blue-link :hover {
 }
 .m2__section ul li.blogs,
 .cabinet-links li.blogs {
-  background-image: url('../img/m2_blogs.svg');
+  background-image: url('../img/journal-icon.svg');
 }
 .m2__section ul li.notarius,
 .cabinet-links li.notarius {
@@ -2870,9 +2944,32 @@ a.blue-link :hover {
 .index-catalog-block .top-text .cabinet-links {
   margin-top: 24px;
 }
+.left-sidebar .jq-selectbox.jqselect .jq-selectbox__select{
+  cursor: pointer;
+}
 ul.menu-links-mobile {
   padding: 0;
   margin: 0;
+}
+ul.menu-links-mobile.blog-links-mobile, ul.menu-links-mobile.blog-tags-mobile {
+  overflow: hidden;
+  -webkit-transition: height 1s ease-in-out;
+  -moz-transition: height 1s ease-in-out;
+  -ms-transition: height 1s ease-in-out;
+  -o-transition: height 1s ease-in-out;
+  transition: height 1s ease-in-out;
+}
+ul.menu-links-mobile + .more-article-themes-btn {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #222;
+  padding-right: 16px;
+  margin-left: 22px;
+  margin-top: 16px;
+  background: url('../img/m1_bottom_arrow.svg') no-repeat right center;
+  width: fit-content;
+  cursor: pointer;
 }
 ul.menu-links-mobile.no-arrows li::after {
   display: none;
@@ -2888,6 +2985,9 @@ ul.menu-links-mobile li {
   background-repeat: no-repeat;
   background-position: center left;
 }
+ul.menu-links-mobile.blog-mobile-catmenu li {
+  padding-left: 0;
+}
 ul.menu-links-mobile li::after {
   content: "";
   position: absolute;
@@ -2900,6 +3000,16 @@ ul.menu-links-mobile li::after {
 }
 ul.menu-links-mobile li a {
   text-decoration: none;
+}
+ul.menu-links-mobile.blog-mobile-catmenu li a {
+  position: relative;
+  padding-left: 22px;
+}
+ul.menu-links-mobile.blog-mobile-catmenu li a img{
+  position: absolute;
+  left: 0px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 ul.menu-links-mobile li + li {
   margin-top: 16px;
@@ -2919,16 +3029,16 @@ ul.menu-links-mobile li.administrativnoe-pravo {
 ul.menu-links-mobile li.bankrotstvo {
   background-image: url('../img/m1_bank.svg');
 }
-ul.menu-links-mobile li.vziskanie-zadoljennosti {
+ul.menu-links-mobile li.vzyskanie-zadolzhennosti {
   background-image: url('../img/m1_debt.svg');
 }
-ul.menu-links-mobile li.vozmeschenie-vreda-i-ubitkov {
+ul.menu-links-mobile li.vozmeschenie-vreda-i-ubytkov {
   background-image: url('../img/m1_damage.svg');
 }
 ul.menu-links-mobile li.dogovornoe-pravo {
   background-image: url('../img/m1_contract.svg');
 }
-ul.menu-links-mobile li.jilischnoe-pravo {
+ul.menu-links-mobile li.zhilischnoe-pravo {
   background-image: url('../img/m1_living.svg');
 }
 ul.menu-links-mobile li.zaschita-prav-potrebiteley {
@@ -2937,22 +3047,22 @@ ul.menu-links-mobile li.zaschita-prav-potrebiteley {
 ul.menu-links-mobile li.zakupki {
   background-image: url('../img/m1_purchase.svg');
 }
-ul.menu-links-mobile li.intellektualnaja-sobstvennost {
+ul.menu-links-mobile li.intellektualnaya-sobstvennost {
   background-image: url('../img/m1_intellect.svg');
 }
 ul.menu-links-mobile li.ispolnitelnoe-proizvodstvo {
   background-image: url('../img/m1_production.svg');
 }
-ul.menu-links-mobile li.litsenzirovanie {
+ul.menu-links-mobile li.licenzirovanie {
   background-image: url('../img/m1_license.svg');
 }
-ul.menu-links-mobile li.migratsionnie-voprosi {
+ul.menu-links-mobile li.migracionnye-voprosy {
   background-image: url('../img/m1_migration.svg');
 }
-ul.menu-links-mobile li.meditsinskie-spori {
+ul.menu-links-mobile li.medicinskie-spory {
   background-image: url('../img/m1_medical_conv.svg');
 }
-ul.menu-links-mobile li.mejdunarodnoe-pravo {
+ul.menu-links-mobile li.mezhdunarodnoe-pravo {
   background-image: url('../img/m1_international.svg');
 }
 ul.menu-links-mobile li.semeynoe-pravo {
@@ -2964,53 +3074,54 @@ ul.menu-links-mobile li.nalogovoe-pravo {
 ul.menu-links-mobile li.nasledstvennoe-pravo {
   background-image: url('../img/m1_inharitance.svg');
 }
-ul.menu-links-mobile li.nedvijimost {
+ul.menu-links-mobile li.nedvizhimost {
   background-image: url('../img/m1_estate.svg');
 }
-ul.menu-links-mobile li.relokatsija {
+ul.menu-links-mobile li.relokaciya {
   background-image: url('../img/m1_relocation.svg');
   background-size: 18px 18px;
 }
-ul.menu-links-mobile li.spori-s-prizivnoy-komissiey {
+ul.menu-links-mobile li.spory-s-prizyvnoy-komissiey {
   background-image: url('../img/m1_army.svg');
 }
-ul.menu-links-mobile li.trudovie-spori {
+ul.menu-links-mobile li.trudovye-spory {
   background-image: url('../img/m1_working.svg');
 }
 ul.menu-links-mobile li.ugolovnoe-pravo {
   background-image: url('../img/m1_criminal.svg');
 }
-ul.menu-links-mobile li.juridicheskie-litsa-i-ip {
+ul.menu-links-mobile li.yuridicheskie-lica-i-ip {
   background-image: url('../img/m1_legal.svg');
 }
-ul.menu-links-mobile li.prochie-juridicheskie-voprosi {
+ul.menu-links-mobile li.prochie-yuridicheskie-voprosy {
   background-image: url('../img/m1_legal_other.svg');
 }
-ul.menu-links-mobile li.geneticheskaja-ekspertiza {
+ul.menu-links-mobile li.geneticheskaya-ekspertiza {
   background-image: url('../img/m1_genetical_exp.svg');
 }
-ul.menu-links-mobile li.meditsinskaja-ekspertiza {
+ul.menu-links-mobile li.medicinskaya-ekspertiza {
   background-image: url('../img/m1_medical_exp.svg');
 }
-ul.menu-links-mobile li.opredelenie-obstojatelstv-dtp {
+ul.menu-links-mobile li.opredelenie-obstoyatelstv-dtp {
   background-image: url('../img/m1_road_exp.svg');
 }
-ul.menu-links-mobile li.psihologo-psihiatricheskaja-ekspertiza {
+ul.menu-links-mobile li.psihologopsihiatricheskaya-ekspertiza {
   background-image: url('../img/m1_psycho_exp.svg');
 }
-ul.menu-links-mobile li.stroitelnaja-ekspertiza {
+ul.menu-links-mobile li.stroitelnaya-ekspertiza {
   background-image: url('../img/m1_building_exp.svg');
 }
-ul.menu-links-mobile li.prochie-vidi-ekspertiz {
+ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   background-image: url('../img/m1_expert_other.svg');
 }
 .big-mobile-popup {
-  padding: 0 20px 10px 20px;
-  height: calc(100% - 130px);
-  top: 60px;
+  padding: 0 20px 42px 20px;
+  height: calc(100% - 128px);
+  top: 58px;
 }
 .big-mobile-popup.mobile-subcat-block,
-.big-mobile-popup.m1 {
+.big-mobile-popup.m1,
+.big-mobile-popup.mobile-journal-themes {
   padding-left: 14px;
 }
 .big-mobile-popup .close {
@@ -3497,6 +3608,10 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   top: 24px;
   right: 32px;
 }
+.company-page .contacts-block.after-affix {
+  top: auto;
+  bottom: 32px;
+}
 .company-page .contacts-block #contacts {
   display: block;
 }
@@ -3584,6 +3699,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   padding: 16px;
   border: 1px solid #E8ECF1;
   box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
   border-radius: 8px;
 }
 .company-page .contacts-block ul li {
@@ -4048,6 +4164,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   font-weight: 500;
   font-size: 20px;
   line-height: 23px;
+  margin-bottom: 28px;
 }
 .articles .name a:hover {
   color: #0F86F3;
@@ -4109,6 +4226,10 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   display: flex;
   flex-wrap: nowrap;
 }
+.articles .article_item.prosmotr {
+  flex-direction: column;
+  padding-bottom: 0;
+}
 .articles .article_item:first-child {
   padding-top: 0;
 }
@@ -4146,22 +4267,6 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   line-height: 16px;
   color: #FF9E68;
 }
-.articles .article_item .date .tags {
-  margin-top: 4px;
-  margin-bottom: 16px;
-}
-.articles .article_item .date .tags a {
-  display: inline-block;
-  text-decoration: underline;
-  color: #4F77B4;
-}
-.articles .article_item .date .tags a:hover {
-  text-decoration: none;
-  color: #0F86F3;
-}
-.articles .article_item .date .tags a + a {
-  margin-left: 8px;
-}
 .articles .article_item .link {
   display: inline-block;
   margin-bottom: 8px;
@@ -4198,7 +4303,6 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   margin: 0;
 }
 .articles .article_item .article_text {
-  margin-bottom: 24px;
   font-weight: 300;
   font-size: 16px;
   line-height: 19px;
@@ -4206,6 +4310,15 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
 .articles .article_item .article_text p {
   margin: 0;
   padding: 0;
+}
+.articles .article_item .article_text + .site { 
+  margin-top: 24px;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 19px;
+}
+.articles .article_item .article_text + .site a {
+  color: #4F77B4;
 }
 .articles .article_item p {
   margin-bottom: 16px;
@@ -4256,6 +4369,13 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
 }
 .article-page .articles {
   margin-top: 32px;
+}
+
+#login-popup-resend p + p {
+  margin-top: 16px;
+}
+#login-popup-resend .button.other {
+  margin-top: 64px;
 }
 .company-page .articles {
   border-top: 1px solid #E8ECF1;
@@ -4320,9 +4440,14 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
 .docs-block .list .item {
   margin: 0 24px;
 }
-.docs-block .list .item img {
+.docs-block .list .item .img-block {
+  width: 100%;
+  height: 364px;
   margin-bottom: 18px;
   border-radius: 8px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 .docs-block .list .item p {
   font-size: 12px;
@@ -4438,6 +4563,12 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
 }
 @media (max-width: 1200px) {
+  .banner-slide__wrapper {
+    padding: 0 82px;
+  }
+  .btn__main-slide {
+    display: none;
+  }
   .index-catalog-block .item {
     padding: 16px 16px 16px 124px;
   }
@@ -4468,9 +4599,6 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .company-page {
     padding-right: 0;
   }
-  .company-page .contacts-block:not(.mobile-contacts) {
-    display: none;
-  }
   .company-page .contacts-block.mobile-contacts {
     display: block;
   }
@@ -4495,10 +4623,50 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .footer__reg-wrapper .flex {
     gap: 15px;
   }
+
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) {
+    display: block;
+    right: auto;
+    top: 286px;
+    width: 296px;
+    max-width: calc(100% - 32px);
+    left: 12px;
+    z-index: 10;
+  }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation {
+    padding: 18px 16px 13px;
+    border-radius: 24px;
+    box-shadow: 0px 1px 10px 0px rgba(0, 0, 0, 0.25);
+  }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation p {
+    font-size: 14px;
+  }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__title {
+    margin-bottom: 10px;
+    gap: 4px;
+  }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__bold {
+    margin-bottom: 8px;
+  }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__button {
+    margin: 14px auto 0;
+    height: 32px;
+    font-weight: 500;
+  }
 }
 @media (max-width: 991px) {
   .wrap {
     padding: 0 20px;
+  }
+  .blog-page {
+    padding: 16px 20px 140px;
+  }
+  .blog-page.blog-page-main {
+    margin: 0 -20px -80px;
+    padding: 16px 20px 136px
+  }
+  .arrow-header{
+    display: none;
   }
   .grid_flex {
     grid-template-columns: repeat(2, 1fr);
@@ -4527,6 +4695,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .banner__wrapper.main-banner .banner-slide__wrapper {
     height: 184px;
+    margin-top: 50px;
   }
   .index-sections-block .item {
     width: 32%;
@@ -4614,15 +4783,16 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .site-menu-wrapper,
   .site-menu-bg {
-    top: 287px;
-  }
-}
-@media (max-width: 800px) {
-  .header .search__box {
-    min-width: 300px;
+    top: 262px;
   }
 }
 @media (max-width: 768px) {
+  .banner__wrapper.main-banner .banner-slide__wrapper {
+    margin-top: 0;
+  }
+  .header .search__box {
+    min-width: 300px;
+  }
   .search-popup .search-window {
     max-width: 100%;
     width: 100%;
@@ -4642,19 +4812,29 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .header .menu1 {
     flex-wrap: wrap;
-    max-width: calc(100% - 140px);
+    max-width: 100%;
   }
   .header .menu1 li {
     min-width: fit-content;
+    margin-right: 15px;
   }
-  .header__profile {
-    margin-left: -30px;
+  .header .menu1 li.social__wrapper {
+    margin-right: 0;
+  }
+  .articles .empty-blog {
+    padding: 0 20px;
   }
   .social__wrapper {
     min-width: fit-content;
   }
   .social__wrapper a {
-    margin-top: 15px;
+    margin-top: 0;
+  }
+  .popup .window.middle{
+    width: 80%;
+  }
+  .popup .window.middle2{
+    width: 80%;
   }
   .popup .window.middle2 .close {
     width: 16px;
@@ -4787,25 +4967,6 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .index-catalog-block .search-filter {
     max-width: none;
   }
-  .articles .article_item .article_profile {
-    display: none;
-  }
-  .articles .article_item .article_profile + .article_body {
-    width: 100%;
-  }
-  .articles .article_item .article_body {
-    width: 100%;
-  }
-  .articles .article_item .article_body .mobile-article_profile {
-    display: block;
-  }
-  .articles .article_item .date .tags {
-    margin-left: -8px;
-  }
-  .articles .article_item .date .tags a {
-    margin-top: 2px;
-    margin-left: 8px;
-  }
   .grid_flex {
     gap: 16px;
   }
@@ -4825,7 +4986,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .company-page .top-info .image {
     position: static;
-    width: 300px;
+    width: 320px;
     height: 400px;
     margin-bottom: 16px;
   }
@@ -4852,9 +5013,12 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     overflow-x: scroll;
     padding-bottom: 10px;
     -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px 8px;
   }
   .staff-block .staff__grid .item {
-    display: inline-block;
+    display: inline-flex;
+    width: fit-content;
   }
   .staff-block .staff__grid .item + .item {
     margin-left: 48px;
@@ -4887,6 +5051,16 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .footer__social {
     margin-left: 0;
+  }
+}
+@media (max-width: 720px) {
+  .flex.header__second-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .site-menu-wrapper, .site-menu-bg {
+    top: 300px;
   }
 }
 @media (min-width: 575px) {
@@ -5069,16 +5243,15 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     top: 58px;
   }
   .navi {
-    background: #fff;
+    background: #FFF;
     padding: 0 0 12px;
     margin-top: 0;
   }
-  .navi a:last-child,
   .navi .wrap {
     white-space: nowrap;
-    overflow-x: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .navi a:last-child::-webkit-scrollbar,
   .navi .wrap::-webkit-scrollbar {
     width: 0;
   }
@@ -5173,50 +5346,9 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .index-catalog-block .articles-filter .checkbox {
     height: 20px;
   }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) {
-    display: block;
-    right: auto;
-    top: 250px;
-    width: 296px;
-    max-width: calc(100% - 32px);
-    left: 50%;
-    z-index: 10;
-    transform: translateX(-50%);
-  }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation {
-    padding: 18px 16px 13px;
-    border-radius: 24px;
-    box-shadow: 0px 1px 10px 0px rgba(0, 0, 0, 0.25);
-  }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation p {
-    font-size: 10px;
-  }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__title {
-    margin-bottom: 12px;
-    gap: 4px;
-  }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__bold {
-    margin-bottom: 8px;
-  }
-  .company-page .contacts-block.confirmation:not(.mobile-contacts) #confirmation .confirmation__button {
-    margin: 12px auto 0;
-    height: 32px;
-    font-weight: 500;
-  }
   .articles_filters {
     margin-top: 4px;
     margin-bottom: 16px;
-  }
-  .articles .article_item {
-    padding: 20px 0;
-  }
-  .articles .article_item .article_body .mobile-article_profile {
-    display: block;
-  }
-  .articles .article_item .article_body .link {
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 19px;
   }
   .index-catalog-block .item {
     padding: 16px 12px 16px 120px;
@@ -5266,7 +5398,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     color: #000;
     border-bottom: 1px solid #ccc;
   }
-  .index-catalog-block .block-name {
+  .index-catalog-block .block-name, .after-mail__title {
     font-size: 16px;
     line-height: 19px;
     margin-bottom: 16px;
@@ -5380,6 +5512,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     padding: 0;
   }
   .index-catalog-block .top-text h1 {
+    margin-top: 0px;
     margin-bottom: 16px;
     font-weight: 500;
     font-size: 16px;
@@ -5411,6 +5544,12 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .index-catalog-block .pre-list-text {
     margin-bottom: 8px;
   }
+
+  .blog-page.blog-page-main .main-content.other {
+    margin: 0 -20px;
+    width: calc(100% + 40px);
+  }
+
   .company-page {
     margin-top: 0;
     padding: 0;
@@ -5499,7 +5638,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
   .company-page .top-info {
     padding: 0 20px 24px;
-    margin: 0 -20px;
+    margin: 0 -20px 30px;
   }
   .company-page .ways {
     padding: 24px 20px;
@@ -5644,7 +5783,7 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     font-size: 16px;
     line-height: 19px;
   }
-  .content2 .articles .name {
+  .articles .name {
     font-size: 18px;
     line-height: 21px;
   }
@@ -5677,11 +5816,17 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
     margin-bottom: 24px;
   }
   .docs-block .list {
-    margin: 0 -20px 0 0;
+    margin: 0 -20px 0 -20px;
   }
   .docs-block .list .item {
     width: 254px;
-    margin: 0 48px 0 0;
+    margin: 0 0 0 20px;
+  }
+  .docs-block .list .item+.item {
+    margin: 0 0 0 48px;
+  }
+  .docs-block .list .item:last-child {
+    margin-right: 20px;
   }
   .index-catalog-block .top-text p.about-page {
     margin-bottom: 11px;
@@ -5756,6 +5901,14 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   .mobile-reviews.opened {
     display: block !important;
   }
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) {
+    position: fixed;
+    top: auto;
+    bottom: 88px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 40px);
+  }
 }
 @media (max-width: 480px) {
   .company-page .top-info .image {
@@ -5767,6 +5920,9 @@ ul.menu-links-mobile li.prochie-vidi-ekspertiz {
   }
 }
 @media (max-width: 355px) {
+  .company-page .contacts-block.confirmation:not(.mobile-contacts) {
+    width: calc(100% - 32px);
+  }
   .company-page .days .item .time {
     width: 90px;
   }

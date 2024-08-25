@@ -294,9 +294,23 @@ $(function () {
     $("body").removeClass("hid");
   });
 
-  $(".btn__mobile-filters.blog-theme-filter").click(function () {
-    $(".mobile-blog-themes").addClass("opened");
+  var blog_mmenu_height = +$('ul.menu-links-mobile.blog-links-mobile').attr('data-themes-count') * 32;
+  var blog_mmenu_height_tags = +$('ul.menu-links-mobile.blog-tags-mobile').attr('data-tags-count') * 32;
+
+  $(".journal-filter-button").click(function () {
+    $('ul.menu-links-mobile.blog-links-mobile').css('height', '272px');
+    $('.big-mobile-popup.mobile-journal-themes .more-article-themes-btn').show();
+
+    $('ul.menu-links-mobile.blog-tags-mobile').css('height', '112px');
+
+    $(".mobile-journal-themes").addClass("opened");
     $("body").addClass("hid");
+  });
+
+  $(".big-mobile-popup.mobile-journal-themes .more-article-themes-btn").click(function () {
+    $(this).hide(300);
+    $('ul.menu-links-mobile.blog-links-mobile').css('height', blog_mmenu_height+'px');
+    $('ul.menu-links-mobile.blog-links-mobile').addClass('opened');
   });
 
   var activeBottomItem = $(".mobile-bottom-header .bottom-header__item.active");
@@ -429,7 +443,7 @@ $(function () {
     $(".popup.cities").fadeIn();
     $("body").addClass("hid");
   });
-  $(".sel:not(.subcat)").styler({
+  $(".sel:not(.subcat, .themes-sel)").styler({
     selectSmartPositioning: false,
     onSelectOpened: function () {
       let height = parseInt($(this).children('.jq-selectbox__dropdown').children('ul').css('max-height').slice(0, -2));
@@ -442,6 +456,15 @@ $(function () {
       let height = parseInt($(this).children('.jq-selectbox__dropdown').children('ul').css('max-height').slice(0, -2));
       if (height > 248) $(this).children('.jq-selectbox__dropdown').children('ul').css('max-height', '248px');
     }
+  });
+  $(".sel.themes-sel").styler({
+    selectSmartPositioning: true,
+  });
+  $(".sel.tags-sel").styler({
+    selectSmartPositioning: true,
+  });
+  $('select.sel.themes-sel, select.sel.tags-sel').on('change', function() {
+    window.location.href = '/journal/'+this.value;
   });
   $(".docs-block .list").slick({
     arrows: false,
@@ -544,7 +567,7 @@ $(function () {
 
   $(window).on('scroll', function () {
     if (window.innerWidth > 1200 && $('.contacts-block:not(.mobile-contacts)').length > 0) {
-      if ($(window).scrollTop() > $(".company-page").offset().top && $(window).scrollTop() < $(".company-page").offset().top + $(".company-page").height() + $(".content2 .articles").height() + 40 - $('.contacts-block:not(.mobile-contacts)').height()) {
+      if ($(window).scrollTop() > $(".company-page").offset().top && $(window).scrollTop() < $(".company-page").offset().top + $(".company-page").height() - 32 - $('.contacts-block:not(.mobile-contacts)').height()) {
         if(!$('.contacts-block:not(.mobile-contacts)').hasClass('affix')) {
           $('.contacts-block:not(.mobile-contacts)').addClass('affix');
           if(window.innerWidth > 1920) {
@@ -557,6 +580,10 @@ $(function () {
       } else {
         $('.contacts-block:not(.mobile-contacts)').removeClass('affix').css('right', '0');
       }
+      $('.contacts-block:not(.mobile-contacts)').removeClass('after-affix');
+      if ($(window).scrollTop() >= $(".company-page").offset().top + $(".company-page").height() - 32 - $('.contacts-block:not(.mobile-contacts)').height()) {
+        $('.contacts-block:not(.mobile-contacts)').addClass('after-affix');
+      }
     } else if ($('.contacts-block:not(.mobile-contacts)').hasClass('affix')){
       $('.contacts-block:not(.mobile-contacts)').removeClass('affix').css('right', '0');
     }
@@ -566,31 +593,31 @@ $(function () {
     let favorite = { lawyers: [], experts: [], notaries: [] };
     let classification_id = parseInt($("#favorite_cat").val());
     let entity_id = parseInt($("#favorite_id").val());
-    let lawyers_id = [1, 2, 5, 6];
-    let experts_id = [3, 7];
-    let notaries_id = [4, 8];
+    let lawyers_id = [1, 2, 5, 6, 7];
+    let experts_id = [3, 8];
+    let notaries_id = [4];
 
     if (localStorage.getItem("favorite")) {
       favorite = JSON.parse(localStorage.getItem("favorite"));
     }
 
     if ($(this).hasClass("active")) {
-		let fav_index = -1;
+		  let fav_index = -1;
       if (lawyers_id.includes(classification_id)) {
-		fav_index = favorite["lawyers"].indexOf(entity_id);
-		if (fav_index !== -1) {
-    		favorite["lawyers"].splice(fav_index, 1);
-		}
+		    fav_index = favorite["lawyers"].indexOf(entity_id);
+		    if (fav_index !== -1) {
+        	favorite["lawyers"].splice(fav_index, 1);
+		    }
       } else if (experts_id.includes(classification_id)) {
         fav_index = favorite["experts"].indexOf(entity_id);
-		if (fav_index !== -1) {
-    		favorite["experts"].splice(fav_index, 1);
-		}
+		    if (fav_index !== -1) {
+        	favorite["experts"].splice(fav_index, 1);
+		    }
       } else if (notaries_id.includes(classification_id)) {
         fav_index = favorite["notaries"].indexOf(entity_id);
-		if (fav_index !== -1) {
-    		favorite["notaries"].splice(fav_index, 1);
-		}
+		    if (fav_index !== -1) {
+        	favorite["notaries"].splice(fav_index, 1);
+		    }
       }
     } else {
       if (lawyers_id.includes(classification_id)) {
@@ -606,8 +633,8 @@ $(function () {
     localStorage.setItem("favorite", favorite);
 
     $.post("/actions/set_favorite.php", { favorite: favorite, company_page: true}).done(function () {
-		$(".company-fav").toggleClass("active");
-	});
+		  $(".company-fav").toggleClass("active");
+	  });
   });
 
   $('#copy-adress').on("click", function () {

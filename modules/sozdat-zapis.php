@@ -5,7 +5,7 @@ $is_edit = isset(explode('/', $_SERVER['REQUEST_URI'])[3]);
 $article_id = false;
 if($is_edit) {
     $article_id = intval(explode('/', $_SERVER['REQUEST_URI'])[3]);
-    $article = get_article($article_id);
+    $article = get_article_cabinet($article_id);
 }
 $data['edit_input'] = '<input type="hidden" name="is_edit" value="'.($is_edit ? $article_id : 'false').'">';
 
@@ -17,6 +17,8 @@ if (isset($article)) {
     $title_input = $article['title'];
     $content = $article['content'];
     $keywords = $article['keywords'];
+    $theme_id = intval($article['service_id']);
+    $theme_name = $article['service_title'];
 }
 //вывод полей к заполнению
 $data['title_input'] = '<input type="text" name="title" placeholder="Название записи" value="'.$title_input.'">';
@@ -31,13 +33,6 @@ $data['blog_id_input'] = '<input type="hidden" name="blog_id" value="'.$blog_id.
 $themes = get_blog_filter_themes();
 $data['themes'] = "<option value='0' class='hidden'>Выбрать раздел</option>";
 
-if ($article_id) {
-    $request = get_article_themes($article_id);
-    if ($request) {
-        $theme_id = intval($request[array_key_first($request)]['id']);
-        $theme_name = get_service($theme_id)['title'];
-    }
-}
 $themes_btn_class = 'not-chosen';
 $themes_btn_text = 'Раздел не выбран';
 if(isset($theme_name)) {
@@ -70,7 +65,7 @@ if (isset($last_theme) && $last_theme != '') {
         if ($theme_id == $last_theme['id']) $selected = 'selected';
     }
     $data['themes'] .= "<option value='{$last_theme['id']}' {$selected}>{$last_theme['title']}</option>";
-    $data['themes_list_mobile'] .= '<li class="'.$last_theme['slug'].'" data-art-id="'.$theme['id'].'">'.$last_theme['title'].'</li>';
+    $data['themes_list_mobile'] .= '<li class="'.$last_theme['slug'].'" data-art-id="'.$last_theme['id'].'">'.$last_theme['title'].'</li>';
 }
 
 //разделы экспертиз

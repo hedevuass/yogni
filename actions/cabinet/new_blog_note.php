@@ -15,17 +15,22 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
         }
 
         if(!$data['title']) {
-            $json['error']['title'] = 'Введите Заголовок записи.';
+            $json['error']['title'] = 'Введите заголовок записи.';
         } else if (strlen($data['title']) > 128) {
             $json['error']['title'] = 'Заголовок записи слишком большой.';
+        } 
+        $data['alias'] = generateAlias($data['title']);
+        if ($data['alias'] == '') {
+            $json['error']['title'] = 'Заголовок записи не может быть конвертирован в алиас. Придумайте другой заголовок.';
         }
+        
 
         // if(!$data['keywords']) {
         //     $json['error']['keywords'] = 'Введите ключевые слова записи.';
         // } else if (str_word_count($data['keywords']) > 4) {
         //     $json['error']['keywords'] = 'Ключевых слов не может быть больше 4.';
         // }
-        $data['theme'] = intval($data['theme']);
+        $data['theme_id'] = intval($data['theme']);
         if($data['theme'] == 0) {
             $json['error']['theme'] = 'Выберите раздел записи.';
         }
@@ -33,19 +38,16 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
         if (isset($json['error'])) responseJson($json);
 
         $data['blog_id'] = intval($data['blog_id']);
+        $data['post_type'] = 'blogs';
+        $data['author_id'] = intval(get_blog_by_id($data['blog_id'])['specialist_id']);
         // $keywords = str_word_count($data['keywords'], 2);
         // $data['keywords'] = implode(', ', $keywords);
         $data['keywords'] = '';
 
         if($data['is_edit'] == 'false') {
             $article_id = intval(create_article($data));
-            if ($article_id) {
-                set_article_theme($article_id, $data['theme']);
-            }
         } else {
             $article_id = intval($data['is_edit']);
-            unset_article_themes($article_id);
-            set_article_theme($article_id, $data['theme']);
             update_article($article_id, $data);
         }
         $json['success'] = $article_id;

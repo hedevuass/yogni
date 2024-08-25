@@ -2,7 +2,6 @@
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
-
 if (isset($_POST['company_id'])) {
     foreach ($_POST as $key => $value) {
         $data[$key] = clean_elem_form($value);
@@ -12,11 +11,8 @@ if (isset($_POST['company_id'])) {
     $employees = [];
     foreach ($bd_employees as $key => $emp) {
         $employees[] = $emp;
-        unset_company_employee($emp['id']);
     }
-
     $new_employees = [];
-
     foreach ($data['name'] as $key => $name) {
         if (!$name && !$data['lastname'][$key] && !$data['post'][$key] && !isset($_FILES[$key]) && !isset($employees[$key])) continue;
         if (!$name) {
@@ -42,7 +38,7 @@ if (isset($_POST['company_id'])) {
                     $img_name = $data['mobile_loaded'][$key];
                 }
             } else {
-                $image = load_image($_FILES[$key], 'employee');
+                $image = load_image($_FILES[$key], 'employee', 'employee_' . $_SESSION['user']['id'] . '_'. date('d-m-y_H-i-s'));
                 if (isset($image['error'])) {
                     $json['error'][$key] = $image['error'];
                     continue;
@@ -51,22 +47,29 @@ if (isset($_POST['company_id'])) {
                 }
             }
         }
-        array_push($new_employees, [
+        $new_employees[$key] = [
             'name' => $name,
             'lastname' => $data['lastname'][$key],
             'post' => $data['post'][$key],
             'file' => $img_name
-        ]);
+        ];
     }
 
     if (isset($json['error'])) responseJson($json);
 
-    foreach ($new_employees as $employee) {
+    foreach ($bd_employees as $emp) {
+        unset_company_employee($emp['id']);
+    }
+    $employee_photos = array();
+    foreach ($new_employees as $employee_key => $employee) {
         if (!set_company_employee($employee, $data['company_id'])) {
             $json['fatal_error'] = 'Загрузка сотрудников временно недоступна';
             responseJson($json);
+        } else {
+            $employee_photos[$employee_key] = $employee['file'];
         }
     }
+    $json['img_info'] = $employee_photos;
     $json['success'] = 'Сотрудники загружены';
 
     responseJson($json);

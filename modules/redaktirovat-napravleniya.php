@@ -17,7 +17,6 @@ if($selected_count > 0) {
 
 // Подставляем специализации
 $data['cabinet_specialization'] = <<<EOF
-	<div class="specialization_select__wrapper">
 		<div class="select">
 			<div class="link">Выбор направлений ({$selected_count})</div>
 			<ul>
@@ -42,23 +41,9 @@ $all_specializations = get_services_by_classification($user['classification_id']
 
 $data['cabinet_specialization'] .= list_specialization($all_specializations, $specializations);
 
-/* $info_block = '';
-
-if ($user['classification_id'] != 8 && $user['classification_id'] != 3) {
-	$info_block = '<div class="specialization_info__wrapper">
-		<div class="specialization_info__icon"></div>
-		<div class="specialization_info__text">
-			Выбор подразделов права повлияет на добвление профиля в каталоги специалистов, но на личной странице будут отображаться только выбранные разделы права.
-		</div>
-	</div>';
-} */
-
 $data['cabinet_specialization'] .= <<<EOF
 			</ul>
 		</div>
-		{$info_block}
-	</div>	
-	<button type="submit" disabled>Сохранить информацию</button>
 EOF;
 
 // Подставляем специализации в попап для мобилок
