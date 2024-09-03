@@ -92,14 +92,22 @@
 }
 
 .select-toggle:after {
-  content: '';
+    content: '';
     position: absolute;
-    right: 0;
+    right: 5px;
     top: 50%;
+    transform: translateY(-50%);
     width: 16px;
     height: 10px;
-    transform: translateY(-50%) rotate(-90deg);
-    background: url(../img/cabinet/mob-menu-arrow.svg) no-repeat center / cover;
+    background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
+    transition: background 0.3s ease;
+}
+
+/* Когда .select-toggle содержит класс .expanded, меняем изображение на крест */
+.select-toggle.expanded:after {
+    background: url(../assets/img/cabinet/select-close.svg) no-repeat center center;
+    width: 16px; /* Обновляем размеры в зависимости от картинки */
+    height: 16px;
 }
 
 .select-dropdown {
@@ -117,11 +125,32 @@
     justify-content: space-between; 
     align-items: center;
     padding: 2px 10px;
+    padding-left: 40px;
     cursor: pointer;
     font-size: unset !important; 
     font-weight: unset !important; 
     margin-top: unset !important; 
     margin-bottom: unset !important;
+}
+
+.select-option-journal::before {
+    content: '';
+    position: absolute;
+    margin-left: -30px;
+    width: 20px;
+    height: 20px;
+    background: url('../assets/img/cabinet/journal-select-svg.svg') no-repeat center center;
+    background-size: contain; 
+}
+
+.select-option-banner::before {
+    content: '';
+    position: absolute;
+    margin-left: -30px;
+    width: 20px;
+    height: 20px;
+    background: url('../assets/img/cabinet/banner-select-svg.svg') no-repeat center center;
+    background-size: contain; 
 }
 
 .select-option input[type="checkbox"] {
@@ -132,6 +161,14 @@
     width: 24px;
     height: 24px;
     order: 2;
+}
+
+.select-option-promo input[type="radio"] {
+  order: 0 !important;
+}
+.select-option-promo {
+  padding-left: 0;
+  gap: 10px;
 }
 
 .select-option input[type="checkbox"]:checked {
@@ -151,7 +188,9 @@
 .select-option input[type="radio"]:checked {
     background: url(../assets/img/cabinet/checkbox_checked_orange.svg) no-repeat center center;
 }
-
+.select-option input[type="radio"]::before {
+  background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
+}
 .option-label {
   font-weight: 500;
   padding: 5px 0 5px 15px;
@@ -251,7 +290,7 @@
 </style>
 <div id="obzor-href" class="heading__mobile support-heading">
   <a href="/cabinet/"></a>
-  <div class="text">Продвижение страницы</div>
+  <div class="text">Продвижение</div>
 </div>
 <div class="promo-page">
   <nav class="top-menu-promo">
@@ -307,7 +346,7 @@
         </div>
     </div>
     <!-- Mobile version swiper -->
-    <div class="swiper-container mobile-only">
+    <div class="swiper-container-tariff mobile-only">
         <div class="swiper-wrapper">
             <div class="swiper-slide">
                 <div class="element-promo promo-tariffs">
@@ -453,9 +492,11 @@
 </div>
 
 <div id="option-href" class="options-section hidden-comp">
+  <div class="option-block-mobile">
     <h2><span class="highlight">Опции</span> страницы</h2>
     <p>Отдельные опции для повышения эффективности работы с каталогом.</p>
-    <hr class="divider" />
+  </div>
+    <hr class="divider hidden-comp" />
     <div class="options-table">
       <div class="table-row table-header">
         <div class="table-cell">Опция</div>
@@ -479,7 +520,7 @@
     </div>
   </div>
   
-
+  <div class="mobile-only mobile-title">Ответы на частые вопросы</div>
   <div id="faq-block" class="faq-section">
   <h2>Ответы на частые вопросы</h2>
   <div class="faq-item">
@@ -578,9 +619,9 @@
           </div>
           <div class="form-option">
             <p class="text-only-option">
-              <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price"></span><br>
+              <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price-after"></span><span class="right-side" id="popup-option-price"></span><br>
               <hr>
-              Период <span class="right-side" id="popup-option-period"></span><br>
+              <span class="popup-connected-tariff-bold">Период <span class="right-side" id="popup-option-period"></span></span><br>
               <span class="right-side" id="popup-option-duration"></span><br>
             </p> 
             <input type="hidden" name="specialist_id" id="popup-specialist-option-id">
@@ -720,7 +761,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
   const buttons = document.querySelectorAll('.promo-button-mob');
-  const allSections = document.querySelectorAll('.obzor-mobile, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
+  const allSections = document.querySelectorAll('.obzor-mobile, .mobile-title, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
 
   function showSections(sectionSelectors) {
     allSections.forEach(section => section.classList.add('hidden-comp'));
@@ -739,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let sectionsToShow = [];
 
       if (target === '#obzor-href') {
-        sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block'];
+        sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title'];
       } else if (target === '#tariff-href') {
         sectionsToShow = ['#tariff-href'];
       } else if (target === '.promo-section') {
@@ -752,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block']);
+  showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title']);
 
   if (window.innerWidth <= 768) {
     const swiper = new Swiper('.swiper-container', {
@@ -763,23 +804,51 @@ document.addEventListener('DOMContentLoaded', function() {
         clickable: true,
       },
     });
+
+    const swiper_tarif = new Swiper('.swiper-container-tariff', {
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+    });
   }
 });
 
 window.addEventListener('DOMContentLoaded', function() {
-    const scrollTarget = localStorage.getItem('scrollTarget');  // Получаем цель скролла
+    const scrollTarget = localStorage.getItem('scrollTarget'); 
 
     if (scrollTarget) {
         const targetElement = document.querySelector(scrollTarget);
         if (targetElement) {
-            // Выполняем плавный скролл к элементу
+            
             window.scrollTo({
                 top: targetElement.offsetTop,
                 behavior: 'smooth'
             });
         }
-        localStorage.removeItem('scrollTarget');  // Очищаем localStorage после использования
+        localStorage.removeItem('scrollTarget');  
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const selectToggles = document.querySelectorAll('.select-toggle');
+    const dropdowns = document.querySelectorAll('.select-dropdown');
+
+    selectToggles.forEach(function(toggle, index) {
+        toggle.addEventListener('click', function() {
+            const dropdown = dropdowns[index]; // Привязка к соответствующему выпадающему списку
+            const isExpanded = dropdown.style.display === 'block';
+            dropdown.style.display = isExpanded ? 'none' : 'block';
+            toggle.classList.toggle('expanded', !isExpanded);
+        });
+    });
+});
+
+document.querySelectorAll('a[data-scroll-target]').forEach(link => {
+    link.addEventListener('click', function(event) {
+        const scrollTarget = this.getAttribute('data-scroll-target');
+        localStorage.setItem('scrollTarget', scrollTarget);  // Сохраняем цель скролла
+    });
 });
 
 </script>

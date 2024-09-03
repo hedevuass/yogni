@@ -1,3 +1,119 @@
+<style>
+	.popup .window .reg {
+		background-color: #EEF3FA;
+	}
+	.popup .window .reg .field textarea {
+		border: none;
+	}
+	.popup .window .reg .name {
+		font-weight: 500;
+		font-family: 'Roboto', sans-serif;
+	}
+	.popup-btn {
+		background-color: #FF9E68 !important;
+		box-shadow: 0px 0px 2px 0px #0000001A !important;
+		color: #ffffff !important;
+		border: none !important;
+		border-radius: 12px !important;
+		margin-bottom: 30px;
+	}
+	input {
+		width: 100%;
+    	padding: 12px;
+    	margin-top: 20px;
+    	border-radius: 12px;
+		color: #B0B0B0;
+	}
+	.inp {
+		margin-top: 20px;
+		color: #B0B0B0;
+	}
+	.message {
+		margin-top: 30px;
+		font-weight: 500;
+	}
+
+	.popup.support-end-oproekte .end__block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px 50px;
+}
+
+.popup.support-end-oproekte .end__text {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: #222;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.popup.support-end-oproekte .end__text p + p {
+  margin-top: 16px;
+}
+
+.popup.support-end-oproekte .end__title {
+  padding: 0 20px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 72px;
+}
+
+.popup.support-end-oproekte .convert {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 32px;
+}
+
+.popup.support-end-oproekte .convert img {
+  max-width: 100%;
+}
+
+.popup.support-end-oproekte .end__text {
+  text-align: left;
+}
+
+/* Дополнительные стили, если они требуются */
+.popup.support-end-oproekte .button {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.popup.support-end-oproekte .popup-btn {
+  padding: 12px 25px;
+  background-color: #222;
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.popup.support-end-oproekte .popup-btn:hover {
+  background-color: #444;
+}
+
+.popup.support-end-oproekte .close-popup-btn {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.popup.support-end-oproekte .close-popup-btn:hover {
+  background-color: #e60000;
+}
+.popup.support-end-oproekte .close-popup-btn {
+	width: 100%;
+    text-align: center;
+}
+@media (max-width: 991px) {
+	.message-to-support { 
+		width: 100%;
+	}
+}
+</style>
 <div class="navi">
 	<div class="wrap">
 		<a href="/">ЮРФАК</a><span>/</span><span class="curr-page">О проекте</span>
@@ -7,14 +123,126 @@
 	<div class="index-catalog-block inner">
 		<div class="top-text">
 			<h1>О проекте</h1>
-			<p class="about-page">
-				ЮРФАК - это удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.
+			<div class="about-page">
+				<div class="text"><span class="orange">ЮР</span>ФАК<br><span class="descr">Удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов.</span></div>
+			</div>
+			<p class="text">
+				Просим вас внимательно ознакомиться с документами, представленными ниже. 
+Используя ЮРФАК.RU, вы соглашаетесь со всеми правилами Проекта. 
 			</p>
-			<ul class="about-links">
-				<li><a href="#">Политика защиты персональных данных</a></li>
-				<li><a href="#">Правила обработки персональных данных</a></li>
-				<li><a href="#">Правила пользования проектом</a></li>
-			</ul>
+			<div id="faq-block" class="faq-section">
+			<div class="faq-item">
+				<button class="faq-question"><div>Как проходит съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"Как проходит съёмка?" здесь.</p>
+				</div>
+			  </div>
+			  <div class="faq-item">
+				<button class="faq-question"><div>Как заказать съёмку?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"Как заказать съёмку?" здесь.</p>
+				</div>
+			  </div>
+			  <div class="faq-item">
+				<button class="faq-question"><div>Нужно ли специально готовиться к съёмке?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"Нужно ли специально готовиться к съёмке?" здесь.</p>
+				</div>
+			  </div>
+			  <div class="faq-item">
+				<button class="faq-question"><div>Не нашли нужный вопрос или требуется помощь в решении проблемы?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"Не нашли нужный вопрос или требуется помощь в решении проблемы?" здесь.</p>
+				</div>
+			  </div>
+			  <div class="faq-item">
+				<button class="faq-question"><div>Если у меня это первая съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"Если у меня это первая съёмка?" здесь.</p>
+				</div>
+			  </div>
+			  <div class="faq-item">
+				<button class="faq-question"><div>В чём отличие профессиональной съёмки от любительской?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
+				<div class="faq-answer">
+				  <p>"В чём отличие профессиональной съёмки от любительской?" здесь.</p>
+				</div>
+			  </div>
+			</div>
+			<p class="text2">
+				Если у вас появились вопросы, есть жалобы или предложения, напишите нам! Мы обязательно изучим вашу ситуацию и ответим в ближайшее время!
+			</p>
+			<button class="message-to-support">Написать в поддержку</button>
+			
 		</div>
 	</div>
 </div>
+
+<div class="popup support-write-oproekte">
+	<div class="bg"></div>
+	<div class="window middle">
+	  	<div class="close"></div>
+	  	<div class="reg">
+			<form method="POST" id="support-popup">
+			  	<div class="name">Сообщение в поддержку</div>
+				  	<div class="popup-body">
+						<div class="support-type"></div>
+						<input type="text" name="user_name"  placeholder="Имя" value="">
+						<input type="text" name="user_email"  placeholder="Адрес электронной почты" value="">
+						<p class="message">Сообщение</p>
+						<div class="field">
+						  	<textarea class="inp" name="content" placeholder="Опишите вашу проблему, вопрос или предложение"></textarea>
+						</div>
+						<div class="button">
+						  	<button type="submit" id="btn-support-popup" class="popup-btn">
+								Отправить
+						  	</button>
+						  	<p>
+								Нажимая “Отправить”, я принимаю изложенное в документах,
+								представленных в разделе сайта <span class="bold">“О проекте”</span>.
+						  	</p>
+						</div>
+					</div>
+			</form>
+	  	</div>
+	</div>
+</div>
+
+<div class="popup support-end-oproekte">
+	<div class="bg"></div>
+	<div class="window middle">
+	  	<div class="close"></div>
+	  	<div class="reg">
+			<div class="popup-body">
+				<div class="end__block">
+					<i class="convert"><img src="/assets/img/cabinet/convert.svg"></i>
+					<div class="end__title">Спасибо за обращение!</div>
+					<div class="end__text">
+						<p>Ответ придёт на электронную почту, указанную при регистрации.</p>
+						<p>Мы постараемся ответить как можно быстрее. Обычно ответ приходит в течение двух часов, но в отдельных случаях может занимать до 1 рабочего дня.</p>
+					</div>
+				</div>
+				<div class="button">
+					<a href="../" class="popup-btn close-popup-btn">
+					  Вернуться на сайт
+					</a>
+			  	</div>
+	  		</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	document.querySelectorAll('.faq-question').forEach(button => {
+	button.addEventListener('click', () => {
+	  const faqItem = button.parentElement;
+	  faqItem.classList.toggle('active');
+  
+	  const faqAnswer = button.nextElementSibling;
+	  if (faqItem.classList.contains('active')) {
+		faqAnswer.style.maxHeight = faqAnswer.scrollHeight + 'px';
+	  } else {
+		faqAnswer.style.maxHeight = '0';
+	  }
+	});
+  });
+</script>

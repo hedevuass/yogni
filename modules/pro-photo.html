@@ -1,5 +1,32 @@
-<div class="heading__mobile"><a href="/cabinet/"></a>PRO-фотосъёмка</div>
+<div style="margin: 0px" class="heading__mobile">
+  <a href="/cabinet/"></a>PRO-фотосъёмка
+</div>
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<style>
+  @media (max-width: 991px) {
+    .swiper-container {
+      width: 100%;
+      height: auto;
+    }
+    .swiper-slide {
+      padding-right: 8px;
+    }
 
+    .swiper-pagination-bullet {
+      background: #ffffff !important;
+      border: 1px solid;
+    }
+    .swiper-pagination-bullet-active {
+      background: #ff8139 !important;
+      border: 1px solid #ff8139;
+    }
+    .swiper-container-order {
+      order: 3;
+      width: 100%;
+      height: auto;
+    }
+  }
+</style>
 <div class="pro-photo-block">
   <div class="pro-photo-top">
     <!--data:pro_photo_title--><!--data:pro_photo_title-->
@@ -27,31 +54,24 @@
       Закажите выездную фотосъёмку в удобном для вас месте.
     </div>
     <div class="pro-photo__wrapper">
-      <div class="pro-photo__card-block">
+      <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card">
           <div class="card__title">
             <div class="title">Экспресс-фото *</div>
           </div>
           <div class="card__price-block">
             <div class="card__price">
-              <span class="price"><!--data:price1--><!--data:price1--></span
-              ><span class="currency">₽</span>
+              <span class="price"><!--data:price1--><!--data:price1--></span><span class="currency">₽</span>
             </div>
           </div>
           <div class="card__body">
             <ul class="card__descr">
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-watch.svg"
-                  alt="Watch Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
                 ~5 минут
               </li>
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-pic.svg"
-                  alt="Photo Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
                 1-2 фото в обработке
               </li>
             </ul>
@@ -60,11 +80,12 @@
         </div>
         <div class="card__text">
           * Быстрая съёмка “на ходу” – фотограф делает несколько снимков в
-          наиболее выигрышном ракурсе. По окончанию фотосессии вы получите до
-          3-х обработанных фото, максимально подходящих для профиля
+          наиболее выигрышном ракурсе. По окончанию фотосессии вы получите
+          до 3-х обработанных фото, максимально подходящих для профиля
         </div>
       </div>
-      <div class="pro-photo__card-block">
+      
+      <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card action">
           <div class="card__title">
             <div class="title">ПРО-фото **</div>
@@ -72,29 +93,20 @@
           </div>
           <div class="card__price-block">
             <div class="card__price old">
-              <span class="price crossed bold"
-                ><!--data:price_old2--><!--data:price_old2--></span
-              ><span class="currency"></span>
+              <span class="price crossed bold"><!--data:price_old2--><!--data:price_old2--></span><span class="currency"></span>
             </div>
             <div class="card__price">
-              <span class="price"><!--data:price2--><!--data:price2-->*</span
-              ><span class="currency">₽</span>
+              <span class="price"><!--data:price2--><!--data:price2-->*</span><span class="currency">₽</span>
             </div>
           </div>
           <div class="card__body">
             <ul class="card__descr">
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-watch.svg"
-                  alt="Watch Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
                 ~10-15 минут
               </li>
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-pic.svg"
-                  alt="Photo Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
                 5 фото в обработке
               </li>
             </ul>
@@ -105,12 +117,14 @@
           </div>
         </div>
         <div class="card__text">
-          ** Полноценная фотосессия, упакованная в 15 минут. Больше времени для
-          выбора фона и ракурса, фотограф поможет подобрать взгляд и позу для
-          фото. Оптимальный вариант при подключении услуг продвижения.
+          ** Полноценная фотосессия, упакованная в 15 минут. Больше
+          времени для выбора фона и ракурса, фотограф поможет подобрать
+          взгляд и позу для фото. Оптимальный вариант при подключении
+          услуг продвижения.
         </div>
       </div>
-      <div class="pro-photo__card-block">
+      
+      <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card">
           <div class="card__title">
             <div class="title">Фотосессия ***</div>
@@ -118,29 +132,20 @@
           </div>
           <div class="card__price-block">
             <div class="card__price old">
-              <span class="price crossed bold"
-                ><!--data:price_old3--><!--data:price_old3--></span
-              ><span class="currency"></span>
+              <span class="price crossed bold"><!--data:price_old3--><!--data:price_old3--></span><span class="currency"></span>
             </div>
             <div class="card__price">
-              <span class="price"><!--data:price3--><!--data:price3--></span
-              ><span class="currency">₽</span>
+              <span class="price"><!--data:price3--><!--data:price3--></span><span class="currency">₽</span>
             </div>
           </div>
           <div class="card__body">
             <ul class="card__descr">
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-watch.svg"
-                  alt="Watch Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
                 ~ от 30 минут
               </li>
               <li>
-                <img
-                  src="/assets/img/cabinet/pro-photo-pic.svg"
-                  alt="Photo Icon"
-                />
+                <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
                 от 10 фото в обработке
               </li>
             </ul>
@@ -151,12 +156,163 @@
           </div>
         </div>
         <div class="card__text">
-          *** Бескомпромиссный выбор для продвижения личного бренда. Имиджевая
-          фотосессия в деловом стиле. Консультация в выборе образа и локации.
-          Профессиональные фото для рекламной кампании и продвижения профиля.
+          *** Бескомпромиссный выбор для продвижения личного бренда.
+          Имиджевая фотосессия в деловом стиле. Консультация в выборе
+          образа и локации. Профессиональные фото для рекламной кампании и
+          продвижения профиля.
         </div>
       </div>
+
+      
+      <div class="swiper-container mobile-only">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">
+            <div class="pro-photo__card-block">
+              <div class="pro-photo__card">
+                <div class="card__title">
+                  <div class="title">Экспресс-фото *</div>
+                </div>
+                <div class="card__price-block">
+                  <div class="card__price">
+                    <span class="price"
+                      ><!--data:price1_2--><!--data:price1_2--></span
+                    ><span class="currency">₽</span>
+                  </div>
+                </div>
+                <div class="card__body">
+                  <ul class="card__descr">
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-watch.svg"
+                        alt="Watch Icon"
+                      />
+                      ~5 минут
+                    </li>
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-pic.svg"
+                        alt="Photo Icon"
+                      />
+                      1-2 фото в обработке
+                    </li>
+                  </ul>
+                  <a class="card__buy-btn">Заказать</a>
+                </div>
+              </div>
+              <div class="card__text">
+                * Быстрая съёмка “на ходу” – фотограф делает несколько снимков в
+                наиболее выигрышном ракурсе. По окончанию фотосессии вы получите
+                до 3-х обработанных фото, максимально подходящих для профиля
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="pro-photo__card-block">
+              <div class="pro-photo__card action">
+                <div class="card__title">
+                  <div class="title">ПРО-фото **</div>
+                  <div class="action-less">-50%</div>
+                </div>
+                <div class="card__price-block">
+                  <div class="card__price old">
+                    <span class="price crossed bold"
+                      ><!--data:price_old2_2--><!--data:price_old2_2--></span
+                    ><span class="currency"></span>
+                  </div>
+                  <div class="card__price">
+                    <span class="price"
+                      ><!--data:price2_2--><!--data:price2_2-->*</span
+                    ><span class="currency">₽</span>
+                  </div>
+                </div>
+                <div class="card__body">
+                  <ul class="card__descr">
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-watch.svg"
+                        alt="Watch Icon"
+                      />
+                      ~10-15 минут
+                    </li>
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-pic.svg"
+                        alt="Photo Icon"
+                      />
+                      5 фото в обработке
+                    </li>
+                  </ul>
+                  <a class="card__buy-btn">Заказать</a>
+                  <div class="card__postscr">
+                    Скидка действует первые две недели после регистрации
+                  </div>
+                </div>
+              </div>
+              <div class="card__text">
+                ** Полноценная фотосессия, упакованная в 15 минут. Больше
+                времени для выбора фона и ракурса, фотограф поможет подобрать
+                взгляд и позу для фото. Оптимальный вариант при подключении
+                услуг продвижения.
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="pro-photo__card-block">
+              <div class="pro-photo__card">
+                <div class="card__title">
+                  <div class="title">Фотосессия ***</div>
+                  <div class="action-less">-50%</div>
+                </div>
+                <div class="card__price-block">
+                  <div class="card__price old">
+                    <span class="price crossed bold"
+                      ><!--data:price_old3_2--><!--data:price_old3_2--></span
+                    ><span class="currency"></span>
+                  </div>
+                  <div class="card__price">
+                    <span class="price"
+                      ><!--data:price3_2--><!--data:price3_2--></span
+                    ><span class="currency">₽</span>
+                  </div>
+                </div>
+                <div class="card__body">
+                  <ul class="card__descr">
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-watch.svg"
+                        alt="Watch Icon"
+                      />
+                      ~ от 30 минут
+                    </li>
+                    <li>
+                      <img
+                        src="/assets/img/cabinet/pro-photo-pic.svg"
+                        alt="Photo Icon"
+                      />
+                      от 10 фото в обработке
+                    </li>
+                  </ul>
+                  <a class="card__buy-btn">Заказать</a>
+                  <div class="card__postscr">
+                    Скидка действует первые две недели после регистрации
+                  </div>
+                </div>
+              </div>
+              <div class="card__text">
+                *** Бескомпромиссный выбор для продвижения личного бренда.
+                Имиджевая фотосессия в деловом стиле. Консультация в выборе
+                образа и локации. Профессиональные фото для рекламной кампании и
+                продвижения профиля.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+      
     </div>
+
+    
   </div>
   <!--data:employee_photo--><!--data:employee_photo-->
   <!--data:employee_photo_mobile--><!--data:employee_photo_mobile-->
@@ -180,18 +336,41 @@
         </p>
       </div>
     </div>
-    <div class="promo__example-card">
+    <div class="swiper-container swiper-container-order mobile-only">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">
+          <div class="promo__example-card">
+            <div class="promo__example"></div>
+            <div class="promo__example-text">
+              Пример удачного стиля для фотосессии
+            </div>
+          </div>
+        </div>
+        <div class="swiper-slide">
+          <div class="promo__example-card">
+            <div class="promo__example promo__example2"></div>
+            <div class="promo__example-text">
+              Пример неудачного стиля для фотосессии
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+
+    <div class="promo__example-card hidden-comp">
       <div class="promo__example"></div>
       <div class="promo__example-text">
         Пример удачного стиля для фотосессии
       </div>
     </div>
-    <div class="promo__example-card">
+    <div class="promo__example-card hidden-comp">
       <div class="promo__example promo__example2"></div>
       <div class="promo__example-text">
         Пример неудачного стиля для фотосессии
       </div>
     </div>
+
     <div class="pro-photo__text promo__mobile-text">
       <p>Профессионализм и личные качества, безусловно, важны.</p>
       <p>
@@ -470,6 +649,9 @@
   $(document).ready(function () {
     if (window.innerWidth <= 768) {
       const swiper = new Swiper(".swiper-container", {
+        slidesPerView: 1.2,
+        centeredSlides: true,
+        spaceBetween: 8,
         pagination: {
           el: ".swiper-pagination",
           clickable: true,

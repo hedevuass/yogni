@@ -120,7 +120,7 @@ EOF;
 	</nav>
 	EOF;
 	$code .= <<<EOF
-	<div class="heading__mobile"><a href="/cabinet/{$href_mobile}"></a>{$page['menu_title']}</div>
+	<div style="margin: 0px;" class="heading__mobile"><a href="/cabinet/{$href_mobile}"></a>{$page['menu_title']}</div>
 </div>
 EOF;
 
@@ -313,7 +313,7 @@ $top_cards = '
 			<div class="name">Актуальное</div>
 			<div class="mob-menu__actual">
 				<div class="actual__name">
-                	<span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">57%</span>
+                	<span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
 				</div>
 				<div class="actual__descr">
 					Первый инструмент для продвижения страницы
@@ -329,8 +329,6 @@ $top_cards = '
 				<div class="actual__postscr">
 					*Первые 2 недели после регистрации
 				</div>
-				<div class="actual__arrow"></div>
-				<div class="actual__photocamera"></div>
 				<a href="/cabinet/pro-photo" class="actual__link"></a>
 			</div>
 			</div>

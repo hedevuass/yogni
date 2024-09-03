@@ -41,7 +41,7 @@ if ($user['company']) {
 
 $data['index_mob_info'] .= '<div class="mob-menu__actual">
 <div class="actual__name">
-    <span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">57%</span>
+    <span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
 </div>
 <div class="actual__descr">
     Первый инструмент для продвижения страницы
@@ -57,20 +57,10 @@ $data['index_mob_info'] .= '<div class="mob-menu__actual">
 <div class="actual__postscr">
     *Первые 2 недели после регистрации
 </div>
-<div class="actual__arrow"></div>
-<div class="actual__photocamera"></div>
+
 <a href="/cabinet/pro-photo" class="actual__link"></a>
 </div>';
 //выводим цену на фото
-$data['index_photo_price'] = '<div class="high-price">
-<span>'.$old_price.'</span>
-<span class="small"> руб.</span>
-<div class="cross-line"></div>
-</div>
-<div class="actual-price">
-<span>'.$actual_price.'*</span>
-<span class="small"> руб.</span>
-</div>';
 
 $data['index_mob_edit_menu'] = mob_edit_menu($user);
 
@@ -271,7 +261,7 @@ $top_cards = '
     $data['top_cards'] = $top_cards;
 
     $top_cards_mobile = '
-<div class="card">
+<a href="/cabinet/page_promo" class="card">
     <div class="card-topline">
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
@@ -281,16 +271,16 @@ $top_cards = '
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
-</div>
-<div class="card">
+</a>
+<a href="/cabinet/page_promo" class="card">
       <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4><img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
         <p>Продвижение карточки</p>
         <div class="card-status">
             <span>' . $promo_status_data['status'] . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-    </div>
-    <div class="card">
+</a>
+<a href="/cabinet/page_promo" class="card">
     <div class="card-topline">
         <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
@@ -300,14 +290,14 @@ $top_cards = '
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
-</div>
-    <div class="card">
+</a>
+<a href="/cabinet/moy-blog" class="card">
       <div class="card-topline"><h4>Мой блог <span class="status-dot '. $status_class .'"></span></h4><img src="../assets/img/cabinet/card-blog.svg" alt=""></div>
         '. $blog_info_block .'
         <div class="card-status">
             <span>'. $status .'</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-    </div>';
+</a>';
     $data['top_cards_mobile'] = $top_cards_mobile;
     $HTML = html_explode($data, $HTML);

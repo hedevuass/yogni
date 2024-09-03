@@ -734,3 +734,63 @@ $('.index-catalog-block').on('click', '#get-blog button', function () {
         }
     })
 })
+
+$('.message-to-support').on('click', function (e) {
+	$('.support-write-oproekte').fadeIn(200);
+	$('body').addClass('hid');
+})
+
+$('#support-popup').on('click', 'button[type="submit"]', function (e) {
+    e.preventDefault();
+    
+    // Получаем ID формы и необходимые поля
+    let form = $(this).closest('form').attr('id');
+    let $textarea = $(`#${form} textarea[name="content"]`);
+    let $feedbackContainer = $textarea.closest('.field');
+
+    // Убираем предыдущие ошибки, если они есть
+    $textarea.removeClass('error');
+    $(`#${form} .invalid-feedback`).remove();
+
+    // Проверка на пустое сообщение
+    if ($textarea.val() === '') {
+        $textarea.addClass('error');
+        $feedbackContainer.append(`<div class="invalid-feedback">Введите сообщение.</div>`);
+        return;
+    }
+
+    // Получаем значения полей
+    let message_type = $(`#${form} .support-type`).text();
+    let message = $textarea.val();
+    let email = $(`#${form} input[name="user_email"]`).val();
+    let user_name = $(`#${form} input[name="user_name"]`).val();
+
+    // Отправляем данные на сервер
+    $.ajax({
+        type: "POST",
+        url: "/actions/mail/feedback.php",
+        dataType: 'json',
+        data: { message_type: message_type, message: message, email: email, user_name: user_name },
+        success: function (json) {
+            if (json['fatal_error']) {
+                let error_message = json['fatal_error'];
+                $feedbackContainer.append(`<div class="invalid-feedback">` + error_message + `</div>`);
+            }
+
+            if (json['success']) {
+                // Закрываем текущий попап
+                $('.popup.support-write-oproekte').fadeOut(200);
+
+                // Открываем попап завершения
+                setTimeout(function () {
+                    $('.popup.support-end-oproekte').fadeIn(200);
+                }, 200);
+            }
+        }
+    });
+});
+
+// Закрытие попапа завершения
+$('.popup.support-end-oproekte').on('click', '.close-popup-btn, .close', function () {
+    $(this).closest('.popup').fadeOut(200);
+});

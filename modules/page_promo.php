@@ -93,7 +93,7 @@ if (isset($tariff['tariff_id']) && isset($connected_tariffs_id[$tariff['tariff_i
   // Формируем HTML для попапа
   $connected_popup = '
   <p class="connected_tariff_popup">
-      <div class="popup-connected-tariff-p">У вас подключен: <span>"' . htmlspecialchars($connected_name) . '"</span></div>
+      <div class="popup-connected-tariff-p">У вас подключен тариф: <span>"' . htmlspecialchars($connected_name) . '"</span></div>
       <div class="popup-connected-tariff-p">Период действия: <span>с ' . htmlspecialchars($start_date) . '</span> <span id="popup-connected-tariff-duration"> по ' . htmlspecialchars($end_date) . '</span></div>
   </p>
   <div class="connected-tariff-descr">*При изменении тарифного плана до окончания срока действия подписки стоимость услуг не пересчитывается, новый тариф подключается с даты оплаты.</div>';
@@ -116,7 +116,7 @@ function generate_tariff_html($tariff, $class, $specialist_id, $connected_tariff
         $button_html = '<button class="confirm-btn card-button confirm-btn-' . $class . ' inactive-button">Подключено до ' . $end_date . '</button>';
     } else {
         $button_html = '
-        <button class="confirm-btn card-button confirm-btn-' . $class . ' active-button" 
+        <button class="confirm-btn card-button confirm-btn-' . $class . ' opacity-button" 
                 data-tariff-id="' . $tariff['id'] . '" 
                 data-tariff-name="' . $tariff['name'] . '" 
                 data-tariff-price="' . $tariff['price'] . '" 
@@ -149,11 +149,10 @@ function generate_mobile_tariff_html($tariff, $class, $specialist_id, $connected
         $button_html = '<button class="confirm-btn card-button confirm-btn-' . $class . ' inactive-button">Подключено до ' . $end_date . '</button>';
     } else {
         $button_html = '
-        <button class="confirm-btn card-button confirm-btn-' . $class . ' active-button" 
+        <button class="confirm-btn card-button confirm-btn-' . $class . ' opacity-button" 
                 data-tariff-id="' . $tariff['id'] . '" 
                 data-tariff-name="' . $tariff['name'] . '" 
                 data-tariff-price="' . $tariff['price'] . '"
-                data-tariff-price="' . $tariff['price'] . '" 
                 data-tariff-old-price="' . $tariff['price_old'] . '"
                 data-specialist-id="' . $specialist_id . '"
                 data-options=\'' . json_encode($options) . '\'>Подключить</button>';
@@ -193,55 +192,69 @@ foreach ($connected_options as $option) {
 }
 
 $options_html = '';
-
-function generate_option_html($option, $connected_options_map, $specialist_id)
+function generate_option_html($option, $connected_options_map, $specialist_id, $connected_tariffs_map)
 {
     $is_connected = isset($connected_options_map[$option['id']]);
     $end_date = $is_connected ? date('d.m.y', strtotime($connected_options_map[$option['id']])) : '';
+
+    $connected_tariffs_ids = array_keys($connected_tariffs_map);
+    $is_basic_tariff_connected = in_array('1', $connected_tariffs_ids); // Тариф 1 (basic)
+    $is_other_tariffs_connected = in_array('2', $connected_tariffs_ids) || in_array('3', $connected_tariffs_ids); // Тариф 2 или 3
+
+    $included_in_tariff = ($is_other_tariffs_connected && in_array($option['id'], [1, 2, 3, 4, 5])) ||
+                          ($is_basic_tariff_connected && in_array($option['id'], [1, 2, 3]));
 
     $option_html = '
     <div class="table-row">
         <div class="table-cell">' . htmlspecialchars($option['name']) . '</div>
         <div class="table-cell hidden-comp">
           <label class="switch" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">
-            <input type="checkbox" readonly ' . ($is_connected ? 'checked' : '') . ' />
+            <input type="checkbox" readonly ' . ($is_connected || $included_in_tariff ? 'checked' : '') . ' />
             <span class="slider round"></span>
           </label>
         </div>
-        <div class="table-cell hidden-comp">
+        <div class="table-cell table-cell-descr hidden-comp">
         ';
 
-    if ($is_connected) {
+    if ($included_in_tariff) {
+        // Если опция включена в тариф basic
+        $option_html .= 'Включено в тариф';
+    } elseif ($is_connected) {
+        // Если опция подключена отдельно
         $option_html .= 'Подключено до ' . htmlspecialchars($end_date);
     } else {
-        $option_html .= '<button class="connect-button" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">Подключить за ' . htmlspecialchars($option['price']) . ' ₽</button>';
+        // Если опция не подключена
+        $option_html .= '<button class="connect-button connect-button-option" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">Подключить за ' . htmlspecialchars($option['price']) . ' ₽</button>';
     }
 
     $option_html .= '</div>
     <div class="mobile-only merge-column">
-            <div class="table-cell">
+        <div class="table-cell">
           <label class="switch" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">
-            <input type="checkbox" readonly ' . ($is_connected ? 'checked' : '') . ' />
+            <input type="checkbox" readonly ' . ($is_connected || $included_in_tariff ? 'checked' : '') . ' />
             <span class="slider round"></span>
           </label>
         </div>
-            <div class="table-cell"> ';
+        <div class="table-cell table-cell-descr">';
 
-    if ($is_connected) {
+    if ($included_in_tariff) {
+        $option_html .= 'Включено в тариф';
+    } elseif ($is_connected) {
         $option_html .= 'Подключено до ' . htmlspecialchars($end_date);
     } else {
-        $option_html .= '<button class="connect-button" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">Подключить за ' . htmlspecialchars($option['price']) . ' ₽</button>';
+        $option_html .= '<button class="connect-button connect-button-option" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">Подключить за ' . htmlspecialchars($option['price']) . ' ₽</button>';
     }
     $option_html .= '</div>
-        </div>
+    </div>
     </div>';
 
     return $option_html;
 }
 
 
+
 foreach ($options as $option) {
-    $options_html .= generate_option_html($option, $connected_options_map, $specialist['id']);
+    $options_html .= generate_option_html($option, $connected_options_map, $specialist['id'], $connected_tariffs_map);
 }
 
 // Получаем данные о баннерах
@@ -300,7 +313,7 @@ foreach ($banners as $banner) {
     // Юрист (classification_id = 1)
     if ($specialist_classification == 1 && ($banner['id'] == 1 || $banner['id'] == 2)) {
         $banner_options_html .= '
-        <label class="select-option">
+        <label class="select-option select-option-banner">
           <input type="radio" name="banner_id" value="' . htmlspecialchars($banner['id']) . '">
           ' . htmlspecialchars($banner['name']) . '
         </label>';
@@ -308,7 +321,7 @@ foreach ($banners as $banner) {
     // Эксперт (classification_id = 3)
     elseif ($specialist_classification == 3 && ($banner['id'] == 1 || $banner['id'] == 3)) {
         $banner_options_html .= '
-        <label class="select-option">
+        <label class="select-option select-option-banner">
           <input type="radio" name="banner_id" value="' . htmlspecialchars($banner['id']) . '">
           ' . htmlspecialchars($banner['name']) . '
         </label>';
@@ -316,14 +329,14 @@ foreach ($banners as $banner) {
     // Нотариус (classification_id = 4)
     elseif ($specialist_classification == 4 && ($banner['id'] == 1 || $banner['id'] == 4)) {
         $banner_options_html .= '
-        <label class="select-option">
+        <label class="select-option select-option-banner">
           <input type="radio" name="banner_id" value="' . htmlspecialchars($banner['id']) . '">
           ' . htmlspecialchars($banner['name']) . '
         </label>';
     } 
     else {
         $banner_options_html .= '
-        <label class="select-option">
+        <label class="select-option select-option-banner">
           <input type="radio" name="banner_id" value="' . htmlspecialchars($banner['id']) . '">
           ' . htmlspecialchars($banner['name']) . '
         </label>';
@@ -457,7 +470,7 @@ $journal_options_html = '
 
 foreach ($journals as $journal) {
     $journal_options_html .= '
-    <label class="select-option">
+    <label class="select-option select-option-journal">
       <input type="radio" name="journal_id" value="' . htmlspecialchars($journal['id']) . '">
       ' . htmlspecialchars($journal['name']) . '
     </label>';
@@ -574,7 +587,7 @@ $popup_promo_html .= '
 foreach ($promo_options as $promo) {
     $class = $index === 1 ? "promo-icon special-padding" : "promo-icon"; // Добавляем класс только ко второму элементу
     $popup_promo_html .= '
-                  <label class="select-option">
+                  <label class="select-option select-option-promo">
                       <input type="radio" name="promo_id" value="' . $promo['id'] . '">
                       <img src="' . htmlspecialchars($promo['url']) . '" alt="Icon" class="' . $class . '">
                       <div>
@@ -667,8 +680,21 @@ $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
 $option_status_data = generate_option_status($connected_options_map);
 $promo_status_data = generate_promo_status($connected_promo_map);
 
+if (isset($connected_tariffs_map[1])) {
+  $discount = 10;
+} elseif (isset($connected_tariffs_map[2])) {
+  $discount = 15;
+} elseif (isset($connected_tariffs_map[3])) {
+  $discount = 20;
+}
+
+$discount_html = '';
+if ($discount > 0) {
+    $discount_html = '<div class="circle-pro-photo">-' . $discount . '%</div>';
+}
+
 $top_cards = '
-<div class="card">
+<a href="#tariff-href" class="card">
     <div class="card-topline">
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
@@ -678,18 +704,19 @@ $top_cards = '
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
-</div>
-<div class="card">
+</a>
+<a href="#promo-href" class="card">
       <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4><img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
         <p>Продвижение карточки</p>
         <div class="card-status">
             <span>' . $promo_status_data['status'] . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-    </div>
-    <div class="card">
+    </a>
+<a href="#option-href" class="card">
     <div class="card-topline">
         <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
+        ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
     <p>Базовые настройки</p>
@@ -697,15 +724,15 @@ $top_cards = '
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
-</div>
-    <div class="card">
+</a>
+    <a href="/cabinet/pro-photo" class="card">
       <div class="card-topline"><h4>PRO-фото <span class="status-dot"></span></h4><img src="../assets/img/cabinet/card-photo.svg" alt=""></div><div class="circle-pro-photo">-50%</div>
         <p>Скидка 50% до 17.04.24</p>
         <div class="card-status">
             <span>Не проведена</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-    </div>';
+    </a>';
 
     
 

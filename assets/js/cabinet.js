@@ -1829,7 +1829,9 @@ $('.forget-pass-link').click(function (e) {
 $(document).ready(function() {
 	var isSyncing = false;
 	
-    $('.tariff-card .active-button').click(function() {
+    $('.tariff-card .confirm-btn').click(function() {
+		$('.confirm-btn').removeClass('active-button');
+        $(this).addClass('active-button')
         var tariffId = $(this).data('tariff-id');
         var tariffName = $(this).data('tariff-name');
         var tariffPrice = $(this).data('tariff-price');
@@ -1939,29 +1941,61 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-	$('.table-row').on('click', '.connect-button, .switch input', function(event) {
+    var isSyncing = false;
 
-		if ($(event.target).is('input[type="checkbox"]')) {
-            event.preventDefault();
+    // Обработка клика по чекбоксу
+    $('.table-row').on('click', '.switch input', function(event) {
+        var $checkbox = $(this);
+        if ($checkbox.is('input[type="checkbox"]')) {
+            if ($checkbox.prop('checked')) {
+                event.preventDefault(); 
+                var $label = $checkbox.closest('label');
+                var optionId = $label.data('option-id');
+                var optionName = $checkbox.closest('.table-row').find('.table-cell:first-child').text();
+                var optionPriceText = $checkbox.closest('.table-row').find('.connect-button').text();
+                var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
+                var specialistId = $label.data('specialist-id');
+
+                $('#popup-option-id').val(optionId);
+                $('#popup-specialist-option-id').val(specialistId);
+                $('#popup-option-name').text(optionName);
+                $('#popup-option-price').text(optionPrice);
+                $('#popup-option-price-after').text(' ₽ в мес. ');
+                $('#popup-option-total').text(optionPrice + ' ₽');
+                $('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
+                
+                updatePopupDates(1);
+                $('#option-popup').fadeIn();
+            } else {
+                event.preventDefault();
+                return;                
+            }
         }
+    });
 
-        var $label = $(this).closest('label');
-        var optionId = $label.data('option-id');
-        var optionName = $(this).closest('.table-row').find('.table-cell:first-child').text();
-        var optionPriceText = $(this).closest('.table-row').find('.connect-button').text();
+    // Обработка клика по кнопке "Подключить"
+    $('.table-row').on('click', '.connect-button-option', function(event) {
+        event.preventDefault(); 
+        var $button = $(this);
+        var optionId = $button.data('option-id');
+        var optionName = $button.closest('.table-row').find('.table-cell:first-child').text();
+        var optionPriceText = $button.text();
         var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
-        var specialistId = $label.data('specialist-id');
+        var specialistId = $button.data('specialist-id');
 
         $('#popup-option-id').val(optionId);
         $('#popup-specialist-option-id').val(specialistId);
         $('#popup-option-name').text(optionName);
-        $('#popup-option-price').text(optionPrice + ' ₽');
+        $('#popup-option-price').text(' ' + optionPrice + ' ');
+		$('#popup-option-price-after').text(' ₽ в мес. ');
         $('#popup-option-total').text(optionPrice + ' ₽');
         $('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
-        
+
         updatePopupDates(1);
         $('#option-popup').fadeIn();
     });
+	
+	
 
     function updatePopupDates(months) {
         var startDate = new Date();
@@ -1973,17 +2007,18 @@ $(document).ready(function() {
         $('#popup-option-duration').text("с " + startDate.toLocaleDateString('ru-RU') + " по " + endDate.toLocaleDateString('ru-RU'));
     }
 
-    $('#option-popup-form').submit(function(event) {
+    $(document).on('submit', '#option-popup-form', function(event) {
         event.preventDefault();
         var form = $(this);
+
         $.ajax({
             type: 'POST',
             url: '', 
             data: form.serialize(),
             success: function(response) {
                 $('#successful-popup .bold').html('Отлично!<br>Вы подключили опции.');
-				$('#successful-popup .middle-text').text('Информация появится в разделе “Продвижение” в течение 60 минут.');
-				$('#successful-popup').fadeIn();
+                $('#successful-popup .middle-text').text('Информация появится в разделе “Продвижение” в течение 60 минут.');
+                $('#successful-popup').fadeIn();
             },
             error: function(response) {
                 console.log(response); 
