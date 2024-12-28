@@ -1,10 +1,20 @@
 $(function () {
 	$(".popup .bg, .popup:not(.delete-confirmation-popup) .window .close, .popup .window .close-popup-btn").click(function () {
-		$(".popup").fadeOut();
+		var popup = $(this).closest('.popup');
+		if (popup.attr('id') !== 'tariff-popup') {
+			popup.fadeOut(function() {
+				popup.find('form').trigger('reset');
+			});
+		} else {
+			popup.fadeOut();
+		}
+	
 		$("body").removeClass("hid");
 	});
+	
 	$(".popup.delete-confirmation-popup .window .close, .popup.delete-confirmation-popup .bg").click(function () {
-		$(".popup").fadeOut();
+		var popup = $(this).closest('.popup');
+    	popup.fadeOut();
 		$("body").removeClass("hid");
 		$(location).attr('href', '/actions/account/delete-user.php');
 	});
@@ -472,7 +482,7 @@ $(function () {
 	  });
 	$(".pro-photo__wrapper").on('click', '.card__buy-btn', function(e){
 		let card = $(this).closest('.pro-photo__card');
-		let price = $(card).children('.card__body').children('.card__price-block').children('.card__price:not(.old)').children('.price').text();
+		let price = $(card).find('.card__price-block .card__price:not(.old) .price').first().text().trim();
 		price = price.replace(/[^0-9]/g, '') + ' ₽';
 		$(".buy-pro-photo .photo-type .title").text($(card).children('.card__title').children('.title').text());
 		$(".buy-pro-photo .photo-type ul li.amount").text($(card).children('.card__body').children('.card__descr').children('li:last-child').text());
@@ -499,7 +509,7 @@ $(function () {
 
 	$("body").on('click', '.pro-photo__mobile-btn', function(e){
 		let card = $('.pro-photo__wrapper .pro-photo__card:nth-child(2)');
-		let price = $(card).children('.card__body').children('.card__price-block').children('.card__price:not(.old)').children('.price').text();
+		let price = $(card).find('.card__body .card__price-block .card__price:not(.old) .price').first().text().trim();
 		price = price.replace(/[^0-9]/g, '') + ' ₽';
 		$(".buy-pro-photo .photo-type .title").text($(card).children('.card__title').children('.title').text());
 		$(".buy-pro-photo .photo-type ul li.amount").text($(card).children('.card__body').children('.card__descr').children('li:last-child').text());
@@ -635,6 +645,51 @@ $('#buy-photo-popup').on('click', 'button[type="submit"]', function (e) {
 // 		}
 // 	})
 })
+
+$('#photo_file_obzor').change(function(e) {
+    e.preventDefault();
+	var fileName = $(this).val().split('\\').pop(); // Получаем имя файла
+	$('.photo__rules-block').text('Выбран файл: ' + fileName); 
+	
+	if (window.FormData === undefined) {
+		alert('В вашем браузере FormData не поддерживается')
+	} else {
+		$('.photo__rules-block').text('');
+		$('.photo__item .invalid-feedback, #change-photo-mobile .popup__body .photo__wrapper .invalid-feedback').remove();
+		$('.photo__item .valid-feedback, #change-photo-mobile .popup__body .photo__wrapper .valid-feedback').remove();
+
+		var formData = new FormData();
+		formData.append('photo_file_obzor', $('#photo_file_obzor')[0].files[0]);
+		$.ajax({
+			type: "POST",
+			url: '/actions/cabinet/upload_image.php',
+			cache: false,
+			contentType: false,
+			processData: false,
+			data: formData,
+			dataType : 'json',
+			success: function(json){
+				if (json['error']) {
+					$(".photo__item, #change-photo-mobile .popup__body .photo__wrapper").append(`<div class="invalid-feedback">${json['error']}</div>`)
+					location.reload();
+				}
+
+				if (json['success']) {
+					$('.photo__rules-block').remove();
+					$(".photo__item, #change-photo-mobile .popup__body .photo__wrapper").append(`<div class="valid-feedback">Фото успешно сохранено.</div>`);
+					$(".cabinet-page .cabinet-content .main-info-block .block1 .item .photo__btn").html('<i></i>Изменить').addClass('refresh');
+					$("#change-photo-mobile .popup__body .photo__btn").html('<img src="/assets/img/cabinet/refresh-file-mob.svg">Изменить');
+					$(".photo__image").css('background-image','url(/uploads/avatars/' + json['success'] + ')').addClass('refresh');
+					if($(".index-mob__info-block .photo-block.profile-photo-mmenu .photo").length) {
+						$(".index-mob__info-block .photo-block.profile-photo-mmenu .photo").css('background-image','url(/uploads/avatars/' + json['success'] + ')');
+					}
+					location.reload();
+				}
+			}
+		});
+	}
+});
+
 $('#photo_file').change(function() {
 	var fileName = $(this).val().split('\\').pop(); // Получаем имя файла
 	$('.photo__rules-block').text('Выбран файл: ' + fileName); 
@@ -1842,11 +1897,28 @@ $(document).ready(function() {
         $('#popup-specialist-id').val(specialistId);
         $('#popup-tariff-name').text(tariffName);
         $('#popup-tariff-name').text(tariffName.toUpperCase());
-        $('#popup-tariff-price').text(tariffPriceOld + ' ₽ в мес.');
-        $('#popup-tariff-total').text(tariffPriceOld + ' руб.');
-        $('#popup-tariff-total-button').html('&nbsp;' + tariffPriceOld + ' руб.');
+        var isChecked = $('#duration-switch').is(':checked') || $('#duration-switch-popup').is(':checked');
         
-        updateDates(1);
+        if (isChecked) {
+			$('#popup-tariff-price').html('<span class="old-price-popup">' + tariffPriceOld + '</span> ' + tariffPrice + ' ₽ в мес.');
+            $('#popup-tariff-total').text((tariffPrice) * 3 + ' руб.');
+            $('#popup-tariff-total-button').html('&nbsp;' + (tariffPrice) * 3 + ' руб.');
+            $('.new-price').css('display', 'inline-block');
+            $('.price-old').addClass('old-price');	
+			$('.three-month').removeClass('thin');
+			$('.one-month').addClass('thin');
+			updateDates(3);
+        } else {
+            $('#popup-tariff-price').text(tariffPriceOld + ' ₽ в мес.');
+            $('#popup-tariff-total').text(tariffPriceOld + ' руб.');
+            $('#popup-tariff-total-button').html('&nbsp;' + tariffPriceOld + ' руб.');
+            $('.new-price').css('display', 'none');
+            $('.price-old').removeClass('old-price');
+			$('.one-month').removeClass('thin');
+			$('.three-month').addClass('thin');
+			updateDates(1);
+        }
+    
         
         $('#tariff-popup').fadeIn();
 		
@@ -1860,8 +1932,9 @@ $(document).ready(function() {
             url: '', 
             data: form.serialize(),
             success: function(response) {
-                $('#successful-popup .bold').html('Отлично!<br>Вы подключили тариф.');
+                $('#successful-popup .successful-title').html('Отлично!<br>Вы подключили тариф.');
                 $('#successful-popup .middle-text').text('Информация появится в разделе "Продвижение" в течении 60 минут.');
+				$('#successful-popup .check').text('Чек по операции придет на электронную почту.');
                 $('#successful-popup').fadeIn();
             },
             error: function(response) {
@@ -1879,11 +1952,11 @@ $(document).ready(function() {
         var isChecked = $('#duration-switch').is(':checked') || $('#duration-switch-popup').is(':checked');
         
         if (isChecked) {
-            $('#popup-tariff-price').text(tariffPrice + ' ₽ в мес.');
-            $('#popup-tariff-total').text(tariffPrice + ' руб.');
-            $('#popup-tariff-total-button').html('&nbsp;' + tariffPrice + ' руб.');
+			$('#popup-tariff-price').html('<span class="old-price-popup">' + tariffPriceOld + '</span> ' + tariffPrice + ' ₽ в мес.');
+            $('#popup-tariff-total').text((tariffPrice) * 3 + ' руб.');
+            $('#popup-tariff-total-button').html('&nbsp;' + (tariffPrice) * 3 + ' руб.');
             $('.new-price').css('display', 'inline-block');
-            $('.price-old').addClass('old-price');
+            $('.price-old').addClass('old-price');	
 			$('.three-month').removeClass('thin');
 			$('.one-month').addClass('thin');
         } else {
@@ -1944,34 +2017,91 @@ $(document).ready(function() {
     var isSyncing = false;
 
     // Обработка клика по чекбоксу
-    $('.table-row').on('click', '.switch input', function(event) {
-        var $checkbox = $(this);
-        if ($checkbox.is('input[type="checkbox"]')) {
-            if ($checkbox.prop('checked')) {
-                event.preventDefault(); 
-                var $label = $checkbox.closest('label');
-                var optionId = $label.data('option-id');
-                var optionName = $checkbox.closest('.table-row').find('.table-cell:first-child').text();
-                var optionPriceText = $checkbox.closest('.table-row').find('.connect-button').text();
-                var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
-                var specialistId = $label.data('specialist-id');
+$('.table-row').on('click', '.switch input', function(event) {
+    var $checkbox = $(this);
+    if ($checkbox.is('input[type="checkbox"]')) {
+        if ($checkbox.prop('checked')) {
+            event.preventDefault(); 
+            var $label = $checkbox.closest('label');
+            var optionId = $label.data('option-id');
+            var optionName = $checkbox.closest('.table-row').find('.table-cell:first-child').text();
+            var optionPriceText = $checkbox.closest('.table-row').find('.connect-button').text();
+            var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
+            var specialistId = $label.data('specialist-id');
+            const discount = parseFloat($('#discount-value').val()); // Получаем скидку
 
-                $('#popup-option-id').val(optionId);
-                $('#popup-specialist-option-id').val(specialistId);
-                $('#popup-option-name').text(optionName);
-                $('#popup-option-price').text(optionPrice);
-                $('#popup-option-price-after').text(' ₽ в мес. ');
+            $('#popup-option-id').val(optionId);
+            $('#popup-specialist-option-id').val(specialistId);
+            $('#popup-option-name').text(optionName);
+            $('#popup-option-price').text(optionPrice);
+            $('#popup-option-price-after').text(' ₽ в мес. ');
+
+            // Расчет новой цены с учетом скидки
+            var discountAmount = (optionPrice * discount) / 100;
+            var newPrice = Math.round(optionPrice - discountAmount);
+
+            // Обновление полей с ценами и скидкой
+            if (discount > 0) {
+                $('#popup-option-discount').text(discount + '%');
+                $('#popup-option-old-price').text(optionPrice + ' ₽');
+                $('#popup-option-total').text(newPrice + ' ₽');
+                $('#popup-option-total-button').html('&nbsp;' + newPrice + ' ₽');
+            } else {
+                $('.popup_discount').hide();
+                $('#popup-option-discount').text('');
+                $('#popup-option-old-price').text('');
                 $('#popup-option-total').text(optionPrice + ' ₽');
                 $('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
-                
-                updatePopupDates(1);
-                $('#option-popup').fadeIn();
-            } else {
-                event.preventDefault();
-                return;                
             }
+
+            updatePopupDates(1);
+            $('#option-popup').fadeIn();
+        } else {
+            event.preventDefault();
+            return;                
         }
-    });
+    }
+});
+
+	// Обработка клика по кнопке "Подключить"
+	$('.table-row').on('click', '.connect-button-option', function(event) {
+		event.preventDefault(); 
+		var $button = $(this);
+		var optionId = $button.data('option-id');
+		var optionName = $button.closest('.table-row').find('.table-cell:first-child').text();
+		var optionPriceText = $button.text();
+		var optionPrice = parseFloat((optionPriceText.match(/\d+/) || [])[0] || '0');
+		var specialistId = $button.data('specialist-id');
+		const discount = parseFloat($('#discount-value').val());
+
+		$('#popup-option-id').val(optionId);
+		$('#popup-specialist-option-id').val(specialistId);
+		$('#popup-option-name').text(optionName);
+		$('#popup-option-price').text(optionPrice);
+		$('#popup-option-price-after').text(' ₽ в мес. ');
+
+		// Расчет новой цены с учетом скидки
+		var discountAmount = (optionPrice * discount) / 100;
+		var newPrice = Math.round(optionPrice - discountAmount);
+
+		// Обновление полей с ценами и скидкой
+		if (discount > 0) {
+			$('#popup-option-discount').text(discount + '%');
+			$('#popup-option-old-price').text(optionPrice + ' ₽');
+			$('#popup-option-total').text(newPrice + ' ₽');
+			$('#popup-option-total-button').html('&nbsp;' + newPrice + ' ₽');
+		} else {
+			$('.popup_discount').hide();
+			$('#popup-option-discount').text('');
+			$('#popup-option-old-price').text('');
+			$('#popup-option-total').text(optionPrice + ' ₽');
+			$('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
+		}
+
+		updatePopupDates(1);
+		$('#option-popup').fadeIn();
+	});
+
 
     // Обработка клика по кнопке "Подключить"
     $('.table-row').on('click', '.connect-button-option', function(event) {
@@ -1980,16 +2110,33 @@ $(document).ready(function() {
         var optionId = $button.data('option-id');
         var optionName = $button.closest('.table-row').find('.table-cell:first-child').text();
         var optionPriceText = $button.text();
-        var optionPrice = (optionPriceText.match(/\d+/) || [])[0] || '0';
+        var optionPrice = parseFloat((optionPriceText.match(/\d+/) || [])[0] || '0');
         var specialistId = $button.data('specialist-id');
+        const discount = parseFloat($('#discount-value').val());
 
         $('#popup-option-id').val(optionId);
         $('#popup-specialist-option-id').val(specialistId);
         $('#popup-option-name').text(optionName);
-        $('#popup-option-price').text(' ' + optionPrice + ' ');
-		$('#popup-option-price-after').text(' ₽ в мес. ');
-        $('#popup-option-total').text(optionPrice + ' ₽');
-        $('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
+        $('#popup-option-price').text(optionPrice);
+        $('#popup-option-price-after').text(' ₽ в мес. ');
+
+        // Расчет новой цены с учетом скидки
+        var discountAmount = (optionPrice * discount) / 100;
+        var newPrice = Math.round(optionPrice - discountAmount);
+
+        // Обновление полей с ценами и скидкой
+        if (discount > 0) {
+            $('#popup-option-discount').text(discount + '%');
+            $('#popup-option-old-price').text(optionPrice + ' ₽');
+			$('#popup-option-total').text(newPrice + ' ₽');
+        	$('#popup-option-total-button').html('&nbsp;' + newPrice + ' ₽');
+        } else {
+			$('.popup_discount').hide();
+            $('#popup-option-discount').text('');
+            $('#popup-option-old-price').text('');
+			$('#popup-option-total').text(optionPrice + ' ₽');
+        	$('#popup-option-total-button').html('&nbsp;' + optionPrice + ' ₽');
+        }
 
         updatePopupDates(1);
         $('#option-popup').fadeIn();
@@ -2016,8 +2163,9 @@ $(document).ready(function() {
             url: '', 
             data: form.serialize(),
             success: function(response) {
-                $('#successful-popup .bold').html('Отлично!<br>Вы подключили опции.');
+                $('#successful-popup .successful-title').html('Отлично!<br>Вы подключили опции.');
                 $('#successful-popup .middle-text').text('Информация появится в разделе “Продвижение” в течение 60 минут.');
+				$('#successful-popup .check').text('Чек по операции придет на электронную почту.');
                 $('#successful-popup').fadeIn();
             },
             error: function(response) {
@@ -2028,7 +2176,26 @@ $(document).ready(function() {
     });
 });
 
+function calculateDays(startDate, endDate) {
+	var oneDay = 1000 * 60 * 60 * 24;
+	var differenceInTime = endDate.getTime() - startDate.getTime();
+	return Math.round(differenceInTime / oneDay) + 1; 
+  }
+
 $(document).ready(function() {
+
+	$('input[name="service_ids[]"], input[name="journal_id"], input[name="banner_id"]').on('change', function() {
+		var selectedName = $(this).data('name');
+				
+		if ($(this).attr('name') === 'service_ids[]') {
+			$('.selected-text-promo').text(selectedName);
+		} else if ($(this).attr('name') === 'journal_id') {
+			$('.selected-text-journal').text(selectedName);
+		} else if ($(this).attr('name') === 'banner_id') {
+			$('.selected-text-banner').text(selectedName);
+		}
+	});
+	
 	// Открытие первого попапа и установка значений
 	$('.reklama-button').click(function() {
         var bannerName = $(this).closest('.table-row').find('.table-cell:first-child').text();
@@ -2075,11 +2242,13 @@ $(document).ready(function() {
 
             // Получаем выбранный баннер из радиокнопок
             var selectedBannerId = $('input[name="banner_id"]:checked').val();
+			var selectedBannerPrice = $(`#popup-banner-price-${selectedBannerId}`).val();
             var selectedBannerOption = $('input[name="banner_id"]:checked').closest('label').text().trim();
             var daysCount = calculateDays(startDate, endDate);
-            var pricePerMonth = parseFloat($('#popup-banner-price').val());
+			var weeksCount = Math.ceil(daysCount / 7);
+            var pricePerMonth = parseFloat(selectedBannerPrice);
             var pricePerDay = pricePerMonth / 30;
-            var totalPrice = daysCount * pricePerDay;
+            var totalPrice = weeksCount * pricePerMonth;
 
             console.log('Days Count:', daysCount);
             console.log('Price Per Month:', pricePerMonth);
@@ -2088,11 +2257,21 @@ $(document).ready(function() {
 
             // Устанавливаем данные во второй попап перед его отображением
             $('#banner-name').text(selectedBannerOption);
-            $('#banner-price').text('7590 ₽ в мес.');
-            $('#banner-period').text(Math.ceil(daysCount / 7) + ' недели');
+            $('#banner-price').html(`${selectedBannerPrice}<span class="light"> ₽ в нед.</span>`);
+			let weekText;
+
+			if (weeksCount === 1) {
+				weekText = 'неделя';
+			} else if (weeksCount >= 2 && weeksCount <= 4) {
+				weekText = 'недели';
+			} else {
+				weekText = 'недель';
+			}
+
+			$('#banner-period').text(weeksCount + ' ' + weekText);
             $('#start-date').text(selectedDates[0].trim());
             $('#end-date').text(selectedDates[1].trim());
-            $('#total-price').text(totalPrice.toFixed(2));
+            $('#total-price').text(Math.floor(totalPrice) + ' руб.');
 
             // Скрытые поля
             $('#popup-banner-id-2').val(selectedBannerId);
@@ -2109,44 +2288,66 @@ $(document).ready(function() {
         }
     });
   
-	
-	function calculateDays(startDate, endDate) {
-	  var oneDay = 1000 * 60 * 60 * 24;
-	  var differenceInTime = endDate.getTime() - startDate.getTime();
-	  return Math.round(differenceInTime / oneDay) + 1; 
-	}
-  
 	// Обработка отправки формы второго попапа
 	$('#banner-popup-form-2').submit(function(event) {
-        event.preventDefault();
+		event.preventDefault();
+	
+		var adLine1 = $('input[name="ad_line1"]').val() || '';
+		var adLine2 = $('input[name="ad_line2"]').val() || '';
+		var adLine3 = $('input[name="ad_line3"]').val() || '';
+		var description;
+	
+		try {
+			description = JSON.stringify({ ad_line1: adLine1, ad_line2: adLine2, ad_line3: adLine3 });
+			$('#popup-description').val(description);
+		} catch (e) {
+			alert('Ошибка при обработке данных.');
+			return;
+		}
+	
+		let formData = $(this).serialize();
+	
+		$.ajax({
+			type: 'POST',
+			url: '',
+			data: formData,
+			success: function() {
+				$('#successful-popup .successful-title').html('Отлично!<br>Вы направили баннер на модерацию.');
+				$('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
+				$('#successful-popup').fadeIn();
+			},
+			error: function(xhr) {
+				alert('Произошла ошибка. Попробуйте снова.');
+				console.error(xhr.responseText);
+			}
+		});
+	});	
+  });
+  $(document).ready(function() {
+    // Глобальная переменная для проверки валидности формы
+    let isFormValid = false;
 
-        var adLine1 = $('input[name="ad_line1"]').val();
-        var adLine2 = $('input[name="ad_line2"]').val();
-        var adLine3 = $('input[name="ad_line3"]').val();
-        var description = JSON.stringify({ ad_line1: adLine1, ad_line2: adLine2, ad_line3: adLine3 });
-        $('#popup-description').val(description);
+    // Функция для проверки валидности формы
+    function validateForm() {
+        isFormValid = true;
 
-        let formData = $(this).serialize();
-        console.log('Form data:', formData);
-
-        $.ajax({
-            type: 'POST',
-            url: '',
-            data: formData,
-            success: function(response) {
-                $('#successful-popup .bold').html('Отлично!<br>Вы направили баннер на модерацию.');
-                $('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
-                $('#successful-popup').fadeIn();
-            },
-            error: function(xhr, status, error) {
-                console.log('Error:', xhr.responseText);
-                alert('Произошла ошибка. Попробуйте снова.');
+        $('#journal-popup-form input, #journal-popup-form .select-option input[type="radio"]').each(function() {
+            // Если значение пустое или нет выбранной радиокнопки
+            if ($(this).val() === '' || !$('input[name="journal_id"]:checked').length) {
+                isFormValid = false;
+                return false;  // Выход из цикла при обнаружении ошибки
             }
         });
-    });
-  });
 
-  $(document).ready(function() {
+        // Если форма валидна, активируем кнопку, иначе деактивируем
+        $('.journal-continue-btn').prop('disabled', !isFormValid);
+    }
+
+    // Обработчик для изменения значений в полях формы
+    $(document).on('input change', '#journal-popup-form input, #journal-popup-form .select-option input[type="radio"]', function() {
+        validateForm();  // Проверяем валидность формы при каждом изменении
+    });
+
     // Открытие первого попапа и установка значений
     $('.journal-button').click(function() {
         var journalName = $(this).closest('.table-row').find('.table-cell:first-child').text();
@@ -2155,22 +2356,19 @@ $(document).ready(function() {
         $('#popup-specialist-id').val(specialistId);
         $('#popup-journal-name').text(journalName);
         $('#journal-popup').fadeIn();
+
+        // Перепроверяем форму при открытии попапа
+        validateForm();
     });
 
-    $('.reklama-continue-btn').click(function(event) {
+    // Обработчик для кнопки продолжить
+    $('.journal-continue-btn').click(function(event) {
         event.preventDefault();
 
-        let isFormValid = true;
-
-        $('#journal-popup-form input, #journal-popup-form .select-option input[type="radio"]').each(function() {
-            if ($(this).val() === '' || !$('input[name="journal_id"]:checked').length) {
-                isFormValid = false;
-                return false;
-            }
-        });
-
+        // Если форма валидна, выполняем дальнейшие действия
         if (isFormValid) {
             var selectedDates = $('#date-select-journal').val().split('—');
+            console.log('Selected Dates:', selectedDates);
             if (selectedDates.length < 2) {
                 alert('Пожалуйста, выберите обе даты.');
                 return;
@@ -2178,6 +2376,8 @@ $(document).ready(function() {
 
             var startDate = moment(selectedDates[0].trim(), "DD.MM.YYYY").toDate();
             var endDate = moment(selectedDates[1].trim(), "DD.MM.YYYY").toDate();
+            console.log('Start Date:', startDate);
+            console.log('End Date:', endDate);
 
             if (!moment(startDate).isValid() || !moment(endDate).isValid()) {
                 alert('Пожалуйста, выберите корректные даты.');
@@ -2185,18 +2385,35 @@ $(document).ready(function() {
             }
 
             var selectedJournalId = $('input[name="journal_id"]:checked').val();
+            var selectedJournalPrice = $(`#popup-journal-price-${selectedJournalId}`).val();
             var selectedJournalOption = $('input[name="journal_id"]:checked').closest('label').text().trim();
             var daysCount = calculateDays(startDate, endDate);
-            var pricePerMonth = parseFloat($('#popup-journal-price').val());
+            var weeksCount = Math.ceil(daysCount / 7);
+            var pricePerMonth = parseFloat(selectedJournalPrice);
             var pricePerDay = pricePerMonth / 30;
-            var totalPrice = daysCount * pricePerDay;
+            var totalPrice = weeksCount * pricePerMonth;
+
+            console.log('Days Count:', daysCount);
+            console.log('Price Per Month:', pricePerMonth);
+            console.log('Price Per Day:', pricePerDay);
+            console.log('Total Price:', totalPrice);
 
             $('#journal-name').text(selectedJournalOption);
-            $('#journal-price').text('7590 ₽ в мес.');
-            $('#journal-period').text(Math.ceil(daysCount / 7) + ' недели');
-            $('#start-date').text(selectedDates[0].trim());
-            $('#end-date').text(selectedDates[1].trim());
-            $('#total-price').text(totalPrice.toFixed(2));
+            $('#journal-price').html(`${selectedJournalPrice}<span class="light"> ₽ в нед.</span>`);
+            let weekText;
+
+            if (weeksCount === 1) {
+                weekText = 'неделя';
+            } else if (weeksCount >= 2 && weeksCount <= 4) {
+                weekText = 'недели';
+            } else {
+                weekText = 'недель';
+            }
+
+            $('#journal-period').text(weeksCount + ' ' + weekText);
+            $('#start-date-journal').text(selectedDates[0].trim());
+            $('#end-date-journal').text(selectedDates[1].trim());
+            $('#total-price-journal').text(Math.floor(totalPrice) + ' руб.');
 
             $('#popup-journal-id-2').val(selectedJournalId);
             $('#popup-start-date-journal').val(startDate.toISOString().split('T')[0]);
@@ -2207,44 +2424,51 @@ $(document).ready(function() {
             });
             $('.popup-footer').addClass('hidden');
         } else {
-            $('.reklama-continue-btn').prop('disabled', true);
-            $('.popup-footer').removeClass('hidden');
+            alert('Пожалуйста, заполните все обязательные поля.');
         }
     });
 
-    function calculateDays(startDate, endDate) {
-        var oneDay = 1000 * 60 * 60 * 24;
-        var differenceInTime = endDate.getTime() - startDate.getTime();
-        return Math.round(differenceInTime / oneDay) + 1; 
-    }
-
     // Обработка отправки формы второго попапа
     $('#journal-popup-form-2').submit(function(event) {
-        event.preventDefault();
-
-        var adLine1 = $('input[name="ad_line1"]').val();
-        var adLine2 = $('input[name="ad_line2"]').val();
-        var adLine3 = $('input[name="ad_line3"]').val();
-        var description = JSON.stringify({ ad_line1: adLine1, ad_line2: adLine2, ad_line3: adLine3 });
-        $('#popup-description-journal').val(description);
-
-        let formData = $(this).serialize();
-
-        $.ajax({
-            type: 'POST',
-            url: '',
-            data: formData,
-            success: function(response) {
-                $('#successful-popup .bold').html('Отлично!<br>Вы направили блок на модерацию.');
-                $('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
-                $('#successful-popup').fadeIn();
-            },
-            error: function(xhr, status, error) {
-                console.log('Error:', xhr.responseText);
-                alert('Произошла ошибка. Попробуйте снова.');
-            }
-        });
-    });
+		event.preventDefault();
+	
+		// Сбор данных из полей
+		var adLine1 = $('input[name="ad_line1"]').val() || '';
+		var adLine2 = $('input[name="ad_line2"]').val() || '';
+		var adLine3 = $('input[name="ad_line3"]').val() || '';
+	
+		// Формирование JSON-строки
+		try {
+			var description = JSON.stringify({
+				ad_line1: adLine1,
+				ad_line2: adLine2,
+				ad_line3: adLine3
+			});
+	
+			// Устанавливаем значение скрытого поля
+			$('#popup-description-journal').val(description);
+		} catch (e) {
+			console.error('Ошибка при формировании JSON:', e);
+			alert('Произошла ошибка при обработке данных. Попробуйте снова.');
+			return;
+		}
+		let formData = $(this).serialize();
+	
+		$.ajax({
+			type: 'POST',
+			url: '', 
+			data: formData,
+			success: function(response) {
+				$('#successful-popup .successful-title').html('Отлично!<br>Вы направили блок на модерацию.');
+				$('#successful-popup .middle-text').text('Как правило, проверка занимает до 24 часов.');
+				$('#successful-popup').fadeIn();
+			},
+			error: function(xhr, status, error) {
+				console.error('Ошибка при отправке:', xhr.responseText);
+				alert('Произошла ошибка. Попробуйте снова.');
+			}
+		});
+	});	
 });
 
 
@@ -2258,39 +2482,69 @@ $(document).ready(function() {
 	$('.promo-card-button').click(function() {
 		$('#promo-popup').fadeIn();
 	  });
+
+	  const discount = parseFloat($('#discount-value').val());
+
 	let selectedPromos = []; // Хранит все выбранные опции
+
+	function truncateText(text, maxLength) {
+		if (text.length > maxLength) {
+			const truncated = text.slice(0, maxLength - 2);
+			const lastChar = '"';
+			return `${truncated}...${lastChar}`;
+		}
+		return text;
+	}
   
 	function updateSecondPopup() {
-	  // Очистка содержимого второго попапа
-	  $('#second-popup-content').empty();
-  
-	  // Добавление всех выбранных опций во второй попап
-	  selectedPromos.forEach((promo, index) => {
-		const promoHtml = `
-		  <div class="selected-promo">
-			<div class="promo-number">${index + 1}.</div>
-			<div class="promo-details">
-			  <div class="promo-info">
-				<span class="promo-title">${promo.title}</span>
-				<span class="promo-dates">${promo.dates}</span>
-			  </div>
-			  <img src="${promo.icon}" alt="Icon" class="promo-icon">
-			</div>
-			<div class="promo-right">
-			  <div class="promo-price">${promo.price} ₽</div>
-			  <button class="delete-selected-promo" data-index="${index}">
-				<img src="../assets/img/cabinet/delete2.svg" alt="Delete">
-			  </button>
-			</div>
-		  </div>`;
-		$('#second-popup-content').append(promoHtml);
-	  });
-  
-	  // Обновление общей стоимости
-	  const totalPrice = selectedPromos.reduce((total, promo) => total + parseFloat(promo.price), 0);
-	  $('#total-price2').text(`${totalPrice} руб.`);
-	  $('#confirm-price').text(`Подключить за ${totalPrice} ₽`);
-	}
+        // Очистка содержимого второго попапа
+        $('#second-popup-content').empty();
+        // Добавление всех выбранных опций во второй попап
+        selectedPromos.forEach((promo, index) => {
+			const truncatedTitle = truncateText(promo.title, 20);
+            const promoHtml = `
+              <div class="selected-promo">
+                <div class="promo-number">${index + 1}.</div>
+                <div class="promo-details">
+                  <div class="promo-info">
+                    <span class="promo-title">${truncatedTitle}</span>
+                    <span class="promo-dates">${promo.dates}</span>
+                  </div>
+                  <img src="${promo.icon}" alt="Icon" class="promo-icon">
+                </div>
+                <div class="promo-right">
+                  <div class="promo-price"><span class="light">${promo.price}</span> <span>₽</span></div>
+                  <button class="delete-selected-promo" data-index="${index}">
+                    <img src="../assets/img/cabinet/delete2.svg" alt="Delete">
+                  </button>
+                </div>
+              </div>`;
+            $('#second-popup-content').append(promoHtml);
+        });
+
+        // Расчет старой цены (без скидки)
+        const oldPrice = selectedPromos.reduce((total, promo) => total + parseFloat(promo.price), 0);
+
+        // Расчет новой цены с учетом скидки
+        if (discount > 0) {
+            const discountAmount = (oldPrice * discount) / 100;
+            let newPrice = oldPrice - discountAmount;
+            newPrice = Math.round(newPrice);
+
+            // Отображение скидки и цен
+            $('#popup-discount').text(`${discount}%`);
+            $('#popup-old-price').text(`${oldPrice} руб.`);
+            $('#discount-section').show();
+            $('#total-price2').text(`${newPrice} руб.`);
+			$('#confirm-price').html(`Подключить за <span class="regular">${newPrice} руб.</span>`);
+        } else {
+            // Скрываем скидку и старую цену
+            $('.popup_discount').hide();
+            $('#total-price2').text(`${oldPrice} руб.`);
+			$('#confirm-price').html(`Подключить за <span class="regular">${oldPrice} руб.</span>`);
+        }
+
+    }
   
 	// Обработка нажатия кнопки "Далее" в первом попапе
 	$(document).on('click', '.promo-continue-btn', function(event) {
@@ -2306,36 +2560,47 @@ $(document).ready(function() {
 	  let specialistId = $('#popup-specialist-id-promo').val();
   
 	  if (!selectedPromoId || selectedServiceIds.length === 0 || selectedDates.length < 2) {
-		alert('Пожалуйста, заполните все поля.');
+		$('.popup-footer').removeClass('hidden');  
+		$('.popup-footer').addClass('red');       
+        $('.popup-footer').text('Выберите место, позицию и период размещения.');  
 		return;
 	  }
   
 	  let startDate = selectedDates[0].trim();
 	  let endDate = selectedDates[1].trim();
+	  var startDateToCalculate = moment(selectedDates[0].trim(), "DD.MM.YYYY").toDate();
+    	var endDateToCalculate = moment(selectedDates[1].trim(), "DD.MM.YYYY").toDate();
   
 	  // Сохранение выбранных данных из services
 	  let selectedServiceTitles = $('input[name="service_ids[]"]:checked').map(function() {
-		return $(this).closest('label').text().trim();
-	  }).get().join(', ');
+		return $(this).data('name');
+		}).get().join(', ');
   
-	  // Сохранение выбранных данных из promo_options
-	  let selectedPromoTitle = $('input[name="promo_id"]:checked').closest('label').find('.promo-title').text();
-	  let selectedPromoDescription = $('input[name="promo_id"]:checked').closest('label').find('.promo-description').text();
-	  let selectedPromoIcon = $('input[name="promo_id"]:checked').closest('label').find('img').attr('src');
-	  let selectedPromoPrice = $('input[name="promo_id"]:checked').closest('label').find('.promo-price').text();
+	  	let selectedPromoTitle = $('input[name="promo_id"]:checked').closest('label').find('.promo-title').text();
+		let selectedPromoDescription = $('input[name="promo_id"]:checked').closest('label').find('.promo-description').text();
+		let selectedPromoIcon = $('input[name="promo_id"]:checked').closest('label').find('img').attr('src');
+		let newSrc = selectedPromoIcon.replace(/(\.[a-z]+)$/i, '-no-background$1');
+		let selectedPromoPrice = $('input[name="promo_id"]:checked').closest('label').find('.promo-price').text();
+
+		var daysCount = calculateDays(startDateToCalculate, endDateToCalculate);
+		var weeksCount = Math.ceil(daysCount / 7);
+
+		// Преобразуем цену из строки в число
+		var pricePerMonth = parseFloat(selectedPromoPrice.replace(/[^\d.-]/g, ''));
+		var pricePerDay = pricePerMonth / 30;
+		var totalPrice = weeksCount * pricePerMonth;
   
 	  // Добавление выбранной опции в массив
 	  selectedPromos.push({
 		id: selectedPromoId,
 		title: selectedServiceTitles,
 		dates: `с ${startDate} по ${endDate}`,
-		icon: selectedPromoIcon,
-		price: selectedPromoPrice,
+		icon: newSrc,
+		price: totalPrice,		
 		specialistId: specialistId,
-		service_ids: selectedServiceIds // Добавляем service_ids
+		service_ids: selectedServiceIds
 	  });
   
-	  // Обновление второго попапа
 	  updateSecondPopup();
   
 	  // Открытие второго попапа
@@ -2364,8 +2629,8 @@ $(document).ready(function() {
 	// Обработка удаления опции
 	$(document).on('click', '.delete-selected-promo', function() {
 	  const index = $(this).data('index');
-	  selectedPromos.splice(index, 1); // Удаление опции из массива
-	  updateSecondPopup(); // Обновление второго попапа
+	  selectedPromos.splice(index, 1); 
+	  updateSecondPopup(); 
 	});
   
 	// Обработка подтверждения
@@ -2377,23 +2642,24 @@ $(document).ready(function() {
 		service_ids: promo.service_ids,
 		start_date: promo.dates.split(' по ')[0].replace('с ', '').trim(),
 		end_date: promo.dates.split(' по ')[1].trim(),
-		price: promo.price.replace(' ₽', ''),
-		specialist_id: promo.specialistId // Добавляем specialistId к данным, отправляемым на сервер
+		price: promo.price,
+		specialist_id: promo.specialistId,
+		service_name: promo.title
 	  }));
   
-	  // Вывод отладочной информации в консоль
 	  console.log('Отправка данных на сервер:', promoData);
   
 	  // Отправка данных на сервер
 	  $.ajax({
 		type: 'POST',
-		url: '', // замените на ваш конечный URL
+		url: '',
 		data: { promos: promoData },
 		success: function(response) {
 		  console.log('Ответ сервера:', response);
 		  // Отображение третьего попапа при успешной обработке
-		  $('#successful-popup .bold').html('Отлично!<br>Вы подключили промо-блоки.');
+		  $('#successful-popup .successful-title').html('Отлично!<br>Вы подключили промо-блоки.');
 		  $('#successful-popup .middle-text').text('Информация появится в разделе "Продвижение" в течении 60 минут.');
+		  $('#successful-popup .check').text('Чек по операции придет на электронную почту.');
 		  $('#successful-popup').fadeIn();
 		},
 		error: function(xhr, status, error) {

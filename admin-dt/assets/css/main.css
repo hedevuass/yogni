@@ -9,6 +9,10 @@ body {
     flex-grow: 1;
 }
 
+.hidden {
+    display: none;
+}
+
 footer {
     flex-shrink: 0;
 }
@@ -30,6 +34,34 @@ footer {
     width: 100%;
 }
 
+.hidden {
+    display: none;
+}
+
+.parent-option {
+    font-weight: bold;
+}
+
+.badge.bg-warning {
+    background-color: orange !important;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 30px;
+    color: #fff;
+    top: 5px;
+    font-size: 10px;
+}
+
+
+.table-avatar {
+    width: 100%;
+}
+
 .upload-avatar {
     position: absolute;
     top: 50%;
@@ -40,4 +72,7 @@ footer {
     border-radius: 10px;
     box-shadow: 0px 2px 5px #21252975;
     cursor: pointer;
+}
+#servicePage td {
+    vertical-align: middle;
 }

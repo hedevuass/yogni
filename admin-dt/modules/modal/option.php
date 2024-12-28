@@ -10,6 +10,10 @@
                 <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $option['id'] ?? '' ?>">
                 <input type="hidden" name="type" class="form-control" id="input-type" value="<?= $type ?? '' ?>">
                 <div class="mb-3">
+                    <label for="input-name" class="form-label">Название опции</label>
+                    <input type="text" name="name" class="form-control" id="input-name" value="<?= $option['name'] ?? '' ?>" require>
+                </div>
+                <div class="mb-3">
                     <label for="input-price" class="form-label">Цена опции</label>
                     <input type="number" name="price" class="form-control" id="input-price" value="<?= $option['price'] ?? '' ?>" require>
                 </div>

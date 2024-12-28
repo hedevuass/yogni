@@ -1,74 +1,112 @@
-	<div class="navi">
-		<div class="wrap">
-		  <a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
-		</div>
-  	</div>
-	<button class="journal-filter-button">Выбрать тему</button>
-	<div class="blog-page">
-		<div class="wrap flex">
-			<div class="left-sidebar">
-				<div class="sticky">
-					<div class="top-name">
-						ЮРФАК: <span>ЖУРНАЛ</span>
-					</div>
-					<ul>
-						<!--data:journal_menu--><!--data:journal_menu-->
-					</ul>
-					<select class="sel themes-sel" id="theme">
-						<option value="0" class="hidden">Все темы</option>
-						<option value=".s0">Все темы</option>
-						<!--data:filter_journal_theme--><!--data:filter_journal_theme-->
-					</select>
-					<!-- <select class="sel tags-sel" id="tag">
+<div class="navi">
+	<div class="wrap">
+		<a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
+	</div>
+</div>
+<button class="journal-filter-button">Выбрать тему</button>
+<div class="blog-page">
+	<div class="wrap flex">
+		<div class="left-sidebar">
+			<div class="sticky">
+				<div class="top-name">
+					ЮРФАК: <span>ЖУРНАЛ</span>
+				</div>
+				<ul>
+					<!--data:journal_menu--><!--data:journal_menu-->
+				</ul>
+				<select class="sel themes-sel" id="theme">
+					<option value="0" class="hidden">Все темы</option>
+					<option value=".s0">Все темы</option>
+					<!--data:filter_journal_theme--><!--data:filter_journal_theme-->
+				</select>
+				<!-- <select class="sel tags-sel" id="tag">
 						<option value="0" class="hidden">Все теги</option>
 						<option value=".s0">Все теги</option>
 					</select> -->
-					<div class="list">
-						<!--data:actual_articles_list--><!--data:actual_articles_list-->
-						<a href="/journal/articles" class="bottom-link">Смотреть все статьи</a>
-					</div>
-				</div>
-			</div>
-			<div class="main-content">
-				<!--data:single_post--><!--data:single_post-->
-				<!--data:top_ads--><!--data:top_ads-->
-				<!--data:blog_info--><!--data:blog_info-->
-				<!--data:news_list--><!--data:news_list-->
-				<!--data:posts--><!--data:posts-->
-				
-				<div class="item4">
-					<div class="image">
-						<img src="/assets/img/blog10.png">
-					</div>
-					<span class="name">Юристы и адвокаты по семейному праву</span>
-					<p>А так же специалисты и компании из <span>более</span> чем <span class="or">88 областей права и экспертизы</span></p>
-					<a href="/yuristy-i-advokaty" class="button">Найти специалиста</a>
-				</div>
-			</div>
-			<div class="right-sidebar">
-				<div class="sticky">
-					<a href="/yuristy-i-advokaty" class="item">
-						<img src="/assets/img/blog-banner1.png">
-						<div class="text">
-							<p>Крутые юристы</p>
-							<button>Найти юриста</button>
-						</div>
-					</a>
-					<a href="/experty" class="item">
-						<img src="/assets/img/blog-banner2.png">
-						<span class="link">Эксперты, которые знают все</span>
-					</a>
+				<div class="list">
+					<!--data:actual_articles_list--><!--data:actual_articles_list-->
+					<a href="/journal/articles" class="bottom-link">Смотреть все статьи</a>
 				</div>
 			</div>
 		</div>
+		<div class="main-content">
+			<!--data:single_post--><!--data:single_post-->
+			<!--data:top_ads--><!--data:top_ads-->
+			<!--data:blog_info--><!--data:blog_info-->
+			<!--data:news_list--><!--data:news_list-->
+			<!--data:posts--><!--data:posts-->
+			<div class="item4">
+				<div class="image">
+					<img src="/assets/img/blog10.png">
+				</div>
+				<span class="name">Юристы и адвокаты по семейному праву</span>
+				<p>А так же специалисты и компании из <span>более</span> чем <span class="or">88 областей права и
+						экспертизы</span></p>
+				<a href="/yuristy-i-advokaty" class="button">Найти специалиста</a>
+			</div>
+			<div class="loading"></div>
+		</div>
+		<div class="right-sidebar">
+			<!--data:sticky--><!--data:sticky-->
+		</div>
 	</div>
-	<div class="big-mobile-popup mobile-journal-themes">
-		<a class="close"></a>
-		<div class="subcat__section-title">Категория записей</div>
-		<ul class="menu-links-mobile blog-mobile-catmenu">
-			<!--data:journal_menu_mobile--><!--data:journal_menu_mobile-->
-		</ul>
-		<div class="subcat__section-title">Тема записей</div>
-		<!--data:mobile_filter_journal--><!--data:mobile_filter_journal-->
-		<div class="more-article-themes-btn">Смотреть все темы</div>
-	</div>
+</div>
+<div class="big-mobile-popup mobile-journal-themes">
+	<a class="close"></a>
+	<div class="subcat__section-title">Категория записей</div>
+	<ul class="menu-links-mobile blog-mobile-catmenu">
+		<!--data:journal_menu_mobile--><!--data:journal_menu_mobile-->
+	</ul>
+	<div class="subcat__section-title">Тема записей</div>
+	<!--data:mobile_filter_journal--><!--data:mobile_filter_journal-->
+	<div class="more-article-themes-btn">Смотреть все темы</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function () {
+    let limit = 3;
+    let start = 5;
+	let post_type = window.location.pathname;
+	post_type = post_type.split('/')[2] || '';
+    let loading = false;
+
+    $(window).on('scroll', function () {
+        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 1600) {
+            if (!loading) {
+                loading = true;
+                /* $('.loading').css('display', 'block'); */
+
+                $.ajax({
+                    url: '/modules/load_more_posts.php',
+                    type: 'POST',
+                    data: {
+						post_type: post_type,
+                        limit: limit,
+                        start: start
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        setTimeout(function () {
+                            /* $('.loading').css('display', 'none'); */
+                            if (response.posts) {
+                                $('.main-content').append(response.posts);
+                                start += limit;
+								loading = false;
+                            } else {
+                                $(window).off('scroll');
+                            }
+                        }, 100);
+                    },
+                    error: function () {
+                        alert('Произошла ошибка при загрузке постов.');
+                        $('.loading').css('display', 'none'); 
+                        loading = false; 
+                    }
+                });
+            }
+        }
+    });
+});
+
+</script>

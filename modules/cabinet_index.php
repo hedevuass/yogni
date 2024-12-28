@@ -13,22 +13,47 @@ $status_class = $blog_info['class'];
 
 $data['cabinet_photo_mob'] .= mob_input_photo($user);
 
-$photo = $user['photo'] ? '/uploads/avatars/'.$user['photo'] : '/assets/img/cabinet/no-photo.svg';
+$photo = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
 $photo_class = $user['photo'] ? '' : 'default';
 $photo_edit_class = $user['photo'] ? '' : ' no-photo';
 
 //выводим фото для компа
-$data['index_photo_edit'] = '<a href="/cabinet/redaktirovat-informatsiyu" class="photo__edit '.$photo_edit_class.'" style="background-image: url(' .$photo.')">
+$data['index_photo_edit'] = '<a href="/cabinet/redaktirovat-informatsiyu" class="photo__edit ' . $photo_edit_class . '" style="background-image: url(' . $photo . ')">
 </a>';
+
+$data['upload_user_photo'] .= input_photo($user);
+
+/**
+ * @param array $user
+ * @return string
+ */
+function input_photo(array $user)
+{
+    if ($user['photo']) {
+        $class = 'refresh';
+        $btn = '<i></i>Загрузить фото профиля';
+    } else {
+        $class = '';
+        $btn = '<i></i>Загрузить фото профиля';
+    }
+    $code = <<<EOF
+        <input type="file" name="photo_file" id="photo_file_obzor">
+        <label for="photo_file_obzor" class="pro-photo__btn photo__btn {$class}">
+            {$btn}
+        </label>           
+    EOF;
+    return $code;
+}
+
 $name = $user['company'] ?? $user['name'] . " " . $user['lastname'];
 //выводим фото и инфу для верха мобилки
 $data['index_mob_info'] = '<div class="index-mob__info-block"><div class="photo-block profile-photo-mmenu">
-<div class="photo '.$photo_class.'" style="background-image: url('.$photo.')"></div>
+<div class="photo ' . $photo_class . '" style="background-image: url(' . $photo . ')"></div>
 <div class="photo-btn"></div>
 </div>
 <div class="info-block">
 <div class="name">' . $name . '</div>
-<div class="classification">'.$user['classification'].'</div>
+<div class="classification">' . $user['classification'] . '</div>
 </div></div>';
 
 if ($user['company']) {
@@ -48,10 +73,10 @@ $data['index_mob_info'] .= '<div class="mob-menu__actual">
 </div>
 <div class="actual__price">
     <span class="high-price">
-        '.$old_price.'
+        ' . $old_price . '
         <div class="cross-line"></div>
     </span>
-    <span class="low-price">' .$actual_price. '</span>
+    <span class="low-price">' . $actual_price . '</span>
     <span>руб.</span>
 </div>
 <div class="actual__postscr">
@@ -80,11 +105,11 @@ function user_info_block(array $user)
         $name = $user['name'] . " " . $user['lastname'];
         $foundation_name = 'Опыт работы (лет)';
     }
-    $photo = $user['photo'] ? '/uploads/avatars/'.$user['photo'] : '/assets/img/cabinet/no-photo.svg';
+    $photo = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
     $photo_class = $user['photo'] ? '' : 'default';
     $phone = is_null($user['phone']) ? "Не указан" : format_phone($user['phone']);
     $foundation = is_null($user['foundation']) ? "Не указано" : $user['foundation'];
-    
+
     $code = <<<EOF
     <div class="profile-photo {$photo_class}" style="background-image: url('{$photo}')"></div>
     <div class="profile-info"> 
@@ -125,18 +150,18 @@ function blog_info_block(array $user)
     $rating = is_null($user['rating']) ? '0' : $user['rating'];
     $status = 'Не ведется';
     $status_class = 'red-dot';
-    
-    if ($blog_id !== null) {
+
+    if ($blog_id !== null || $count < 0) {
         $count = count_blog_articles($blog_id);
         $views_db = count_blog_views($blog_id)[0];
         $views = $views_db['SUM(views)'] ?? '0';
-        
-        if ($count > 0 || $views > 0 || $rating > 0) {
+
+        if ($count > 0) {
             $status = 'Ведется';
             $status_class = 'blue-dot';
         }
     }
-    
+
     $code = <<<EOF
     <div class="other-info__wrapper">
         <div class="info-item">
@@ -165,14 +190,14 @@ EOF;
  */
 function mob_edit_menu(array $user)
 {
-	//получаем страницы меню
-	$array = get_cabinet_top_menu();
+    //получаем страницы меню
+    $array = get_cabinet_top_menu();
     $code = '';
     foreach ($array as $page) {
         if (!str_starts_with($page['alias'], 'redaktirovat-')) continue;
         if (!$user['company'] && $page['id'] == 17) continue;
-		if (($user['classification_id'] == 4) && $page['id'] == 6) continue;
-        $code .= '<a class="menu-item" href="/cabinet/'.$page['alias'].'">'.$page['menu_title'].'</a>';
+        if (($user['classification_id'] == 4) && $page['id'] == 6) continue;
+        $code .= '<a class="menu-item" href="/cabinet/' . $page['alias'] . '">' . $page['menu_title'] . '</a>';
     }
     return $code;
 }
@@ -184,8 +209,8 @@ function mob_edit_menu(array $user)
  */
 function mob_input_photo(array $user)
 {
-    if ($user['photo']) { 
-        $photo = '/uploads/avatars/'.$user['photo'];
+    if ($user['photo']) {
+        $photo = '/uploads/avatars/' . $user['photo'];
         $class = 'refresh';
         $btn = '<i></i>Изменить';
     } else {
@@ -207,6 +232,42 @@ function mob_input_photo(array $user)
     EOF;
     return $code;
 }
+//Тарифы
+$tariffs = [
+    'basic' => get_tariff_data(1),
+    'pro' => get_tariff_data(2),
+    'expert' => get_tariff_data(3)
+];
+
+$specialist = get_specialist($_SESSION['user']['id']);
+$connected_tariffs = get_connected_tariffs($specialist['id']);
+
+$connected_tariffs_map = [];
+$connected_tariffs_id = [];
+$connected_tariffs_duration = [];
+foreach ($connected_tariffs as $tariff) {
+    if (is_array($tariff)) {
+        $connected_tariffs_map[$tariff['tariff_id']] = date('d.m.y', strtotime($tariff['end_date']));
+        $connected_tariffs_id[$tariff['tariff_id']] = $tariff['tariff_id'];
+        $connected_tariffs_duration[$tariff['tariff_id']] = $tariff['duration'];
+    }
+}
+
+$tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
+
+if (isset($connected_tariffs_map[1])) {
+    $discount = 10;
+  } elseif (isset($connected_tariffs_map[2])) {
+    $discount = 15;
+  } elseif (isset($connected_tariffs_map[3])) {
+    $discount = 20;
+  }
+  
+  $discount_html = '';
+  if ($discount > 0) {
+      $discount_html = '<div class="circle-pro-photo">-' . $discount . '%</div>';
+  }
+  
 
 $connected_options = get_connected_options($user['id']);
 
@@ -215,12 +276,25 @@ foreach ($connected_options as $option) {
     $connected_options_map[$option['option_id']] = $option['end_date'];
 }
 
+$connected_promo = get_connected_promo($user['id']);
+
+$connected_promo_map = [];
+foreach ($connected_promo as $promo) {
+    if (is_array($promo)) {
+        $promo_details = get_promo_details($promo['promo_id']);
+       
+        $connected_promo_map[] = [
+            'title' => $promo_details['title']
+        ];
+    }
+}
+
 $promo_status_data = generate_promo_status($connected_promo_map);
 $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
-$option_status_data = generate_option_status($connected_options_map);
+$option_status_data = generate_option_status($connected_options_map, $connected_tariffs_map);
 
 $top_cards = '
-<a href="/cabinet/page_promo" data-scroll-target="#tariff-href" class="card">
+<a href="/cabinet/page_promo?target=tariff-href" data-scroll-target="#tariff-href" class="card">
     <div class="card-topline">
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
@@ -232,7 +306,9 @@ $top_cards = '
     </div>
 </a>
 <a href="/cabinet/page_promo" data-scroll-target="#promo-href" class="card">
-      <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4><img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
+      <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4>
+       ' . $discount_html . '
+       <img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
         <p>Продвижение карточки</p>
         <div class="card-status">
             <span>' . $promo_status_data['status'] . '</span>
@@ -242,6 +318,7 @@ $top_cards = '
 <a href="/cabinet/page_promo" data-scroll-target="#option-href" class="card">
     <div class="card-topline">
         <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
+        ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
     <p>Базовые настройки</p>
@@ -251,17 +328,17 @@ $top_cards = '
     </div>
 </a>
 <a href="/cabinet/moy-blog" class="card">
-      <div class="card-topline"><h4>Мой блог <span class="status-dot '. $status_class .'"></span></h4><img src="../assets/img/cabinet/card-blog.svg" alt=""></div>
-        '. $blog_info_block .'
+      <div class="card-topline"><h4>Мой блог <span class="status-dot ' . $status_class . '"></span></h4><img src="../assets/img/cabinet/card-blog.svg" alt=""></div>
+        ' . $blog_info_block . '
         <div class="card-status">
-            <span>'. $status .'</span>
+            <span>' . $status . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
     </a>';
-    $data['top_cards'] = $top_cards;
+$data['top_cards'] = $top_cards;
 
-    $top_cards_mobile = '
-<a href="/cabinet/page_promo" class="card">
+$top_cards_mobile = '
+<a href="/cabinet/page_promo?target=tariff-href" class="card">
     <div class="card-topline">
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
@@ -272,17 +349,20 @@ $top_cards = '
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
 </a>
-<a href="/cabinet/page_promo" class="card">
-      <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4><img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
+<a href="/cabinet/page_promo?target=promo-section" class="card">
+      <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4>
+       ' . $discount_html . '
+       <img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
         <p>Продвижение карточки</p>
         <div class="card-status">
             <span>' . $promo_status_data['status'] . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-</a>
-<a href="/cabinet/page_promo" class="card">
+    </a>
+<a href="/cabinet/page_promo?target=option-href" class="card">
     <div class="card-topline">
         <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
+        ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
     <p>Базовые настройки</p>
@@ -292,12 +372,12 @@ $top_cards = '
     </div>
 </a>
 <a href="/cabinet/moy-blog" class="card">
-      <div class="card-topline"><h4>Мой блог <span class="status-dot '. $status_class .'"></span></h4><img src="../assets/img/cabinet/card-blog.svg" alt=""></div>
-        '. $blog_info_block .'
+      <div class="card-topline"><h4>Мой блог <span class="status-dot ' . $status_class . '"></span></h4><img src="../assets/img/cabinet/card-blog.svg" alt=""></div>
+        ' . $blog_info_block . '
         <div class="card-status">
-            <span>'. $status .'</span>
+            <span>' . $status . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
 </a>';
-    $data['top_cards_mobile'] = $top_cards_mobile;
-    $HTML = html_explode($data, $HTML);
+$data['top_cards_mobile'] = $top_cards_mobile;
+$HTML = html_explode($data, $HTML);

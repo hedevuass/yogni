@@ -84,37 +84,25 @@ if ($specialist['classification_id'] == 1 || $specialist['classification_id'] ==
 $data['breadcrumbs'] .= '<span class="curr-page">' . $specialist['classification'] . ' ' . $name . '</span>';
 
 
-$connected_tariffs = get_connected_options($specialist['id']);
+$connected_tariffs = get_connected_tariffs($specialist['id']);
+
+$connected_options = get_connected_options($specialist['id']);
+$connected_option_ids = array_column($connected_options, 'option_id');
 
 // Блок с контактами
 if ($specialist['email'] && $specialist['phone'] && $specialist['active'] != 0) {
-    $contacts_list = '<ul>';
-
+    // Проверяем наличие подключенных тарифов
     if (!empty($connected_tariffs)) {
-        // Создаем массив для проверки подключенных опций
-        $connected_options = [];
-        foreach ($connected_tariffs as $tariff) {
-            $connected_options[] = $tariff['option_id']; // Предположим, что в тарифах есть поле option_id
-        }
-
-        // Условие для показа номера телефона (option_id = 1)
-        if (in_array(1, $connected_options)) {
-            $contacts_list .= '<li class="company-write">
-            <img src="/assets/img/contacts2.svg">
-            Написать
-        </li>
+        // Если есть хотя бы один тариф, выводим контакты
+        $contacts_list = '<ul>
         <li class="event contacts-tel">
-                <img src="/assets/img/contacts1.svg"> 
-                <span class="non-clicked">Показать телефон</span>
-                <span class="clicked"><a href="tel:' . $specialist['phone'] . '">' . format_phone($specialist['phone']) . '</a></span>
-            </li>';
-        }
+            <img src="/assets/img/contacts1.svg"> 
+            <span class="non-clicked">Показать телефон</span>
+            <span class="clicked"><a href="tel:' . $specialist['phone'] . '">' . format_phone($specialist['phone']) . '</a></span>
+        </li>';
 
-        // Проверка дополнительных контактов
         $other = json_decode($specialist['other'], true);
-
-        // Условие для показа почты (если опция email подключена)
-        if (in_array(2, $connected_options) && isset($other['email']) && $other['email']) {
+        if ($other['email']) {
             $contacts_list .= '<li class="event contacts-email">
                 <img src="/assets/img/contacts2.svg">
                 <span class="non-clicked">Показать почту</span>
@@ -122,11 +110,74 @@ if ($specialist['email'] && $specialist['phone'] && $specialist['active'] != 0) 
             </li>';
         }
 
-        // Условие для показа сайта и соцсетей (option_id = 3)
-        if (in_array(3, $connected_options)) {
+        if ($other['site'] || $other['tg'] || $other['vk'] || $other['dzen']) {
+            $contacts_list .= '<li class="event other"><i></i>Другие контакты</li>
+                <li class="event more"><i></i>Показать ещё</li>';
+
+            if ($other['site']) {
+                $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> Сайт</a></li>';
+            }
+            if ($other['tg']) {
+                $contacts_list .= '<li class="no-sticky"><a href="https://t.me/' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
+            }
+            if ($other['vk']) {
+                $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
+            }
+            if ($other['dzen']) {
+                $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
+            }
+        }
+        $contacts_list .= '</ul>';
+
+        // Выводим блок контактов
+        $data['specialist'] = <<<EOF
+            <div class="contacts-block">
+                <div id="contacts">
+                {$contacts_list}
+                </div>
+            </div>
+        EOF;
+
+        // Для мобильной версии
+        $data['mobile_contacts'] = <<<EOF
+            <div class="name mobile-contacts">Контакты</div> 
+            <div class="contacts-block mobile-contacts">
+                {$contacts_list}
+            </div>
+        EOF;
+    }
+    elseif (!empty($connected_option_ids)) { 
+        
+        $contacts_list = '<ul>';
+
+        // Блок телефона
+        if (in_array(1, $connected_option_ids)) {  // Опция для телефона
+            $contacts_list .= '<li class="event contacts-tel">
+            <img src="/assets/img/contacts1.svg"> 
+            <span class="non-clicked">Показать телефон</span>
+            <span class="clicked"><a href="tel:' . $specialist['phone'] . '">' . format_phone($specialist['phone']) . '</a></span>
+        </li>';
+        }
+
+        // Блок электронной почты
+        if (in_array(2, $connected_option_ids)) {
+            $other = json_decode($specialist['other'], true);
+            if ($other['email']) {
+                $contacts_list .= '<li class="event contacts-email">
+                <img src="/assets/img/contacts2.svg">
+                <span class="non-clicked">Показать почту</span>
+                <span class="clicked"><a href="mailto:' . $other['email'] . '">' . $other['email'] . '</a></span>
+            </li>';
+            }
+        }
+
+        // Блок соцсетей и сайта
+        if (in_array(3, $connected_option_ids)) {
+            $other = json_decode($specialist['other'], true);
             if ($other['site'] || $other['tg'] || $other['vk'] || $other['dzen']) {
-                $contacts_list .= '<li class="event other"><i></i>Показать ещё</li>';
-                
+                $contacts_list .= '<li class="event other"><i></i>Другие контакты</li>
+                <li class="event more"><i></i>Показать ещё</li>';
+
                 if ($other['site']) {
                     $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> Сайт</a></li>';
                 }
@@ -137,33 +188,92 @@ if ($specialist['email'] && $specialist['phone'] && $specialist['active'] != 0) 
                     $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
                 }
                 if ($other['dzen']) {
-                    $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс. Дзен</a></li>';
+                    $contacts_list .= '<li class="no-sticky"><a href="https://' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
                 }
             }
         }
+
+        $contacts_list .= '</ul>';
+
+        // Выводим блок контактов
+        $data['specialist'] = <<<EOF
+            <div class="contacts-block">
+                <div id="contacts">
+                {$contacts_list}
+                </div>
+            </div>
+        EOF;
+
+        // Для мобильной версии
+        $data['mobile_contacts'] = <<<EOF
+            <div class="name mobile-contacts">Контакты</div> 
+            <div class="contacts-block mobile-contacts">
+                {$contacts_list}
+            </div>
+        EOF;
     } else {
-        $contacts_list .= '<li class="company-write">
-            <img src="/assets/img/contacts2.svg">
-            Написать
-        </li>';
-    }
-
-    $contacts_list .= '</ul>';
-
-    $data['specialist'] = <<<EOF
-        <div class="contacts-block">
-            <div id="contacts">
-            {$contacts_list}
+        // Если тарифов нет, выводим только кнопку "Написать"
+        $other = json_decode($specialist['other'], true);
+        $mail = $other['email'];
+        $data['specialist'] = <<<EOF
+            <div class="contacts-block">
+                <ul>
+                    <li class="company-write">
+                        <img src="/assets/img/contacts2.svg">
+                        Написать
+                    </li>
+                </ul>
+            </div>
+        <div class="popup write">
+        <div class="bg"></div>
+        <div class="window middle">
+            <div class="close"></div>
+            <div class="reg">
+            <div class="name">Написать специалисту</div>
+            <div class="form">
+                <div class="field">
+                <input
+                    type="text"
+                    placeholder="Номер телефона или email"
+                    class="inp"
+                />
+                <input type="hidden" id="specialist_mail" value=" $mail ">
+                </div>
+                <div class="field">
+                <textarea
+                    type="text"
+                    placeholder="Сообщение"
+                    class="popup-textarea"
+                ></textarea>
+                </div>
+                <div class="button">
+                <p>
+                    Нажимая “Отправить”, я принимаю изложенное в документах,
+                    представленных в разделе сайта “О проекте”.
+                </p>
+                <button id="send_message_to_specialist" class="popup-btn">Отправить</button>
+                </div>
+            </div>
             </div>
         </div>
-    EOF;
-    $data['mobile_contacts'] = <<<EOF
-        <div class="contacts-block mobile-contacts">
-            {$contacts_list}
         </div>
-    EOF;
+        EOF;
+
+        // Для мобильной версии (если нужно)
+        $data['mobile_contacts'] = <<<EOF
+            <div class="name mobile-contacts">Контакты</div> 
+            <div class="contacts-block mobile-contacts">
+                <ul>
+                    <li class="company-write">
+                        <img src="/assets/img/contacts2.svg">
+                        Написать
+                    </li>
+                </ul>
+            </div>
+        EOF;
+    }
 } else if ($specialist['active'] == 0) {
-    // Если специалист не активен, выводим сообщение о подтверждении
+    // Блок, если специалист не активен
     $data['specialist'] = <<<EOF
         <div class="contacts-block confirmation">
             <div id="confirmation">
@@ -181,6 +291,7 @@ if ($specialist['email'] && $specialist['phone'] && $specialist['active'] != 0) 
 
 
 
+
 // Аватарка
 $specialist['photo'] = $specialist['photo'] ? $specialist['photo'] : 'company.png';
 
@@ -192,6 +303,14 @@ foreach ($_SESSION['favorite'] as $fav_cat) {
     }
 }
 
+$tariff3Connected = false;
+foreach ($connected_tariffs as $tariff) {
+    if ($tariff['tariff_id'] == 3) {
+        $tariff3Connected = true;
+    }
+}
+$rocketStyle = $tariff3Connected ? 'display: block;' : 'display: none;';
+
 $data['specialist'] .= <<<EOF
     <div class="top-info fav">
         <div class="company-actions">
@@ -201,7 +320,7 @@ $data['specialist'] .= <<<EOF
                 <input type="hidden" id="favorite_id" value="{$specialist_id}">
             </i>
 		</div>
-        <div class="image" style="background: url('/uploads/avatars/{$specialist['photo']}') center/cover;"><div class="rocket"></div></div>
+        <div class="image" style="background: url('/uploads/avatars/{$specialist['photo']}') center/cover;"><div class="rocket" style="$rocketStyle"></div></div>
         <div class="company-name">
             <span>$name</span>
             {$specialist['classification']}
@@ -316,6 +435,48 @@ if (!is_null($specialist['document']) && $specialist['document']) {
 $data['input_specialist_id'] = "<input type='hidden' name='specialist' value='{$specialist['id']}'>";
 
 
+$excluded_blocks = [];
+$has_tariff_2_or_3 = array_intersect(array_column($connected_tariffs, 'tariff_id'), [2, 3]);
+
+// Проверяем, есть ли тарифы 2 или 3
+$has_tariff_2_or_3 = array_intersect(array_column($connected_tariffs, 'tariff_id'), [2, 3]);
+
+// Проверяем подключенные опции
+$has_option_4 = in_array(4, array_column($connected_options, 'option_id'));
+
+// Проверяем либо тарифы, либо опции
+$has_tariff_2_or_3_or_option_4 = $has_tariff_2_or_3 || $has_option_4;
+
+if ($has_tariff_2_or_3_or_option_4) {
+    switch ($specialist['classification_id']) {
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+        case 7:
+            $excluded_blocks[] = 'lawyers';
+            break;
+        case 3:
+        case 8:
+            $excluded_blocks[] = 'experts';
+            break;
+        case 4:
+            $excluded_blocks[] = 'notaries';
+            break;
+    }
+}
+
+// Порядок блоков
+$block_order = match ($specialist['classification_id']) {
+    1, 2, 5, 6 => ['lawyers', 'experts', 'notaries'],
+    3, 7 => ['experts', 'lawyers', 'notaries'],
+    4, 8 => ['notaries', 'lawyers', 'experts'],
+    default => []
+};
+
+// Фильтруем порядок блоков с учётом исключений
+$block_order = array_filter($block_order, fn($block) => !in_array($block, $excluded_blocks));
+
 /**
  * Блоки специалистов внизу страницы
  */
@@ -395,14 +556,24 @@ $block_order = match ($specialist['classification_id']) {
 };
 
 
+// Инициализируем массив $data['recomended'] для избежания ошибки
+if (!isset($data['recomended'])) {
+    $data['recomended'] = '';
+}
+
+// Генерация блоков с учётом исключений
 foreach ($block_order as $block) {
+    // Пропускаем блоки, которые должны быть исключены
+    if (in_array($block, $excluded_blocks)) {
+        continue;
+    }
+
     $title = 'recommended_title_' . $block;
     $button = 'recommended_button_' . $block;
 
-
     if ($block == 'experts') {
         $href = 'experty';
-    } else if ($block == 'notaries') {
+    } elseif ($block == 'notaries') {
         $href = 'notariusy';
     } else {
         $href = 'yuristy-i-advokaty';
@@ -414,6 +585,7 @@ foreach ($block_order as $block) {
         $desc_class = 'class="desctop_only"';
         $mobile_button = '<a href="/' . $href . '" class="mobile_only">Больше специалистов</a>';
     }
+    
     if ($$block) {
         $data['recomended'] .= <<<EOF
         <div class="index-catalog-block on-company-page">
@@ -432,6 +604,7 @@ foreach ($block_order as $block) {
     }
 }
 
+
 // Устанавливаем title
 $HTML = html_replace([
     'title' => $name
@@ -448,19 +621,37 @@ function experience(array $specialist): string
     $code = '<div class="year">';
 
     if ($specialist['foundation']) {
-        $specialist['foundation'] = date('Y', strtotime($specialist['foundation']));
+        $foundation = (int)$specialist['foundation'];
 
-        if ($specialist['company']) $code .= "<span>Год основания:</span> {$specialist['foundation']}";
+        if ($foundation < 1000) {
+            $experience = $foundation;
 
-        if (!$specialist['company']) {
-            $experience = date('Y') - $specialist['foundation'];
+            if ($experience <= 0) {
+                $insert = 'менее года';
+            } else {
+                $insert = num_decline($experience, 'год, года, лет');
+            }
 
-            if (!$experience) $insert = 'менее года';
-            if ($experience) $insert = num_decline($experience, 'год, года, лет');
+            if (!$specialist['company']) {
+                $code .= "<span>Опыт работы:</span> {$insert}";
+            }
+        } else {
+            if ($specialist['company']) {
+                $code .= "<span>Год основания:</span> {$foundation}";
+            } else {
+                $experience = date('Y') - $foundation;
 
-            $code .= "<span>Опыт работы:</span> {$insert}";
+                if ($experience <= 0) {
+                    $insert = 'менее года';
+                } else {
+                    $insert = num_decline($experience, 'год, года, лет');
+                }
+
+                $code .= "<span>Опыт работы:</span> {$insert}";
+            }
         }
     }
+
     $code .= '</div>';
 
     return $code;
@@ -496,13 +687,9 @@ function block_ways(array $specialist, array $specializations): array
         $class_link = get_classification_link($specialist['classification_id']);
 
         foreach ($specializations as $key => $specialization) {
-            if ($specialization['p_id'] != 0) {
-                continue;
-            }
-            //$href = "/".$class_link."/" .($specialization['p_id'] === 0 ? '' : $specialization['p_slug'] . '/') . $specialization['slug'];
             $href = "/" . $class_link . "/" . $specialization['slug'];
             $list .= "<a href='{$href}'>{$specialization['title']}</a>";
-
+        
             $code['mobile'] .= '<li class="' . $specialization['slug'] . '"><a href="' . $href . '">' . $specialization['title'] . '</a></li>';
         }
 
@@ -779,16 +966,16 @@ function block_address(string $address, string $map_adress, string $how_to_get, 
                         ymaps.ready(init);
                         function init() {
                             var myMap = new ymaps.Map("specialist_adress_map", {
-                                center: ['.$latitude.', '.$longitude.'],
+                                center: [' . $latitude . ', ' . $longitude . '],
                                 zoom: 16
                             }, {
                                 searchControlProvider: "yandex#search"
                             });
                             var myCollection = new ymaps.GeoObjectCollection(); 
                             var myPlacemark = new ymaps.Placemark([
-                                '.$latitude.', '.$longitude.'
+                                ' . $latitude . ', ' . $longitude . '
                             ], {
-                                balloonContent: "'.$map_adress.'"
+                                balloonContent: "' . $map_adress . '"
                             }, {
                                 preset: "islands#icon",
                                 iconColor: "#FF8139"
@@ -809,12 +996,12 @@ function block_address(string $address, string $map_adress, string $how_to_get, 
         $code .= '  
                 <p class="grey">Как добраться:</p>
                 <div class="adress" id="copy-adress">
-                    '.$address.'
+                    ' . $address . '
                 </div>
-                <textarea id="content">'.$address.'</textarea>
-                '.$how_to_get.'
-                <a href="yandexnavi://map_search?text='.$map_adress.'"><img src="/assets/img/map-button1.svg"> Открыть в Яндекс.Навигаторе</a>
-                <a href="https://yandex.ru/maps/?text='.$map_adress.'"><img src="/assets/img/map-button2.svg"> Открыть в Яндекс.Картах</a>
+                <textarea id="content">' . $address . '</textarea>
+                ' . $how_to_get . '
+                <a href="yandexnavi://map_search?text=' . $map_adress . '"><img src="/assets/img/map-button1.svg"> Открыть в Яндекс.Навигаторе</a>
+                <a href="https://yandex.ru/maps/?text=' . $map_adress . '"><img src="/assets/img/map-button2.svg"> Открыть в Яндекс.Картах</a>
             </div>';
     }
     return $code;
@@ -889,18 +1076,18 @@ function block_blog(array $specialist, string $title, string $name): string
             foreach ($articles as $article) {
                 $code .= '<div class="item2">
                 <div class="flex post-data">
-                    <a href="/journal/'.$article['service_slug'].'" class="cat_'.$article['post_type'].'"><span>'.$article['service_title'].'</span></a>
-                    <div class="date">'.date('d.m.Y', strtotime($article['date'])).'</div>
+                    <a href="/journal/' . $article['service_slug'] . '" class="cat_' . $article['post_type'] . '"><span>' . $article['service_title'] . '</span></a>
+                    <div class="date">' . date('d.m.Y', strtotime($article['date'])) . '</div>
                 </div>
-                <a href="/journal/id'.$article['blog_id'].'/'.$article['alias'].'" class="name">'.$article['title'].'</a>';
+                <a href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '" class="name">' . $article['title'] . '</a>';
                 if ($article['photo'] != '' && !is_null($article['photo'])) {
-                $code .= '<a href="/journal/id'.$article['blog_id'].'/'.$article['alias'].'" class="image">
-                    <img src="/uploads/articles/'.$article['photo'].'">
+                    $code .= '<a href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '" class="image">
+                    <img src="/uploads/articles/' . $article['photo'] . '">
                 </a>';
                 }
-                $code .= '<a href="/journal/id'.$article['blog_id'].'/'.$article['alias'].'">'.cut_text($article['content'], 300).'</a>';
+                $code .= '<a href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '">' . cut_text($article['content'], 300) . '</a>';
                 $author_name = $specialist['company'] ? $specialist['company'] : $specialist['lastname'] . ' ' . $specialist['name'];
-                $code .= '<a href="/journal/id'.$article['blog_id'].'" class="author">'.$author_name.'</a>
+                $code .= '<a href="/journal/id' . $article['blog_id'] . '" class="author">' . $author_name . '</a>
                 </div>';
             }
 

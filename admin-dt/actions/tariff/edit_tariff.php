@@ -13,14 +13,30 @@ if (isset($_POST['id'])) {
         responseJson($json);
     }
 
+    // Преобразуем массив options обратно в JSON, сохраняем изображение и новый текст
+    $options = [];
+    foreach ($data['options'] as $key => $option) {
+        $options[$key] = [
+            'image' => $option['image'], // Сохраняем старое изображение
+            'text' => $option['text'],   // Обновляем текст
+        ];
+    }
+    
+    $data['options'] = json_encode($options, JSON_UNESCAPED_UNICODE);
+
     $function = 'update_' . $data['type'];
 
     try {
-        $function($data);
-        $json['success'] = 'Цена обновлена';
+        if (isset($data['id']) && $data['id'] !== '') {
+            $function($data);
+        } else {
+            add_option($data);
+        }
+        $json['success'] = 'Тариф обновлен';
     } catch (Exception $e) {
-        $json['fatal'] = 'Редактирование тарифов или услуг. Возникла ошибка: ' . $e->getMessage();
+        $json['fatal'] = 'Редактирование тарифов. Возникла ошибка: ' . $e->getMessage();
     }
 
     responseJson($json);
 }
+

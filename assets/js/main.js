@@ -59,28 +59,59 @@ $('input[name=city]').on('click', function () {
 })
 
 // Filter Lawyer
+$(document).ready(function() {
+    // Получаем параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Проверяем параметры и устанавливаем состояние галочек
+    if (urlParams.has('specialist') && urlParams.get('specialist') === 'true') {
+        $('#ch1').prop('checked', true); 
+    }
+    if (urlParams.has('company') && urlParams.get('company') === 'true') {
+        $('#ch2').prop('checked', true); 
+    }
+
+    if (urlParams.get('specialist') === 'true') {
+        $('#ch3').prop('checked', true);
+    }
+    if (urlParams.get('company') === 'true') {
+        $('#ch4').prop('checked', true);
+    }
+});
+
 $('#filter-lawyers').on('click', 'button', function () {
     let category = $('#category').val(),
         get = '/yuristy-i-advokaty';
 
     if (category !== '0' && category !== '.s0') {
-        let subcategory = $(`select${category}`).val()
+        let subcategory = $(`select${category}`).val();
 
         if (subcategory === '0') {
             get += '/' + $(`option[value='${category}']`).attr('data-slug');
         } else {
-            get += '/' + $(`option[value='${category}']`).attr('data-slug') +'/'+  subcategory;
+            get += '/' + $(`option[value='${category}']`).attr('data-slug') + '/' + subcategory;
         }
     }
 
-    if (!$('#ch1').is(':checked') && $('#ch2').is(':checked')) {
-        get += '?company=true';
-    } else if ($('#ch1').is(':checked') && !$('#ch2').is(':checked')){
-        get += '?specialist=true';
+    let params = [];
+
+    // Если выбраны обе галочки, добавляем оба параметра
+    if ($('#ch1').is(':checked')) {
+        params.push('specialist=true');
     }
-    
+    if ($('#ch2').is(':checked')) {
+        params.push('company=true');
+    }
+
+    // Если есть параметры, добавляем их в URL
+    if (params.length > 0) {
+        get += '?' + params.join('&');
+    }
+
     $(location).attr('href', get);
-})
+});
+
+
 
 $('#filter-blog').on('click', 'button', function () {
     let theme = $('#blog_theme').val();
@@ -106,16 +137,33 @@ $('#filter-blog').on('click', 'button', function () {
 })
 
 $('.catalog-checkbox-mobile .checkbox').on('click', function () {
-    let slug = $('.catalog-checkbox-mobile').attr('data-class-slug');
-    get = '/'+slug;
-    if($(this).hasClass('specialist_ch')) {
-        get += '?specialist=true';
+    let path = window.location.pathname;
+
+    let currentParams = new URLSearchParams(window.location.search);
+
+    let get = path;
+
+    // Логика обработки нажатий на чекбоксы
+    if ($(this).hasClass('specialist_ch')) {
+        currentParams.set('specialist', 'true'); 
+        currentParams.delete('company');  
+    } else if ($(this).hasClass('company_ch')) {
+        currentParams.set('company', 'true'); 
+        currentParams.delete('specialist'); 
+    } else if ($(this).hasClass('checkbox') && $(this).text() === 'Все') {
+        // Если выбрано "Все", удаляем оба фильтра
+        currentParams.delete('specialist');
+        currentParams.delete('company');
     }
-    if($(this).hasClass('company_ch')) {
-        get += '?company=true';
+
+    // Если есть параметры фильтрации, добавляем их в URL
+    if (currentParams.toString()) {
+        get += '?' + currentParams.toString(); 
     }
+
     $(location).attr('href', get);
 });
+
 
 // Filter Expertise
 $('#filter-expertise').on('click', 'button', function () {
@@ -134,10 +182,6 @@ $('#filter-expertise').on('click', 'button', function () {
 
     if ($('#ch4').is(':checked')) {
         filter += question ? '&company=true' : '?company=true'
-    }
-
-    if ($('#ch3').is(':checked') && $('#ch4').is(':checked')) {
-        filter = ''
     }
 
     get += filter
@@ -450,6 +494,48 @@ $('.send-confirmation').click(function(e) {
         }
     });
 });
+//Send mail to specialist
+$('.popup.write .popup-btn').on('click', function(e) {
+    e.preventDefault();
+
+    // Собираем данные формы
+    const email = $('#specialist_mail').val();
+    const contactInfo = $('.popup.write input[type=text]').val();
+    const message = $('.popup.write textarea').val();
+
+    // Проверяем, заполнены ли поля
+    if (contactInfo.trim() === '' || message.trim() === '') {
+        alert('Заполните все поля.');
+        return;
+    }
+
+    // Отправляем данные на сервер
+    $.ajax({
+        type: 'POST',
+        url: '/actions/mail/send_message.php',  // Укажи путь до обработчика
+        data: {
+            email: email,
+            contactInfo: contactInfo,
+            message: message
+        },
+        success: function(response) {
+            // Очищаем форму и вставляем сообщение об успешной отправке
+            $('.popup.write .form').html(`
+                <div style="text-align: center;" class="middle-text">
+                    Сообщение успешно отправлено.
+                </div>
+            `);
+        },
+        error: function(xhr, status, error) {
+            $('.popup.write .form').html(`
+                <div style="text-align: center;" class="middle-text">
+                    Произошла ошибка при отправке сообщения.
+                </div>
+            `);
+        }
+    });
+});
+
 // Recovery Password
 $('#recovery-password-popup').on('click', 'button', function (e) {
     e.preventDefault()

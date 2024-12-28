@@ -38,12 +38,30 @@ if ($blog) {
     <div class="stat-descr">Просмотров</div>
 </div>
 EOF;
+
+$data['info_blog_mobile'] .= <<<EOF
+<div>
+    <div class="stat-info">{$rating}<span class="red">-0</span></div>
+    <div class="stat-descr">В рейтинге</div>
+</div>
+<div class="middle-block">
+    <div class="stat-info">{$articles_count}<span class="green">+0</span></div>
+    <div class="stat-descr">Записей</div>
+</div>
+<div>
+    <div class="stat-info">{$views_count}<span class="green">+0</span></div>
+    <div class="stat-descr">Просмотров</div>
+</div>
+EOF;
 }
+
+
 
 $HTML = html_explode([
     'articles' => $data['articles'],
     'blog_id_input' => $data['blog_id_input'],
     'articles_more_btn' => $data['articles_more_btn'],
-    'info_blog' => $data['info_blog']
+    'info_blog' => $data['info_blog'],
+    'info_blog_mobile' => $data['info_blog_mobile']
 ], $HTML);
 

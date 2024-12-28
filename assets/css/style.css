@@ -266,11 +266,10 @@ img {
   Margin: 0;
   line-height: 22px;
   mso-line-height-rule: exactly;
-  font-family: helvetica, 'helvetica neue', arial, verdana, sans-serif;
   font-size: 18px;
   font-style: normal;
   font-weight: normal;
-  color: #373737;
+  color: #222222;
   text-align: left;
 }
 .es-button:hover{
@@ -842,6 +841,9 @@ a.blue-link :hover {
   font-weight: 500;
   text-decoration: underline;
   color: #FF8139;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .header__profile-greeting a.profile-link:hover {
   color: #0F86F3;
@@ -1148,8 +1150,9 @@ a.blue-link :hover {
 }
 .faq-item.active .faq-answer {
   max-height: 100px;
-  padding: 10px 15px;
+  padding: 5px 15px 10px;
   border-radius: 0 0 16px 16px;
+  white-space: pre-line;
 }
 .faq-item.active .faq-question {
   border-radius: 16px 16px 0 0;
@@ -1166,7 +1169,7 @@ a.blue-link :hover {
   transform-origin: center;
 }
 .faq-answer p {
-  margin: 10px 0;
+  margin: 0 0 10px;
   font-weight: 300;
 }
 .index-catalog-block .top-text .links a {
@@ -1184,10 +1187,7 @@ a.blue-link :hover {
   font-weight: 500;
 }
 .index-catalog-block .top-text p {
-  max-width: 590px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  line-height: 14px;
+  font-size: 14px;
 }
 .after-mail__content {
   font-size: 12px;
@@ -1204,18 +1204,25 @@ a.blue-link :hover {
   max-width: 1020px;
   height: 480px;
   margin-bottom: 32px;
-  background-image: url('../img/o-proekte.png');
+  background-image: url(../img/o-proekte.png);
   text-align: center;
 }
+  .index-catalog-block .top-text div.about-page {
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+      
+  }
 .index-catalog-block .top-text div.about-page .text {
-  
   font-weight: 900;
-  font-size: 32px;
   padding-top: 60px;
   color: #FFFFFF; 
 }
 .index-catalog-block .top-text div.about-page .descr {
-  
   font-weight: 600;
   font-size: 18px;
   color: #FFFFFF; 
@@ -1227,7 +1234,7 @@ a.blue-link :hover {
   margin-top: 48px;
   color: #222222;
 }
-.message-to-support{
+.message-to-support {
     margin-top: 32px;
     display: flex;
     align-items: center;
@@ -1239,13 +1246,14 @@ a.blue-link :hover {
     background-color: #FF8139;
     background-repeat: no-repeat;
     background-size: 24px 24px;
-    background-position: right 12% center;
+    background-position: right 16% center;
     background-image: url(../img/cabinet/faq-support-link.svg);
     box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.1);
     color: #fff;
     font-size: 16px;
     font-weight: 500;
     text-decoration: none;
+    padding-right: 40px;
 }
 .message-to-support:hover {
   background-color: #e87634;
@@ -3572,6 +3580,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 .reviews {
   border-bottom: 1px solid #E8ECF1;
+  border-top: 1px solid #E8ECF1;
   padding: 32px 0;
 }
 .reviews .name {
@@ -3787,6 +3796,9 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   display: block;
 }
 .company-page .contacts-block ul {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 16px;
   border: 1px solid #E8ECF1;
   box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.1);
@@ -3803,8 +3815,11 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   height: 48px;
   background: #E8ECF1;
   border-radius: 8px;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   cursor: pointer;
+}
+.company-page .contacts-block ul .company-write {
+  background-color: #C8E0FF;
 }
 .company-page .contacts-block ul li:hover {
   color: #0F86F3;
@@ -3878,6 +3893,9 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 .company-page .contacts-block ul li.shown {
   display: flex !important;
 }
+.mobile-contacts {
+  display: none;
+}
 .company-page .contacts-block.mobile-contacts {
   display: none;
   position: static;
@@ -3903,8 +3921,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 .company-page .top-info {
   position: relative;
   border-bottom: 1px solid #E8ECF1;
-  padding: 0 0 17px 352px;
-  min-height: 500px;
+  padding: 0 0 32px 352px;
+  min-height: 400px;
 }
 .company-page .top-info .company-actions {
   position: absolute;
@@ -3958,7 +3976,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   left: 0;
   top: 5px;
   width: 320px;
-  height: calc(100% - 54px);
+  bottom: 32px;
   max-height: 400px;
 }
 .company-page .top-info .image img {
@@ -4087,7 +4105,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 .company-page .prices {
   border-top: 1px solid #E8ECF1;
-  border-bottom: 1px solid #E8ECF1;
   padding: 32px 0;
 }
 .company-page .prices .name {
@@ -4469,7 +4486,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   margin-top: 64px;
 }
 .company-page .articles {
-  border-top: 1px solid #E8ECF1;
   padding: 32px 0;
 }
 .company-page .articles .article_item .article_body {
@@ -4637,6 +4653,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
   .articles .article_item .article_body {
     width: 100%;
+    padding-top: 30px;
   }
 }
 @media (max-width: 1275px) {
@@ -4689,6 +4706,12 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
   .company-page {
     padding-right: 0;
+  }
+  .mobile-contacts {
+    display: block;
+  }
+  .mobile-contacts.name {
+    margin: 24px 0 0 0;
   }
   .company-page .contacts-block.mobile-contacts {
     display: block;
@@ -4747,9 +4770,20 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 @media (max-width: 991px) {
   .index-catalog-block .top-text p {
+    font-size: 14px; 
+  }
+  .index-catalog-block .top-text div.about-page {
+    font-weight: 300;
+    max-width: 1020px;
+    height: 390px;
+    margin-bottom: 32px;
+    background-image: url('../img/o-proekte-2.png');
+    text-align: center;
+  }
+  .index-catalog-block .top-text div.about-page .descr {
     font-size: 14px;
-    margin: 32px 0 48px;
-    margin-bottom: unset;
+    font-weight: 500;
+    line-height: 16px;
   }
   .index-catalog-block .top-text div.about-page .text {
     padding-top: unset;
@@ -4846,6 +4880,10 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
   .index-catalog-block .filter .checkbox + label {
     margin-right: 10px;
+  }
+  .company-page .prices {
+    border-bottom: 1px solid #E8ECF1;
+    border-top: 0px;
   }
   .banner-slide__wrapper {
     font-size: 18px;
@@ -5079,7 +5117,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     display: none;
   }
   .index-catalog-block .top-text {
-    padding: 24px 0 0;
+    padding: 24px 0 204px;
   }
   .index-catalog-block .top-text .links {
     display: none;
@@ -5634,7 +5672,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     margin: 0 !important;
   }
   .index-catalog-block .top-text {
-    padding: 0;
+    padding: 0 0 204px;
   }
   .index-catalog-block .top-text h1 {
     margin-top: 0px;
@@ -5642,6 +5680,12 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     font-weight: 500;
     font-size: 16px;
     line-height: 19px;
+  }
+  .izbrannoe .top-text {
+    padding: 16px 0 20px !important;
+  }
+  .poisk .top-text {
+    padding: 16px 0 20px !important;
   }
   .index-catalog-block .top-text p {
     margin-bottom: 16px;
@@ -5763,11 +5807,12 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
   .company-page .top-info {
     padding: 0 20px 24px;
-    margin: 0 -20px 30px;
+    margin: 0 -20px 0px;
   }
   .company-page .ways {
     padding: 24px 20px;
     margin: 0 -20px;
+    border-bottom: 1px solid #E8ECF1;
   }
   .company-page .ways .flex {
     max-height: 220px;
@@ -5795,12 +5840,13 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     max-width: 100%;
   }
   .company-page .contacts-block.mobile-contacts {
-    padding: 24px 20px 8px;
+    padding: 24px 20px 24px;
     margin: 0 -20px;
   }
   .company-page .reviews {
     padding: 24px 20px;
     margin: 0 -20px;
+    border-top: 0;
   }
   .reviews .name .rating {
     display: block;
@@ -5863,6 +5909,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .company-page .days {
     padding: 24px 20px 8px;
     margin: 0 -20px;
+    border-bottom: 1px solid #E8ECF1 !important;
   }
   .company-page .days .item {
     font-size: 14px;

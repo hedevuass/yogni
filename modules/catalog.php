@@ -15,9 +15,6 @@ $category = get_service_by_slug($requestion);
 if (!$category && $requestion!='yuristy-i-advokaty' && $requestion!='experty' && $requestion!='notariusy') responseRedirect('/');
 // Данные пагинации
 $start = 0;
-$limit = 16;
-$page = intval($_GET['page']) ?: 1;
-if ($page) $start = ($page - 1) * $limit;
 
 $mobile_btn_title = "Выбрать подраздел";
 if (!$category) {
@@ -29,6 +26,18 @@ if ($category) {
     // Хлебные крошки
     $vars = vars(classification: $category['classification']);
     $link_for_pagination = $vars['slug'].($category['p_id'] == 0 ? '' : '/' . $category['p_slug']).'/'.$category['slug'];
+
+    $page = intval($_GET['page']) ?: 1;
+    $promo_count = count(get_promo_list($vars['block'])); 
+
+    if ($page === 1) {
+        $limit = max(24 - $promo_count, 0);
+    } else {
+        $limit = 24;
+    }
+
+    $limit_for_pagination = 24;
+    $start = ($page - 1) * $limit;
 
     $data['breadcrumbs'] = breadcrumbs($vars, $category);
 
@@ -56,10 +65,23 @@ if ($category) {
     $count = count_specialists_by_service($services);
 
     $specialists = get_specialists_by_service($services, $limit, $start);
+    $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($services, $limit, $start);
 }
 
 if (!$category) {
     $vars = vars(requestion: $requestion);
+
+    $page = intval($_GET['page']) ?: 1;
+    $promo_count = count(get_promo_list($vars['block'])); 
+
+    if ($page === 1) {
+        $limit = max(24 - $promo_count, 0);
+    } else {
+        $limit = 24;
+    }
+
+    $limit_for_pagination = 24;
+    $start = ($page - 1) * $limit;
 
     $link_for_pagination = $vars['slug'];
 
@@ -94,25 +116,42 @@ if (!$category) {
 
     $count = count_specialists_by_classification($vars['classification']);
     $specialists = get_specialists_by_classification($vars['classification'], $limit, $start);
+    $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($vars['classification'], $limit, $start);
 }
 
-// меню-фильтр для мобилки
+
 $data['catalog_mobile_filter'] = '<div class="big-mobile-popup mobile-subcat-block'.$mobile_filter_class.'">
                                         <a class="close"></a>
                                         <div class="subcat__section-title">'.$mobile_filter_title.'</div>
                                         <ul class="menu-links-mobile">' . $first_cat;
+
+// Получаем текущие параметры URL
+$current_params = $_SERVER['QUERY_STRING']; // Получаем строку параметров, например, "specialist=true&company=true"
+
 foreach ($mobile_links as $link) {
     $class_link = get_classification_link($link['classification']);
+    // Формируем базовую ссылку для подраздела
+    $url = '/'.$class_link.'/'.($category_mob ? $category_mob['slug'].'/': '').$link["slug"];
+
+    // Если есть параметры в текущем URL, добавляем их в ссылку
+    if (!empty($current_params)) {
+        $url .= '?' . $current_params;
+    }
+
+    // Если в названии ссылки есть слово 'прочие', мы добавляем её отдельно
     if (mb_stripos($link['title'], 'прочие') !== false) {
-        $last_link = '<li class="'.$link["slug"].'"><a href="/'.$class_link.'/'.($category_mob ? $category_mob['slug'].'/': '').$link["slug"].'">'.$link["title"].'</a></li>';
+        $last_link = '<li class="'.$link["slug"].'"><a href="'.$url.'">'.$link["title"].'</a></li>';
     } else {
-        $data['catalog_mobile_filter'] .= '<li class="'.$link["slug"].'"><a href="/'.$class_link.'/'.($category_mob ? $category_mob['slug'].'/': '').$link["slug"].'">'.$link["title"].'</a></li>';
+        $data['catalog_mobile_filter'] .= '<li class="'.$link["slug"].'"><a href="'.$url.'">'.$link["title"].'</a></li>';
     }
 }
+
 if (isset($last_link) && $last_link != '') {
     $data['catalog_mobile_filter'] .= $last_link;
 }
+
 $data['catalog_mobile_filter'] .= '</ul></div>';
+
 
 // кнопкa для мобилки
 $data['mobile_filter_btn'] = '<button class="btn btn__mobile-filters'.$mobile_btn_class.'">'.
@@ -120,23 +159,33 @@ $mobile_btn_title.'<i><img src="/assets/img/mobile-filters-btn.svg" alt=""></i>
 </button>';
 
 // Промоблок
-$data['promo'] = block_promo($vars['block'], $category['classification']);
+$filter_type = 'all'; // По умолчанию показываем всех
+if (isset($_GET['company']) && $_GET['company'] === 'true') {
+    $filter_type = 'companies'; // Фильтр компаний
+} elseif (isset($_GET['specialist']) && $_GET['specialist'] === 'true') {
+    $filter_type = 'specialists'; // Фильтр частных специалистов
+}
+
+// Промо-блок с учётом фильтра
+if ($page === 1) {
+    $data['promo'] = block_promo($vars['block'], $category['classification'], $filter_type);
+}
 
 $data['pre_list'] = pre_list($pre_list_text);
 
 // Список специалистов
-$data['catalog_specialists'] = block($specialists);
+$data['catalog_specialists'] = block($specialists_with_tarrifs);
 
 // Пагинация
-$data['pagination'] = block_pagination($count, $limit, $page, $link_for_pagination, $list ?? $vars);
+$data['pagination'] = block_pagination($count, $limit_for_pagination, $page, $link_for_pagination, $list ?? $vars);
 
 // Filter
 $category['classification'] = is_numeric($category['classification']) ? $category['classification'] : $category['classification'][0];
 
 $filter = match ((int)$category['classification']) {
-    1, 2, [1, 2, 5, 6]  => 'lawyer',
-    3, [3, 7]           => 'expert',
-    4, [4, 8]           => 'notary',
+    1, 2, [1, 2, 5, 6, 7]  => 'lawyer',
+    3, [3, 8]           => 'expert',
+    4, [4]           => 'notary',
 };
 
 // Устанавливаем title
@@ -309,7 +358,7 @@ function vars(int $classification = null, string $requestion = null): array
                 'title'             => 'Эксперты',
                 'slug'              => 'experty',
                 'h1'                => 'Все эксперты',
-                'classification'    => [3, 7],
+                'classification'    => [3, 8],
                 'block'             => 2,
                 'pre_list'          => 'Топ эксперты'
             ],
@@ -317,7 +366,7 @@ function vars(int $classification = null, string $requestion = null): array
                 'title'             => 'Нотариусы',
                 'slug'              => 'notariusy',
                 'h1'                => 'Все нотариусы',
-                'classification'    => [4, 8],
+                'classification'    => [4],
                 'block'             => 3,
                 'pre_list'          => 'Топ нотариусы'
             ],
@@ -325,7 +374,7 @@ function vars(int $classification = null, string $requestion = null): array
                 'title'             => 'Юристы и адвокаты',
                 'slug'              => 'yuristy-i-advokaty',
                 'h1'                => 'Все юристы и адвокаты',
-                'classification'    => [1, 2, 5, 6],
+                'classification'    => [1, 2, 5, 6, 7],
                 'block'             => 1,
                 'pre_list'          => 'Топ юристы и адвокаты'
             ]
@@ -340,20 +389,25 @@ function vars(int $classification = null, string $requestion = null): array
  * @param int|array $classification
  * @return string
  */
-function block_promo(int $block_id, int|array $classification): string
+function block_promo(int $block_id, int|array $classification, string $filter_type = 'all'): string
 {
+    // Получаем список специалистов для промо с фильтрацией по alias, если он есть
     $specialists = get_promo_list($block_id);
 
-    $count = count($specialists);
-
-    if ($count < 8) {
-        $blocks_limit = 8 - $count;
-        $supplement = get_specialists_by_classification($classification, $blocks_limit);
-        $specialists = array_merge($specialists, $supplement);
+    // Фильтруем специалистов, если выбран фильтр "Частные" или "Компании"
+    if ($filter_type === 'specialists') {
+        $specialists = array_filter($specialists, function ($specialist) {
+            return empty($specialist['company_name']); // Частные лица: нет названия компании
+        });
+    } elseif ($filter_type === 'companies') {
+        $specialists = array_filter($specialists, function ($specialist) {
+            return !empty($specialist['company_name']); // Компании: есть название компании
+        });
     }
 
     return block($specialists, 'important');
 }
+
 
 /**
  * @param string $text

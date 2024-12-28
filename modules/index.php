@@ -19,9 +19,202 @@ $data['index_experts'] = block($experts);
 $notaries = get_specialists_by_classification([4, 8], 8);
 $data['index_notaries'] = block($notaries);
 
+// Обрабатываем список баннеров
+
 // Обрабатываем список блогов
 /* $articles = get_main_blog_articles(0, 6);
 $data['articles'] = block_articles($articles); */
+
+$first_banners = get_banner(1);
+
+$data['first_slider'] .= '
+<div class="banner__wrapper main-banner">
+    <div class="swiper" id="banner1">
+        <div class="swiper-wrapper">';
+
+foreach ($first_banners as $slide) {
+    $image = $slide['image']; 
+
+    $description = json_decode($slide['description'], true);
+
+    if (!empty($image)) {
+
+        $current_description = isset($description) ? $description : ['line1' => '', 'line2' => '', 'line3' => ''];
+
+        $data['first_slider'] .= '
+            <div class="swiper-slide banner-slide">
+                <div class="banner-slide__wrapper">
+                    <div class="background_img">
+                        <img src="assets/img/' . $image . '" alt="' . $current_description['line1'] . '">
+                        <div class="background_fade"></div>
+                    </div>
+                    <div class="main-slide__left-text">
+                        ' . $current_description['line1'] . ',
+                        <br>
+                        ' . $current_description['line2'] . '
+                        <div class="orange-text main">' . $current_description['line3'] . '</div>
+                    </div>
+                    <div class="title main-title">
+                        ' . $slide['title'] . '
+                        <div class="main-title__after-text">
+                            И еще <a href="' . $slide['link'] . '">88 направлений</a>
+                        </div>
+                    </div>
+                    <a href="' . $slide['button_link'] . '" class="btn btn__main-slide">' . $slide['button_text'] . '</a>
+                </div>
+            </div>';
+    }
+}
+
+$data['first_slider'] .= '
+        </div>
+        <div class="banner-btn__prev" id="banner1__prev">
+            <img src="assets/img/banner-prev.svg" alt="previous">
+        </div>
+        <div class="banner-btn__next" id="banner1__next">
+            <img src="assets/img/banner-next.svg" alt="next">
+        </div>
+    </div>
+</div>';
+
+$second_banners = get_banner(2);
+
+$data['second_slider'] = '
+<div class="banner__wrapper">
+    <div class="swiper" id="banner2">
+        <div class="swiper-wrapper">';
+
+foreach ($second_banners as $slide) {
+    $description = json_decode($slide['description'], true);
+    $image = $slide['image'];
+
+    $data['second_slider'] .= '
+            <div class="swiper-slide banner-slide promo-slide">
+                <div class="banner-slide__wrapper">
+                    <div class="background_img">
+                        <img src="assets/img/' . $image . '">
+                        <div class="background_fade"></div>
+                    </div>
+                    <div class="text">
+                        <p>' . $description['line1'] . '</p>
+                        <p>' . $description['line2'] . '</p>
+                        <p>' . $description['line3'] . '</p>
+                    </div>
+                    <div class="title">
+                        ' . $slide['specialist_name'] . '
+                        <div class="orange-text large-padding right-side">
+                            ' . $slide['classification'] . '
+                        </div>
+                    </div>
+                </div>
+            </div>';
+}
+
+$data['second_slider'] .= '
+        </div>
+        <div class="banner-btn__prev" id="banner2__prev">
+            <img src="assets/img/banner-prev.svg" alt="previous">
+        </div>
+        <div class="banner-btn__next" id="banner2__next">
+            <img src="assets/img/banner-next.svg" alt="next">
+        </div>
+    </div>
+</div>';
+
+$third_banners = get_banner(3);
+
+$data['third_slider'] = '
+<div class="banner__wrapper">
+    <div class="swiper" id="banner3">
+        <div class="swiper-wrapper">';
+
+foreach ($third_banners as $slide) {
+
+    $description = json_decode($slide['description'], true);
+    
+    $image = $slide['image'];
+
+    $data['third_slider'] .= '
+        <div class="swiper-slide banner-slide promo-slide">
+            <div class="banner-slide__wrapper">
+                <div class="background_img">
+                    <img src="assets/img/' . $image . '">
+                    <div class="background_fade"></div>
+                </div>
+                <div class="text">
+                    <p>' . $description['line1'] . '</p>
+                    <p>' . $description['line2'] . '</p>
+                    <p>' . $description['line3'] . '</p>
+                </div>
+                <div class="title">
+                    ' . $slide['specialist_name'] . '
+                    <div class="orange-text right-side">
+                        ' . $slide['classification'] . '
+                    </div>
+                </div>
+            </div>
+        </div>';
+}
+
+$data['third_slider'] .= '
+        </div>
+        <div class="banner-btn__prev" id="banner3__prev">
+            <img src="assets/img/banner-prev.svg" alt="previous">
+        </div>
+        <div class="banner-btn__next" id="banner3__next">
+            <img src="assets/img/banner-next.svg" alt="next">
+        </div>
+    </div>
+</div>';
+
+$fourth_banners = get_banner(4);
+
+$data['fourth_slider'] = '
+<div class="banner__wrapper">
+    <div class="swiper" id="banner4">
+        <div class="swiper-wrapper">';
+
+// Проходим по каждому слайду баннера
+foreach ($fourth_banners as $slide) {
+    // Декодируем описание баннера
+    $description = json_decode($slide['description'], true);
+    
+    // Получаем имя файла изображения
+    $image = $slide['image'];
+
+    // Создаем HTML для каждого слайда
+    $data['fourth_slider'] .= '
+        <div class="swiper-slide banner-slide promo-slide">
+            <div class="banner-slide__wrapper">
+                <div class="background_img">
+                    <img src="assets/img/' . $image . '">
+                    <div class="background_fade"></div>
+                </div>
+                <div class="text">
+                    <p>' . $description['line1'] . '</p>
+                    <p>' . $description['line2'] . '</p>
+                </div>
+                <div class="title">
+                    ' . $slide['specialist_name'] . '
+                    <div class="orange-text right-side">
+                        ' . $slide['classification'] . '
+                    </div>
+                </div>
+            </div>
+        </div>';
+}
+
+// Завершаем структуру слайдера
+$data['fourth_slider'] .= '
+        </div>
+        <div class="banner-btn__prev" id="banner4__prev">
+            <img src="assets/img/banner-prev.svg" alt="previous">
+        </div>
+        <div class="banner-btn__next" id="banner4__next">
+            <img src="assets/img/banner-next.svg" alt="next">
+        </div>
+    </div>
+</div>';
 
 //Список новостей
 $news_titles = fillNewsList();
@@ -32,7 +225,7 @@ if (is_array($news_titles)) {
         Лента новостей
     </div>';
     foreach ($news_titles as $title_array) {
-        $data['news_list'] .= '<a href="/journal/' . $title_array['alias'] . '" class="link">' . $title_array['title'] . '</a>';
+        $data['news_list'] .= '<a href="/journal/' . $title_array['alias'] . '" class="link">' . htmlspecialchars_decode($title_array['title']) . '</a>';
     }
     $data['news_list'] .= '<a href="/journal/news" class="bottom-link">Смотреть все новости</a>
     </div>';
@@ -82,7 +275,7 @@ function get_actual_services(): array
         'more_actual_service' => '<div class="index-sections-block last">',
     ];
 
-    $services = get_services();
+    $services = get_actual_services_from_db();
     $blocks = get_blocks();
 
     foreach ($blocks as $block) {

@@ -16,7 +16,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/functions.php';
 
 $requestion_arr = explode('/', $_SERVER['REQUEST_URI']);
 $include_ads = $main_page = true;
-$posts = get_actual_posts();
+$posts = get_actual_posts('', 0, 0, 5, 0);
 $data['breadcrumbs'] = '<span class="curr-page">Журнал</span>';
 $tag_id = $theme_id = 0;
 if(isset($requestion_arr[2])) {
@@ -180,16 +180,54 @@ $data['mobile_filter_journal'] .= '</ul>';
 $data['news_list'] = $data['blog_info'] = $data['top_ads'] = $data['actual_articles_list'] = $data['single_post'] = $data['posts'] = '';
 $news_titles = fillNewsList();
 
+$journal_banners = get_journal_banners();
+
+$filteredBanners = array_filter($journal_banners, function($banner) {
+    return in_array($banner['id'], [3, 4]);
+});
+
+foreach ($filteredBanners as $index => $banner) {
+    if ($banner['id'] == 3) {
+        // HTML для первого баннера
+        $first_banner = '
+        <a href="' . htmlspecialchars($banner['link']) . '" class="item">
+            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '">
+            <div class="text">
+                <p>' . htmlspecialchars($banner['title']) . '</p>
+                <button>' . htmlspecialchars($banner['button_text']) . '</button>
+            </div>
+        </a>';
+    } elseif ($banner['id'] == 4) {
+        // HTML для второго баннера
+        $second_banner = '
+        <a href="' . htmlspecialchars($banner['link']) . '" class="item">
+            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '">
+            <span class="link">' . htmlspecialchars($banner['title']) . '</span>
+        </a>';
+    }
+}
+
+$data['sticky'] = '<div class="sticky">' . $first_banner . $second_banner . '</div>';
+
 if ($include_ads) {
-    $data['top_ads'] = '<div class="item1">
-        <img src="/assets/img/blog5.png" class="image">
-        <a href="#" class="name">Помощь в подготовке документов для получения ВНЖ Черногории</a>
-        <p>Офисы в Подгорице и Москве.</p>
-        <div class="cat">
-            <span>ПРОМО</span> <img src="/assets/img/cat1.svg"> Релокейт-консалт
-        </div>
-        <a href="#" class="button">Подробнее</a>
-    </div>';
+    $topAd = array_filter($journal_banners, function($banner) {
+        return $banner['id'] == 1;
+    });
+
+    $topAd = reset($topAd);
+
+    if ($topAd) {
+        $data['top_ads'] = '<div class="item1">
+            <img src="/assets/img/' . htmlspecialchars($topAd['image']) . '" class="image">
+            <a href="' . htmlspecialchars($topAd['link']) . '" class="name">' . htmlspecialchars($topAd['title']) . '</a>
+            <p>' . htmlspecialchars($topAd['description']) . '</p>
+            <div class="cat">
+                <span>' . htmlspecialchars($topAd['category']) . '</span> 
+                <img src="/assets/img/cat1.svg"> ' . htmlspecialchars($topAd['service_type']) . '
+            </div>
+            <a href="' . htmlspecialchars($topAd['button_link'] ?? $topAd['link']) . '" class="button">' . htmlspecialchars($topAd['button_text']) . '</a>
+        </div>';
+    }
 }
 
 if ($main_page && is_array($news_titles) && $theme_id == 0 && $tag_id == 0) {
@@ -200,7 +238,7 @@ if ($main_page && is_array($news_titles) && $theme_id == 0 && $tag_id == 0) {
         Лента новостей
     </div>';
     foreach ($news_titles as $title_array) {
-        $data['news_list'] .= '<a href="/journal/' . $title_array['alias'] . '" class="link">' . $title_array['title'] . '</a>';
+        $data['news_list'] .= '<a href="/journal/' . $title_array['alias'] . '" class="link">' . htmlspecialchars_decode($title_array['title']) . '</a>';
     }
     $data['news_list'] .= '<a href="/journal/news" class="bottom-link">Смотреть все новости</a>
     </div>';
@@ -269,7 +307,7 @@ if (isset($blog)) {
             </a>
             <div class="info">
                 <div class="name">
-                    <a href="/specialist/id'.$specialist['id'].'">'.$blog_name.'</a>
+                    <a class="blog_name blog_name_author_page" href="/specialist/id'.$specialist['id'].'">'.$blog_name.'</a>
                     '.$rating_code.' 
                 </div>
                 <div class="prof">
@@ -294,7 +332,7 @@ if (isset($single_post)) {
             <div class="author">
                 <div class="author__img-wrapper" style="background-image:url(/uploads/avatars/'.$specialist['photo'].');"></div>
                 <div>
-                    <p><a href="/specialist/id'.$specialist['id'].'">'.$blog_name.'</a> '.$rating_code.'</p>
+                    <p><a class="blog_name" href="/specialist/id'.$specialist['id'].'">'.$blog_name.'</a> '.$rating_code.'</p>
                     '.$specialist['classification'].'
                 </div>
             </div>
@@ -378,17 +416,26 @@ foreach ($posts as $post) {
     }
     $data['posts'] .= '</div>';
     if ($post_number == 2) {
-        $data['posts'] .= '<div class="item3">
-        <div class="cat">
-            <span>ПРОМО</span> <img src="/assets/img/cat4.svg"> Релокейт-консалт
-        </div>
-        <div class="image">
-            <img src="/assets/img/blog7.png">
-        </div>
-        <a href="#" class="name">Где в Европе проще всего оформить ВНЖ?</a>
-        <p>Разбираемся, как открыть кофейню в Португалии и зарегистрировать ИП в Черногории</p>
-        <a href="#" class="button">Подробнее</a>
-    </div>';
+        $postAd = array_filter($journal_banners, function($banner) {
+            return $banner['id'] == 2;
+        });
+    
+        $postAd = reset($postAd);
+    
+        if ($postAd) {
+            $data['posts'] .= '<div class="item3">
+                <div class="cat">
+                    <span>' . htmlspecialchars($postAd['category']) . '</span> 
+                    <img src="/assets/img/cat4.svg"> ' . htmlspecialchars($postAd['service_type']) . '
+                </div>
+                <div class="image">
+                    <img src="/assets/img/' . htmlspecialchars($postAd['image']) . '">
+                </div>
+                <a href="' . htmlspecialchars($postAd['link']) . '" class="name">' . htmlspecialchars($postAd['title']) . '</a>
+                <p>' . htmlspecialchars($postAd['description']) . '</p>
+                <a href="' . htmlspecialchars($postAd['button_link'] ?? $postAd['link']) . '" class="button">' . htmlspecialchars($postAd['button_text']) . '</a>
+            </div>';
+        }
     }
     $post_number++;
 }

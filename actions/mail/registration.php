@@ -4,6 +4,58 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
+//Социальные сети
+$socials = get_all_social();
+$social_html = '<tr style="border-collapse:collapse">';
+foreach ($socials as $social) {
+    if (!empty($social['link'])) {
+        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+        $height = 24; 
+        $width = 30;
+        
+        switch ($social['alt']) {
+            case 'youtube':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 30;
+                break;
+            case 'telegram':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 24;
+                break;
+            case 'vk':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 24;
+                break;
+            case 'yandex':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 24;
+                break;
+            default:
+                $image_src .= $social['image'];
+                break;
+        }
+        
+        $social_html .= '
+            <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
+                <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
+                   style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px">
+                    <img src="' . $image_src . '" 
+                         alt="' . htmlspecialchars($social['alt']) . '" 
+                         title="' . ucfirst(htmlspecialchars($social['alt'])) . '" 
+                         height="' . $height . '" 
+                         width="' . $width . '" 
+                         style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic">
+                </a>
+            </td>';
+    }
+}
+
+$social_html .= '</tr>';
+
 if (isset($_POST['email'])) {
     $email = clean_elem_form($_POST['email']);
     $name = clean_elem_form($_POST['name']);
@@ -166,12 +218,7 @@ a[x-apple-data-detectors] {
                      <tbody><tr style="border-collapse:collapse">
                      <td align="center" class="es-m-p0t" style="padding:0;Margin:0;padding-top:20px;padding-bottom:40px;font-size:0">
                      <table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
-                         <tbody><tr style="border-collapse:collapse">
-                         <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_1.png" alt="Yt" title="Youtube" height="24" width="30" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                         <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_2.png" alt="Telegram" title="Telegram" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                         <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/cib_vk.png" alt="Vk" title="Vkontakte" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                         <td align="center" valign="top" style="padding:0;Margin:0"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/brandico_yandexrect.png" alt="Ya" title="Yandex" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                         </tr>
+                         <tbody>{$social_html}
                          </tbody></table></td>
                          </tr>
                          <tr style="border-collapse:collapse">

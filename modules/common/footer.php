@@ -40,6 +40,20 @@ foreach ($cities as $key => $city) {
     EOF;
 }
 
+// Социальные сети
+$social_links = get_all_social();
+$data['social_links'] = '<ul class="footer__social">';
+foreach ($social_links as $social) {
+    $data['social_links'] .= '<li><a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a></li>';
+}
+$data['social_links'] .= '</ul>';
+
+//Мобильные
+$data['social_links_mobile'] = '<div class="flex social__wrapper">';
+foreach ($social_links as $social) {
+    $data['social_links_mobile'] .= '<a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
+}
+$data['social_links_mobile'] .= '</div>';
 
 // Обрабатывает список категорий для popup меню
 $services = get_services_for_menu();
@@ -240,3 +254,10 @@ $HTML = str_replace(
 
 $HTML_ = explode('<!--data:content-->', $HTML, 3);
 $HTML = $HTML_[0] . "<!--data:content-->{$data['content']}<!--data:content-->" . $HTML_[2];
+
+$HTML_ = explode('<!--data:social_links-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:social_links-->{$data['social_links']}<!--data:social_links-->" . $HTML_[2];
+
+$HTML_ = explode('<!--data:social_links_mobile-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:social_links_mobile-->{$data['social_links_mobile']}<!--data:social_links_mobile-->" . $HTML_[2];
+

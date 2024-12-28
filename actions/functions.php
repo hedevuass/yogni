@@ -35,9 +35,9 @@ function block(array $specialists, $class = false)
                 <div class="rating">
         EOF;
 
-        if ($specialist['rating']) {
+        
             $data .= rating($specialist['rating']);
-        }
+        
 
         $data .= <<<EOF
                     </div>
@@ -524,4 +524,14 @@ function block_articles_cabinet(array $articles, bool $has_text_no_articles): st
 	}
 
     return $code;
+}
+
+function truncateText($text) {
+    $maxLength = 16;
+    if (mb_strlen($text) > $maxLength) {
+        $truncated = mb_substr($text, 0, $maxLength - 2);
+        $lastChar = mb_substr($text, $maxLength - 1, 1);
+        return $truncated . '...' . $lastChar;
+    }
+    return $text;
 }

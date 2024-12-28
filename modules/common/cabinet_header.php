@@ -66,9 +66,11 @@ $data['left_menu_mobile'] = $left_menu['mobile'];
 if ($page['title'] && $page['description'] && $page['keywords']) {
 	if ($page['title'] !== "Обзор аккаунта") {
         $page['title'] = "Обзор аккаунта <img src='/assets/img/cabinet/obzor-arrow.svg'> <span class='grey'>{$page['title']}</span>";
+        $page['url_title'] = "Обзор аккаунта";
     }
 	$HTML = html_replace([
 		'title' 		=> $page['title'],
+		'url_title' 		=> $page['url_title'],
 		'description' 	=> $page['description'],
 		'keywords' 		=> $page['keywords']
 	], $HTML);
@@ -197,13 +199,10 @@ foreach ($connected_promo as $promo) {
 
 function generate_promo_status($connected_promo_map)
 {
-    
-    if (is_array($connected_promo_map) && count($connected_promo_map) > 0) {
-        $status;
-        foreach ($connected_promo_map as $promo) {
-            $status .= $promo['title'] . ', ';
-        }
-        $status = rtrim($status, ', ');
+    $count = count($connected_promo_map); // Считаем количество подключенных промо
+
+    if ($count > 0) {
+        $status = 'Подключено (' . $count . ')';
         $status_class = 'blue-dot'; // Класс для синего кружка
     } else {
         $status = 'Не подключено';
@@ -214,7 +213,8 @@ function generate_promo_status($connected_promo_map)
 }
 
 
-	//Опции
+
+//Опции
 
 $connected_options = get_connected_options($specialist['id']);
 
@@ -241,20 +241,41 @@ function generate_tariff_status($tariffs, $connected_tariffs_map) {
 }
 
 
-	function generate_option_status($connected_options_map) {
-		$count = count($connected_options_map);
-		if ($count > 0) {
-			$status = 'Подключено (' . $count . ')';
-			$status_class = 'blue-dot'; // Класс для синего кружка
-		} else {
-			$status = 'Не подключено';
-			$status_class = 'red-dot'; // Класс для красного кружка
-		}
-		return ['status' => $status, 'class' => $status_class];
-	}
+function generate_option_status($connected_options_map, $connected_tariffs_map)
+{
+    $count = count($connected_options_map);
+
+    // Опции, входящие в состав тарифов
+    $tariff_options = [
+        1 => [1, 2, 3],      
+        2 => [1, 2, 3, 4, 5], 
+        3 => [1, 2, 3, 4, 5], 
+    ];
+
+    // исключение дублирующихся опций
+    $included_options = [];
+    foreach ($connected_tariffs_map as $tariff_id => $end_date) {
+        if (isset($tariff_options[$tariff_id])) {
+            $included_options = array_merge($included_options, $tariff_options[$tariff_id]);
+        }
+    }
+
+    $unique_options = array_diff(array_keys($connected_options_map), $included_options);
+    $count = count($unique_options) + count($included_options);
+
+    if ($count > 0) {
+        $status = 'Подключено (' . $count . ')';
+        $status_class = 'blue-dot'; 
+    } else {
+        $status = 'Не подключено';
+        $status_class = 'red-dot';
+    }
+
+    return ['status' => $status, 'class' => $status_class];
+}
 
 $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
-$option_status_data = generate_option_status($connected_options_map);
+$option_status_data = generate_option_status($connected_options_map, $connected_tariffs_map);
 
 
 
@@ -297,6 +318,8 @@ $top_cards = '
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
     </div>';
+	
+	$social_links = get_all_social();
 
 	$code['mobile'] = '
 	<div class="mob-nav2">
@@ -339,11 +362,13 @@ $top_cards = '
 			</ul>
 		</div>
 		<div>
-			<div class="mob-menu__social">
-				<a href="#" class="youtube"></a>
-				<a href="#" class="telegram"></a>
-				<a href="#" class="vk"></a>
-				<a href="#" class="yandex"></a>
+			<div class="mob-menu__social">';
+			
+foreach ($social_links as $social) {
+    $code['mobile'] .= '<a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
+}
+
+$code['mobile'] .= '
 			</div>
 		</div>';
 

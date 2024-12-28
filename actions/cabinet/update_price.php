@@ -23,14 +23,19 @@ if (isset($_POST['name'])) {
     unset_specialist_services();
 
     foreach ($data['name'] as $key => $name) {
+        // Пропускаем итерацию, если нет имени или цены
         if (!$name || !$data['price'][$key]) continue;
-
+    
+        // Удаляем апострофы из цены
         $price = $data['price'][$key] ?? 0;
         if ($price != 0) {
-            $price = intval(str_replace('&#039;', '', $price));
+            $price = intval(str_replace("'", '', $price)); // Удаление апострофа
         }
+        
+        // Устанавливаем значение для 'of'
         $of = $data['of'][$key] ? 1 : 0;
-
+    
+        // Функция для сохранения данных
         set_specialist_service($name, $price, $of);
     }
 

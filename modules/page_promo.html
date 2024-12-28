@@ -1,7 +1,12 @@
-
 <style>
 .reg {
   padding: 16px 40px !important;
+}
+
+.flatpickr-day.disabled-red {
+  background: #a0a0a091 !important; 
+  cursor: not-allowed;
+  color: white !important;
 }
 
 .name-tariff {
@@ -22,6 +27,14 @@
 
 .right-side {
   float: right;
+}
+
+.mb-100 {
+  margin-bottom: 100px;
+}
+
+#banner-period {
+  font-weight: 400;
 }
 
 .confirm-btn-tariff {
@@ -60,20 +73,28 @@
 }
 
 .for-pay {
-  margin: 100px 0 0 0;
+  font-weight: 500;
 }
+
 .reklam-text {
-  margin-top: 10px;
+  margin-top: 18px;
   font-size: 12px;
   color: #373737;
+  font-weight: 300;
 }
 .popup-body-succes {
   height: 400px;
   text-align: center;
   padding: 25px;
 }
-.popup-body-succes .bold {
+.popup-body-succes .successful-title {
+  font-size: 16px;
+  font-weight: 500;
   margin: 100px 0 30px 0;
+}
+.popup-body-succes .middle-text {
+  font-size: 14px;
+  font-weight: 300;
 }
 
 .select-toggle {
@@ -85,6 +106,14 @@
     position: relative;
     margin-top: 10px;
     color: #373737;
+}
+
+.custom-select .expanded {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.popup-content .expanded {
+  border-radius: 8px 8px 0 0 !important;
 }
 
 .input {
@@ -118,7 +147,26 @@
     box-sizing: border-box;
     max-height: 360px;
     overflow-y: auto;
-    border-radius: 8px !important;
+    border-radius: 0 0 8px 8px !important;
+    padding: 20px 0;
+}
+.select-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.select-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.select-dropdown::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
+
+.select-dropdown::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
 }
 .select-option {
     display: flex !important;
@@ -131,8 +179,13 @@
     font-weight: unset !important; 
     margin-top: unset !important; 
     margin-bottom: unset !important;
-}
+    color: #222222;
 
+}
+.select-option > span {
+  color: #373737;
+  width: 90%;
+}
 .select-option-journal::before {
     content: '';
     position: absolute;
@@ -159,7 +212,7 @@
     border: none;
     cursor: pointer;
     width: 24px;
-    height: 24px;
+    height: 30px;
     order: 2;
 }
 
@@ -180,7 +233,8 @@
     background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
     border: none;
     cursor: pointer;
-    width: 24px;
+    width: 100%;
+    max-width: 24px;
     height: 24px;
     order: 2;
 }
@@ -193,18 +247,20 @@
 }
 .option-label {
   font-weight: 500;
-  padding: 5px 0 5px 15px;
-  font-size: unset !important; 
-    margin-top: unset !important; 
-    margin-bottom: unset !important;
+  color: #373737;
+  padding: 0px 0 10px 15px;
+  font-size: 16px !important; 
+  margin-top: unset !important; 
+  margin-bottom: unset !important;
+  padding-left: 40px;
 }
 
 .promo-icon.special-padding {
-    padding: 4px;
+    margin-left: -12px;
 }
 
 .promo-icon {
-    padding: 20px 0;
+    padding: 12px 0;
 }
 
 .promo-description {
@@ -212,19 +268,20 @@
 }
 
 .popup-content .button .add-more-promo {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  margin-top: 106px !important;
 }
 
 .popup-content .selected-promo {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 10px 0;
 }
 
 .popup-content .selected-promo .promo-number {
   width: 5%;
-  font-weight: bold;
+  font-weight: 14px;
   margin-bottom: auto;
 }
 
@@ -234,6 +291,11 @@
   width: 65%;
 }
 
+.delete-selected-promo {
+  border-radius: 8px;
+  padding: 0 2px;
+}
+
 .popup-content .selected-promo .promo-info {
   display: flex;
   flex-direction: column;
@@ -241,19 +303,22 @@
 }
 
 .popup-content .selected-promo .promo-title {
-  font-weight: 500;
-  margin-right: 5px;
+  font-weight: 400;
+  margin: 0 5px 3px 0;
 }
 
 .popup-content .selected-promo .promo-dates {
-  color: #666;
-  font-size: 0.9em;
+  color: #373737;
+  font-size: 14px;
+  text-wrap: nowrap;
+  font-weight: 300;
 }
 
 .popup-content .selected-promo .promo-icon {
-  width: 48px;
-  height: 48px;
+  width: 24px;
+  height: 24px;
   margin-right: 10px;
+  padding: 0 !important;
 }
 
 .popup-content .selected-promo .promo-price {
@@ -278,14 +343,88 @@
   width: 50%;
 }
 
-.total-price {
+.promo-title {
   font-weight: 500;
-  margin-top: 20px;
 }
 
-#total-price2 {
+.light {
+  font-weight: 300;
+}
+
+.start_end_date {
+  margin-top: 8px;
+}
+
+.regular {
   font-weight: 400;
 }
+
+.total-price {
+  font-weight: 500;
+}
+
+.popup_discount {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+#second-popup-content {
+  margin-bottom: 48px;
+}
+
+.total_price, .popup_total_discount {
+  font-weight: 400;
+}
+
+#popup-old-price {
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.select-dropdown-childrens {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.select-dropdown-childrens.open {
+    max-height: 500px;
+}
+
+.select-toggle-parrent {
+    position: relative;
+    cursor: pointer;
+    height: 30px;
+}
+
+.select-toggle-parrent::after {
+    content: '';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 16px;
+    background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
+    transition: background 0.3s ease;
+}
+
+.select-toggle-parrent.open::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Если родитель имеет дочерние элементы */
+.select-toggle-parrent + .select-dropdown-childrens {
+    /* Это условие применяет стили только к родителям, у которых есть дочерние элементы */
+}
+
+@media (max-width: 430px) {
+  .popup-content .selected-promo .promo-dates {
+    text-wrap: wrap;
+  }
+}
+
+
 
 </style>
 <div id="obzor-href" class="heading__mobile support-heading">
@@ -295,21 +434,21 @@
 <div class="promo-page">
   <nav class="top-menu-promo">
     <ul class="blog-menu desktop-blog-menu">
-      <li><a href="#obzor-href" class="">ОБЗОР</a></li>
+      <li><a href="#obzor-section-href" class="">ОБЗОР</a></li>
       <li><a href="#tariff-href" class="">ТАРИФЫ</a></li>
       <li><a href="#promo-href" class="">ПРОМО-БЛОКИ</a></li>
       <li><a href="#option-href" class="">ОПЦИИ</a></li>
     </ul>
 
     <ul class="blog-menu mobile-blog-menu">
-      <li><button data-target="#obzor-href" class="promo-button-mob active">ОБЗОР</button></li>
-      <li><button data-target="#tariff-href" class="promo-button-mob">ТАРИФЫ</button></li>
-      <li><button data-target=".promo-section" class="promo-button-mob">ПРОМО-БЛОКИ</button></li>
-      <li><button data-target="#option-href" class="promo-button-mob">ОПЦИИ</button></li>
+      <li><button data-target="#obzor-href" id="obzor-href-mob" class="promo-button-mob">ОБЗОР</button></li>
+      <li><button data-target="#tariff-href" id="tariff-href-mob" class="promo-button-mob">ТАРИФЫ</button></li>
+      <li><button data-target=".promo-section" id="promo-section-mob" class="promo-button-mob">ПРОМО-БЛОКИ</button></li>
+      <li><button data-target="#option-href" id="option-href-mob" class="promo-button-mob">ОПЦИИ</button></li>
     </ul>
   </nav>
 
-<div class="obzor-mobile">
+<div class="obzor-mobile hidden-comp">
   <div id="cards-block" class="cards-container">
     <!--data:top_cards--><!--data:top_cards-->
 </div>
@@ -408,7 +547,7 @@
   </div>
 </div>
 <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-<div class="promo-section white-mobile-promo mobile-only">
+<div class="promo-section white-mobile-promo mobile-only hidden-comp">
   <div style="margin-bottom: 20px;" class="promo-text">
     <h2>Промо-блоки и баннеры</h2>
     <p>
@@ -432,15 +571,15 @@
     <button class="promo-button promo-card-button hidden-comp">Подключить</button>
   </div>
   <button class="promo-button promo-card-button mobile-only">Подключить</button>
-  <div class="promo-slider swiper">
+  <div class="promo-slider swiper swiper-autoheight">
     <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide1.svg" alt="Image 1" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide2.svg" alt="Image 2" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide3.svg" alt="Image 3" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide4.svg" alt="Image 4" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/tariff-slide5.svg" alt="Image 5" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide1.png" alt="Image 1" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide2.png" alt="Image 2" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide3.png" alt="Image 3" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide4.png" alt="Image 4" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide5.png" alt="Image 5" /></div>
     </div>
-    <div class="swiper-pagination"></div>
+    <div class="swiper-pagination swiper-pagination-autoheight"></div>
   </div>
 </div>
 
@@ -459,10 +598,9 @@
   <button class="promo-button reklama-button mobile-only">Подключить</button>
   <div class="promo-slider swiper">
     <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide1.svg" alt="Image 1" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide2.svg" alt="Image 2" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/banner-slide3.svg" alt="Image 3" /></div>
-      
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide1.svg" alt="Image 1" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide2.svg" alt="Image 2" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide3.svg" alt="Image 3" /></div>
     </div>
     <div class="swiper-pagination"></div>
   </div>
@@ -483,9 +621,9 @@
   <button class="promo-button journal-button mobile-only">Подключить</button>
   <div class="promo-slider swiper">
     <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide1.svg" alt="Image 1" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide2.svg" alt="Image 2" /></div>
-      <div class="swiper-slide"><img src="../assets/img/cabinet/journal-slide3.svg" alt="Image 3" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide1.svg" alt="Image 1" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide2.svg" alt="Image 2" /></div>
+      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide3.svg" alt="Image 3" /></div>
     </div>
     <div class="swiper-pagination"></div>
   </div>
@@ -501,13 +639,13 @@
       <div class="table-row table-header">
         <div class="table-cell">Опция</div>
         <div class="table-cell center-status">Статус</div>
-        <div class="table-cell hidden-comp"></div>
+        <div class="table-cell hidden-comp table-cell-descr"></div>
       </div>
       <!--data:options--><!--data:options-->
     </div>
   </div>
 
-  <div id="photo-block" class="order-photo-section">
+  <div id="photo-block" class="order-photo-section hidden-comp">
     <div class="order-photo-text">
       <h2>Заказать фотосъёмку</h2>
       <p>Самый очевидный способ <span class="highlight">продвижения страницы</span>.</p>
@@ -520,45 +658,10 @@
     </div>
   </div>
   
-  <div class="mobile-only mobile-title">Ответы на частые вопросы</div>
-  <div id="faq-block" class="faq-section">
-  <h2>Ответы на частые вопросы</h2>
-  <div class="faq-item">
-    <button class="faq-question"><div>Как проходит съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"Как проходит съёмка?" здесь.</p>
-    </div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-question"><div>Как заказать съёмку?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"Как заказать съёмку?" здесь.</p>
-    </div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-question"><div>Нужно ли специально готовиться к съёмке?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"Нужно ли специально готовиться к съёмке?" здесь.</p>
-    </div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-question"><div>Не нашли нужный вопрос или требуется помощь в решении проблемы?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"Не нашли нужный вопрос или требуется помощь в решении проблемы?" здесь.</p>
-    </div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-question"><div>Если у меня это первая съёмка?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"Если у меня это первая съёмка?" здесь.</p>
-    </div>
-  </div>
-  <div class="faq-item">
-    <button class="faq-question"><div>В чём отличие профессиональной съёмки от любительской?</div><img src="../assets/img/cabinet/arrow-faq-down.svg" alt=""></button>
-    <div class="faq-answer">
-      <p>"В чём отличие профессиональной съёмки от любительской?" здесь.</p>
-    </div>
-  </div>
+  <div class="mobile-only mobile-title hidden-comp">Ответы на частые вопросы</div>
+  <div id="faq-block" class="faq-section hidden-comp">
+  <h2 style="margin-bottom: 35px !important;">Ответы на частые вопросы</h2>
+  <!--data:faqs--><!--data:faqs-->
 </div>
 
 </div>
@@ -575,7 +678,7 @@
         <div class="name">
           Подключение тарифа
         </div>
-        <div class="form-tariff">
+        <div class="form-tariff mb-100">
           <p class="text-only-tariff">
             <!--data:connected_tariff--><!--data:connected_tariff-->
             <span class="popup-connected-tariff-bold">Тариф <span id="popup-tariff-name"></span></span> <span class="right-side" id="popup-tariff-price"></span><br>
@@ -618,16 +721,25 @@
             Подключение опции
           </div>
           <div class="form-option">
+            <div class="mb-100">
             <p class="text-only-option">
               <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price-after"></span><span class="right-side" id="popup-option-price"></span><br>
               <hr>
               <span class="popup-connected-tariff-bold">Период <span class="right-side" id="popup-option-period"></span></span><br>
               <span class="right-side" id="popup-option-duration"></span><br>
             </p> 
+            </div>
             <input type="hidden" name="specialist_id" id="popup-specialist-option-id">
             <input type="hidden" name="option_id" id="popup-option-id">
             <input type="hidden" name="duration" id="popup-duration" value="1 month">
-            <div class="for-pay">К оплате: <span id="popup-option-total"></span></div>
+            <div class="popup_discount">
+              Примененная скидка: <span class="popup_total_discount" id="popup-option-discount"></span>
+            </div>
+            <div class="for-pay">
+                К оплате: 
+                <span id="popup-option-old-price" style="font-weight: 700; text-decoration: line-through;"></span>
+                <span class="total_price" id="popup-option-total"></span>
+            </div>
             <div class="button">
               <button type="submit" class="confirm-btn-option">Подключить за <span id="popup-option-total-button"></span></button>
               <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
@@ -659,12 +771,15 @@
             <div id="second-popup-content">
 
             </div>
+            <div class="popup_discount">
+              Примененная скидка: <span class="popup_total_discount" id="popup-discount"></span>
+            </div>
             <div class="total-price">
-              К оплате: <span id="total-price2"></span>
+              К оплате: <span id="popup-old-price"></span> <span class="total_price" id="total-price2"></span>
             </div>
             <div class="button">
-              <button type="button" class="add-more-promo">Добавить ещё размещение</button>
-              <button type="submit" class="confirm-promo"><span id="confirm-price"></span></button>
+              <button style="background-color: transparent; color: #FF8139; border: 1px solid #FF8139;" type="button" class="add-more-promo">Добавить ещё размещение</button>
+              <button style="margin-top: 0px;" type="submit" class="confirm-promo"><span id="confirm-price"></span></button>
               <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
             </div>
           </form>
@@ -683,14 +798,14 @@
         <form method="POST" id="successful-popup-form">
           <div class="form-successful">
             <div class="text">
-            <div class="bold">
+            <div class="successful-title">
             </div>
             <div class="middle-text">
             </div>
           </div>
             <div class="button">
               <a href="/cabinet/page_promo" type="submit" class="confirm-btn-option connect-button popup-link">Перейти в раздел <span id="popup-successful-total-button"></span></a>
-              <p>Чек по операции придет на электронную почту</p>
+              <p class="check"></p>
             </div>
           </div>
         </form>
@@ -738,6 +853,144 @@
     locale: 'ru', 
     weekNumbers: true, 
   });
+
+  function initializeFlatpickr(selector) {
+  flatpickr(selector, {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru',
+    weekNumbers: true,
+    onChange: function (selectedDates, dateStr, instance) {
+      if (selectedDates.length === 2) {
+        const startDate = selectedDates[0];
+        const endDate = selectedDates[1];
+        const diffInDays = ((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        if (diffInDays % 7 !== 0) {
+          $('.popup-footer').removeClass('hidden').addClass('red').text(
+            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
+          );
+
+          instance.clear();
+        }
+      }
+    },
+    onReady: function (selectedDates, dateStr, instance) {
+      const input = instance.input;
+      const calendar = instance.calendarContainer;
+      calendar.style.width = `${input.offsetWidth}px`;
+    },
+    onOpen: function (selectedDates, dateStr, instance) {
+      const input = instance.input;
+      const calendar = instance.calendarContainer;
+      calendar.style.width = `${input.offsetWidth}px`;
+    },
+  });
+}
+
+function initializeJournalFlatpickr(selector) {
+  flatpickr(selector, {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru',
+    weekNumbers: true,
+    disable: disabledRanges,
+    onChange: function (selectedDates, dateStr, instance) {
+      if (selectedDates.length === 2) {
+        const startDate = selectedDates[0];
+        const endDate = selectedDates[1];
+        const diffInDays = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+
+        if (diffInDays % 7 !== 0) {
+          $('.popup-footer').removeClass('hidden').addClass('red').text(
+            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
+          );
+
+          instance.clear();
+        }
+      }
+    },
+    onReady: function (selectedDates, dateStr, instance) {
+      const disabledElements = instance.calendarContainer.querySelectorAll(
+        '.flatpickr-day.flatpickr-disabled'
+      );
+
+      disabledElements.forEach((el) => {
+        const elDate = instance.parseDate(el.dateObj);
+
+        disabledRanges.forEach((range) => {
+          const rangeStart = instance.parseDate(range.from, 'd.m.Y');
+          const rangeEnd = instance.parseDate(range.to, 'd.m.Y');
+
+          if (elDate >= rangeStart && elDate <= rangeEnd) {
+            el.classList.add('disabled-red');
+          }
+        });
+      });
+    },
+  });
+}
+
+function initializeBannerFlatpickr(selector) {
+  flatpickr(selector, {
+    dateFormat: 'd.m.Y',
+    minDate: 'today',
+    mode: 'range',
+    showMonths: 1,
+    locale: 'ru',
+    weekNumbers: true,
+    disable: disabledBannerRanges,
+    onChange: function (selectedDates, dateStr, instance) {
+      if (selectedDates.length === 2) {
+        const startDate = selectedDates[0];
+        const endDate = selectedDates[1];
+        const diffInDays = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+
+        if (diffInDays % 7 !== 0) {
+          $('.popup-footer').removeClass('hidden').addClass('red').text(
+            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
+          );
+
+          instance.clear();
+        }
+      }
+    },
+    onReady: function (selectedDates, dateStr, instance) {
+      const disabledElements = instance.calendarContainer.querySelectorAll(
+        '.flatpickr-day.flatpickr-disabled'
+      );
+
+      disabledElements.forEach((el) => {
+        const elDate = instance.parseDate(el.dateObj);
+
+        disabledBannerRanges.forEach((range) => {
+          const rangeStart = instance.parseDate(range.from, 'd.m.Y');
+          const rangeEnd = instance.parseDate(range.to, 'd.m.Y');
+
+          if (elDate >= rangeStart && elDate <= rangeEnd) {
+            el.classList.add('disabled-red');
+          }
+        });
+      });
+    },
+    onOpen: function (selectedDates, dateStr, instance) {
+      const input = instance.input;
+      const calendar = instance.calendarContainer;
+      calendar.style.width = `${input.offsetWidth}px`;
+    },
+  });
+}
+
+
+// Инициализация flatpickr для всех полей
+initializeBannerFlatpickr('#date-select');
+initializeJournalFlatpickr('#date-select-journal');
+initializeFlatpickr('#promo-date-select');
+  
   
     $('a[href^="#"]').on('click', function(event) {
         var target = $(this.getAttribute('href'));
@@ -750,16 +1003,40 @@
     });
 });
 
-  const swiper = new Swiper('.swiper', {
+
+const swiperElements = document.querySelectorAll('.swiper');
+swiperElements.forEach((element) => {
+  const autoHeightSetting = element.classList.contains('swiper-autoheight') ? true : false; // add autoheight prop if .swiper-autoheight
+
+  new Swiper(element, {
     slidesPerView: 1,
     centeredSlides: true,
     pagination: {
       el: '.swiper-pagination',
       clickable: true,
     },
+    autoHeight: autoHeightSetting,
   });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
+
+  var toggles = document.querySelectorAll('.select-toggle-parrent');
+
+  toggles.forEach(function(toggle) {
+      toggle.addEventListener('click', function() {
+          var dropdown = this.nextElementSibling;
+          
+          if (dropdown.classList.contains('open')) {
+              this.classList.remove('open');
+              dropdown.classList.remove('open');
+          } else {
+              dropdown.classList.add('open');
+              this.classList.add('open');
+          }
+      });
+  });
+
   const buttons = document.querySelectorAll('.promo-button-mob');
   const allSections = document.querySelectorAll('.obzor-mobile, .mobile-title, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
 
@@ -775,6 +1052,9 @@ document.addEventListener('DOMContentLoaded', function() {
     button.addEventListener('click', function() {
       buttons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
+      const tariff_href = document.getElementById('tariff-href-mob');
+      const promo_section = document.getElementById('promo-section-mob');
+      const option_href = document.getElementById('option-href-mob');
 
       const target = button.getAttribute('data-target');
       let sectionsToShow = [];
@@ -783,10 +1063,13 @@ document.addEventListener('DOMContentLoaded', function() {
         sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title'];
       } else if (target === '#tariff-href') {
         sectionsToShow = ['#tariff-href'];
+        tariff_href.classList.add('active');
       } else if (target === '.promo-section') {
         sectionsToShow = ['.promo-section'];
+        promo_section.classList.add('active');
       } else if (target === '#option-href') {
         sectionsToShow = ['#option-href'];
+        option_href.classList.add('active');
       }
 
       showSections(sectionsToShow);
@@ -795,8 +1078,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
   showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title']);
 
-  if (window.innerWidth <= 768) {
-    const swiper = new Swiper('.swiper-container', {
+  const urlParams = new URLSearchParams(window.location.search);
+  const target = urlParams.get('target');
+  let sectionsToShowFromURL = [];
+
+  if (target === 'tariff-href') {
+    sectionsToShowFromURL = ['#tariff-href'];
+  } else if (target === 'promo-section') {
+    sectionsToShowFromURL = ['.promo-section'];
+  } else if (target === 'option-href') {
+    sectionsToShowFromURL = ['#option-href'];
+  }
+
+  if (!target) {
+    document.getElementById('obzor-href-mob').classList.add('active');
+  }
+
+  if (sectionsToShowFromURL.length > 0) {
+    console.log(`Target from URL: ${target}`);
+    showSections(sectionsToShowFromURL);
+    
+    const buttons = document.querySelectorAll('.promo-button-mob');
+    
+    for (let i = 0; i < buttons.length; i++) {
+      const buttonAtr = buttons[i];
+      const buttonTarget = buttonAtr.getAttribute('data-target');
+
+      // Если дата-таргет совпадает с target из URL
+      if (buttonTarget === `#${target}` || buttonTarget === `.${target}`) {
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        buttonAtr.classList.add('active');
+        
+        break;
+      }
+    }
+  }
+});
+
+
+    const swiper_container = new Swiper('.swiper-container', {
       slidesPerView: 1.1,
       spaceBetween: 5, 
       pagination: {
@@ -811,8 +1132,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clickable: true,
       },
     });
-  }
-});
+
 
 window.addEventListener('DOMContentLoaded', function() {
     const scrollTarget = localStorage.getItem('scrollTarget'); 
@@ -840,6 +1160,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const isExpanded = dropdown.style.display === 'block';
             dropdown.style.display = isExpanded ? 'none' : 'block';
             toggle.classList.toggle('expanded', !isExpanded);
+        });
+
+        // Закрытие списка при выборе любого элемента
+        const dropdownItems = dropdowns[index].querySelectorAll('.select-option input'); // Выбираем все input внутри списка
+        dropdownItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                dropdowns[index].style.display = 'none'; // Закрываем выпадающий список
+                toggle.classList.remove('expanded'); // Убираем класс "expanded", если был
+
+                // Обновляем текст выбранного элемента
+                const selectedText = item.getAttribute('data-name');
+                toggle.textContent = selectedText;
+            });
         });
     });
 });

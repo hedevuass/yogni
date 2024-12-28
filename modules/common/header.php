@@ -15,6 +15,14 @@ if (isset($_SESSION['user'])) {
     EOF;
 }
 
+// Социальные сети
+$social_links = get_all_social();
+$data['social_links_header'] = '<li class="flex social__wrapper">';
+foreach ($social_links as $social) {
+    $data['social_links_header'] .= '<a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
+}
+$data['social_links_header'] .= '</li>';
+
 // нижнее меню для мобилки
 // определяем активный раздел по ссылке
 $home = $journal = $izbrannoe = $cabinet = '';

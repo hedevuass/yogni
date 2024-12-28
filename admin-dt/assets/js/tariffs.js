@@ -7,7 +7,10 @@ let Tariffs = {
         'pageSelector': '#tariffPage',
         'modalEditTariffSelector': '#modalEditTariff',
         'modalEditPromotionSelector': '#modalEditPromotion',
-        'modalEditOptionSelector': '#modalEditOption'
+        'modalEditOptionSelector': '#modalEditOption',
+        'addOptionButton': '#add-option-btn', 
+        'optionsContainer': '#options-container',
+        'deleteOptionButton': '.delete-option-btn'
     },
     start: function () {
         $('#tariffs').dataTable({
@@ -25,6 +28,42 @@ let Tariffs = {
 
         $(this.selectors.pageSelector).on('click', '.modalEdit', this.modalEdit)
         $(this.selectors.pageSelector).on('click', '#tariffEdit, #promotionEdit, #optionEdit', this.edit)
+        $(this.selectors.pageSelector).on('click', '.delete', this.delete)
+        $(this.selectors.pageSelector).on('click', this.selectors.addOptionButton, this.addOption);
+        $(this.selectors.pageSelector).on('click', this.selectors.deleteOptionButton, this.deleteOption);
+    },
+    addOption: function() {
+        let optionCounter = $('#options-container .option-item').length; // Считаем количество существующих опций
+
+        // Создаем новый HTML для поля ввода новой опции с полем для загрузки файла
+        let newOptionHtml = `
+            <div class="mb-3 option-item" data-key="${optionCounter + 1}">
+                <label for="input-option-${optionCounter + 1}" class="form-label">Опция ${optionCounter + 1}</label>
+                <div class="row mb-3">
+                    <!-- Колонка для поля ввода и изображения -->
+                    <div class="col-10">
+                        <input type="text" name="options[${optionCounter + 1}][text]" class="form-control" id="input-option-${optionCounter + 1}" required>
+
+                        <!-- Поле для выбора изображения -->
+                        <input type="hidden" name="options[${optionCounter + 1}][image]" value="">
+                    </div>
+                    <!-- Колонка для кнопки удаления -->
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger btn-sm delete-option-btn">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+
+        // Добавляем новый блок в контейнер
+        $(Tariffs.selectors.optionsContainer).append(newOptionHtml);
+    },
+
+    // Метод для удаления опции
+    deleteOption: function() {
+        // Удаляем родительский элемент (весь блок с опцией)
+        $(this).closest('.option-item').remove();
     },
     modalEdit: function () {
         let button = $(this),
@@ -81,7 +120,25 @@ let Tariffs = {
                 if (json.success) location.reload()
             }
         })
-    }
+    }, delete: function () {
+        let id = $(this).attr('data-id'),
+            button = $(this)
+
+        if (confirm('Вы уверены, что хотите удалить пост?')) {
+            $.ajax({
+                type: "POST",
+                url: "actions/tariff/delete.php",
+                dataType: 'json',
+                data: {id: id},
+                beforeSend: function () {
+                    Helper.loadingButton(button)
+                },
+                success: function (json) {
+                    if (json.success) location.reload()
+                }
+            })
+        }
+    },
 };
 
 export {

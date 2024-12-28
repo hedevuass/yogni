@@ -46,10 +46,18 @@ if (!isset($_SESSION['city'])) $_SESSION['city'] = [
 ];
 
 // Админская часть приложения
-const LOGIN = 'admin';
-const PASSWORD = 'password';
-const ADMIN_HREF = '/admin-dt/';
+$settings = [
+    'login' => 'admin',
+    'password' => 'password',
+    'admin_href' => '/admin-dt/',
+];
 
-/*  ini_set('error_reporting', E_ALL);
+define('LOGIN', $settings['login']);
+define('PASSWORD', $settings['password']);
+define('ADMIN_HREF', $settings['admin_href']);
+
+return $settings;
+
+ ini_set('error_reporting', E_ALL);
  ini_set('display_errors', 1);
- ini_set('display_startup_errors', 1); */
+ ini_set('display_startup_errors', 1);

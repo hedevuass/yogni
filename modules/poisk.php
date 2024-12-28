@@ -37,7 +37,7 @@ if (!empty($specialists) || !empty($companies)) {
     $pre_list_text = 'Топ результаты';
 
     // Промоблок
-    $data['promo'] = block_promo($vars['block'], $classification);
+    /* $data['promo'] = block_promo($vars['block'], $classification); */
 
     $data['pre_list'] = pre_list($pre_list_text);
 

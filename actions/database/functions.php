@@ -143,6 +143,25 @@ function get_services(): array
     return $result;
 }
 
+/**
+ * Возвращает все категории
+ * @return array
+ */
+function get_actual_services_from_db(): array
+{
+    global $data_base;
+    $array =  $data_base->selectAll("SELECT * FROM dt_service_actual");
+
+    $result = [];
+
+    foreach ($array as $value) {
+        $result[$value['id']] = $value;
+    }
+
+    return $result;
+}
+
+
 // Возвращает категории по id родителя
 function get_services_by_parrent_id(int $p_id = 0)
 {
@@ -245,6 +264,32 @@ function get_services_for_menu()
     return $data;
 }
 
+function get_services_for_menu_with_prochie_last()
+{
+    global $data_base;
+
+    // Модифицированный запрос, который ставит "Прочие юридические вопросы" последним
+    $services = $data_base->selectAll("SELECT s.id as id, s.title as title, s.p_id, s.slug,
+                                            c.id as classification_id,
+                                            CASE 
+                                                WHEN s.title = 'Прочие юридические вопросы' THEN 999999  -- Ставим большое число, чтобы сортировать последним
+                                                WHEN s.title = 'Миграционные вопросы' THEN 30
+                                                ELSE ROW_NUMBER() OVER (ORDER BY s.title)
+                                            END as sort_order
+                                       FROM dt_service s
+                                       LEFT JOIN dt_classification c ON s.classification = c.id
+                                       ORDER BY sort_order, s.title");
+
+    $data = [];
+
+    // Формируем массив услуг по классификации и родительской категории
+    foreach ($services as $service) {
+        $data[$service['classification_id']][$service['p_id']][$service['id']] = $service;
+    }
+
+    return $data;
+}
+
 
 // Возвращает тег по alias
 function get_tag_by_alias(string $alias)
@@ -308,6 +353,23 @@ function set_specialist_rating(int $specialist_id, int $rating = 5)
     global $data_base;
     return $data_base->add("INSERT INTO dt_specialist_review (specialist_id, rating)
                                     VALUE (?, ?)", [$specialist_id, $rating]);
+}
+
+
+// Тарифы ПРО-фото
+function get_pro_photo_by_id(int $id): array
+{
+    global $data_base;
+    $result = $data_base->selectRow("SELECT * FROM dt_pro_photo WHERE id = ?", [$id]);
+
+    return $result;
+}
+
+function get_faq_pro_photo() 
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * from dt_faq_pro_photo");
+    
 }
 
 // Возвращает специалиста
@@ -537,6 +599,12 @@ function get_actual_posts_main()
                                     LEFT JOIN dt_service se ON se.id = ar.theme_id
                                     WHERE ar.moderation=0 AND ar.post_type='articles'
                                     ORDER BY date DESC LIMIT 2");
+}
+
+function get_banner(int $id): mixed
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_banners_sliders WHERE banner_id = ?", [$id]);
 }
 
 // Возвращает актуальные записи для блога специалиста
@@ -833,28 +901,97 @@ function get_specialists_by_classification($classification, int $limit, int $sta
         $and .= 'AND cm.id IN (' . $_SESSION['metro'] . ')';
     }
 
-    $specialists = $data_base->selectAll("SELECT
-                                                s.id,
-                                                s.name,
-                                                s.lastname,
-                                                s.photo,
-                                                s.rating,
-                                                c.title as classification_title,
-                                                ci.name as city_name,
-                                                se.title as specialization,
-                                                cm.name as metro_name,
-                                                co.title as company_name,
-                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)as specialization_count
-                                            FROM dt_specialist s
-                                            LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                            LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                            LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                            LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                            LEFT JOIN dt_company co ON s.company_id = co.id
-                                            WHERE s.classification_id $where AND s.city_id = ? $and
-                                            GROUP BY s.id, se.id, cm.name
-                                            ORDER BY s.rating DESC
-                                            LIMIT $start, $limit", $array);
+    $specialists = $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг из отзывов
+            c.title AS classification_title,
+            ci.name AS city_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN (SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id)) AS specialization, -- Все услуги в одну строку
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name, -- Метро в одну строку
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE s.classification_id $where AND s.city_id = ? $and
+        GROUP BY s.id
+        ORDER BY rating DESC
+        LIMIT $start, $limit
+    ", $array);
+
+    return $specialists;
+}
+
+
+function get_specialists_by_classification_with_tariffs($classification, int $limit, int $start = 0)
+{
+    global $data_base;
+    $and = '';
+    if (isset($_GET['company']) && !isset($_GET['specialist'])) {
+        $and = 'AND s.company_id IS NOT NULL';
+    }
+
+    if (isset($_GET['specialist']) && !isset($_GET['company'])) {
+        $and = 'AND s.company_id IS NULL';
+    }
+
+    if (is_int($classification)) {
+        $where = '= ?';
+        $array = [$classification];
+    }
+
+    if (is_array($classification)) {
+        $where = 'IN (' . implode(',', $classification) . ')';
+    }
+    $array[] = $_SESSION['city']['id'];
+
+    if (($classification == 4) && isset($_SESSION['metro']) && !empty($_SESSION['metro'])) {
+        $and .= 'AND cm.id IN (' . $_SESSION['metro'] . ')';
+    }
+
+    $specialists = $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг из отзывов
+            c.title AS classification_title,
+            ci.name AS city_name,
+            se.title AS specialization,
+            cm.name AS metro_name,
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+            -- Проверка на подключение тарифов (берём максимальный тариф, если есть)
+            COALESCE(
+                (SELECT MAX(tariff_id) 
+                 FROM dt_tariff_list 
+                 WHERE specialist_id = s.id AND tariff_id IN (2, 3)
+                ), 0
+            ) AS max_tariff,
+            -- Проверка на подключение опции с option_id = 5
+            EXISTS(
+                SELECT 1
+                FROM dt_options_list
+                WHERE specialist_id = s.id AND option_id = 5
+            ) AS has_option
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
+        LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE s.classification_id $where AND s.city_id = ? $and
+        GROUP BY s.id, se.id, cm.name
+        -- Сортировка: тариф 3 -> тариф 2 -> наличие опции -> рейтинг
+        ORDER BY max_tariff DESC, has_option DESC, rating DESC
+        LIMIT $start, $limit
+    ", $array);
 
     return $specialists;
 }
@@ -892,7 +1029,7 @@ function search_specialists(string $search)
 function full_search_specialists(string $search, int $start = 0, int $limit = 12)
 {
     global $data_base;
-    $and='';
+    $and = '';
     if (isset($_GET['filter'])) {
         $filter_req = htmlentities(strip_tags($_GET['filter']));
         if ($filter_req == 'lawyers') {
@@ -906,69 +1043,82 @@ function full_search_specialists(string $search, int $start = 0, int $limit = 12
     
     $search = explode(' ', $search, 2);
     if (!empty($search[0]) && !empty($search[1])) {
-        if (mb_strlen($search[0]) < 4 && mb_strlen($search[1]) < 4) {
-            $condition = '=';
-            $search_name = $search[0];
-            $search_lastname = $search[1];
-        } else {
-            $condition = 'LIKE';
-            $search_name = '%' . $search[0] . '%';
-            $search_lastname = '%' . $search[1] . '%';
-        }
+        $condition = (mb_strlen($search[0]) < 4 && mb_strlen($search[1]) < 4) ? '=' : 'LIKE';
+        $search_name = ($condition === '=') ? $search[0] : '%' . $search[0] . '%';
+        $search_lastname = ($condition === '=') ? $search[1] : '%' . $search[1] . '%';
+
         $specialists = $data_base->selectAll("SELECT
                                                 s.id,
                                                 s.name,
                                                 s.lastname,
                                                 s.photo,
-                                                s.rating,
-                                                c.title as classification_title,
+                                                IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг
+                                                c.title AS classification_title,
                                                 s.classification_id,
-                                                ci.name as city_name,
-                                                se.title as specialization,
-                                                cm.name as metro_name,
-                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)as specialization_count
-                                                FROM dt_specialist s
-                                                LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                                LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                                LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                                LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                                WHERE (s.name $condition ? AND s.lastname $condition ? AND s.active = 1 AND s.city_id = ? AND s.company_id IS NULL $and) 
+                                                ci.name AS city_name,
+                                                se.title AS specialization,
+                                                cm.name AS metro_name,
+                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+                                                EXISTS (
+                                                    SELECT 1 
+                                                    FROM dt_tariff_list 
+                                                    WHERE specialist_id = s.id AND tariff_id IN (2, 3)
+                                                ) AS has_tariff,
+                                                EXISTS (
+                                                    SELECT 1 
+                                                    FROM dt_options_list 
+                                                    WHERE specialist_id = s.id AND option_id = 5
+                                                ) AS has_option
+                                            FROM dt_specialist s
+                                            LEFT JOIN dt_classification c ON s.classification_id = c.id
+                                            LEFT JOIN dt_city ci ON s.city_id = ci.id
+                                            LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
+                                            LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+                                            WHERE (s.name $condition ? AND s.lastname $condition ? AND s.active = 1 AND s.city_id = ? AND s.company_id IS NULL $and) 
                                                 OR (s.name $condition ? AND s.lastname $condition ? AND s.active = 1 AND s.city_id = ? AND s.company_id IS NULL $and)
-                                                LIMIT $start, $limit", 
-                                                [$search_name, $search_lastname, $_SESSION['city']['id'], $search_lastname, $search_name, $_SESSION['city']['id']]);
+                                            ORDER BY has_tariff DESC, has_option DESC, rating DESC
+                                            LIMIT $start, $limit", 
+                                            [$search_name, $search_lastname, $_SESSION['city']['id'], $search_lastname, $search_name, $_SESSION['city']['id']]);
     } else if (!empty($search[0]) && empty($search[1])) {
-        if (mb_strlen($search[0]) < 4) {
-            $condition = '=';
-            $search_name = $search[0];
-        } else {
-            $condition = 'LIKE';
-            $search_name = '%' . $search[0] . '%';
-        }
-        $specialists = $data_base->selectAll("SELECT 
+        $condition = (mb_strlen($search[0]) < 4) ? '=' : 'LIKE';
+        $search_name = ($condition === '=') ? $search[0] : '%' . $search[0] . '%';
+
+        $specialists = $data_base->selectAll("SELECT
                                                 s.id,
                                                 s.name,
                                                 s.lastname,
                                                 s.photo,
-                                                s.rating,
-                                                c.title as classification_title,
+                                                IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг
+                                                c.title AS classification_title,
                                                 s.classification_id,
-                                                ci.name as city_name,
-                                                se.title as specialization,
-                                                cm.name as metro_name,
-                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)as specialization_count
-                                                FROM dt_specialist s
-                                                LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                                LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                                LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                                LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                                WHERE (s.name $condition ? OR s.lastname $condition ?) 
+                                                ci.name AS city_name,
+                                                se.title AS specialization,
+                                                cm.name AS metro_name,
+                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+                                                EXISTS (
+                                                    SELECT 1 
+                                                    FROM dt_tariff_list 
+                                                    WHERE specialist_id = s.id AND tariff_id IN (2, 3)
+                                                ) AS has_tariff,
+                                                EXISTS (
+                                                    SELECT 1 
+                                                    FROM dt_options_list 
+                                                    WHERE specialist_id = s.id AND option_id = 5
+                                                ) AS has_option
+                                            FROM dt_specialist s
+                                            LEFT JOIN dt_classification c ON s.classification_id = c.id
+                                            LEFT JOIN dt_city ci ON s.city_id = ci.id
+                                            LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
+                                            LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+                                            WHERE (s.name $condition ? OR s.lastname $condition ?) 
                                                 AND s.active = 1
                                                 AND s.company_id IS NULL
-                                                AND s.city_id = ?
-                                                $and
-                                                LIMIT $start, $limit", 
-                                                [$search_name, $search_name, $_SESSION['city']['id']]);
+                                                AND s.city_id = ? $and
+                                            ORDER BY has_tariff DESC, has_option DESC, rating DESC
+                                            LIMIT $start, $limit", 
+                                            [$search_name, $search_name, $_SESSION['city']['id']]);
     } else return false;
+
     return $specialists;
 }
 
@@ -1000,7 +1150,7 @@ function full_search_companies(string $search, int $start = 0, int $limit = 12)
         $condition = 'LIKE';
         $search = '%' . $search . '%';
     }
-    $and='';
+    $and = '';
     if (isset($_GET['filter'])) {
         $filter_req = htmlentities(strip_tags($_GET['filter']));
         if ($filter_req == 'lawyers') {
@@ -1011,27 +1161,61 @@ function full_search_companies(string $search, int $start = 0, int $limit = 12)
             $and = 'AND co.classification = 8';
         }
     }
-    $companies = $data_base->selectAll("SELECT 
-                                        co.title as company_name,
-                                        s.id,
-                                        s.photo,
-                                        s.rating,
-                                        co.classification as classification_id,
-                                        c.title as classification_title,
-                                        ci.name as city_name,
-                                        se.title as specialization,
-                                        cm.name as metro_name
-                                        FROM dt_company co
-                                        LEFT JOIN dt_specialist s ON s.company_id = co.id
-                                        LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                        LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                        LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                        LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                        WHERE co.title $condition ? AND s.city_id = ? $and
-                                        LIMIT $start, $limit", [$search, $_SESSION['city']['id']]);
+
+    $companies = $data_base->selectAll("
+    SELECT 
+        s.id,
+        co.title AS company_name,
+        s.photo,
+        IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating,  -- Средний рейтинг
+        co.classification AS classification_id,
+        c.title AS classification_title,
+        ci.name AS city_name,
+        -- Одна специализация компании
+        (SELECT se.title 
+         FROM dt_service se 
+         WHERE se.id = (
+             SELECT MAX(ss.service_id) 
+             FROM dt_specialist_specialization ss
+             WHERE ss.specialist_id = s.id
+         )
+        ) AS specialization,
+        -- Количество специализаций компании
+        (SELECT COUNT(ss.service_id) 
+         FROM dt_specialist_specialization ss
+         WHERE ss.specialist_id = s.id
+        ) AS specialization_count,
+        cm.name AS metro_name,
+        -- Проверка на наличие тарифов с ID 2 или 3
+        EXISTS (
+            SELECT 1
+            FROM dt_tariff_list t
+            WHERE t.specialist_id = s.id AND t.tariff_id IN (2, 3)
+        ) AS has_tariff,
+        -- Проверка на наличие опции с ID 5
+        EXISTS (
+            SELECT 1
+            FROM dt_options_list o
+            WHERE o.specialist_id = s.id AND o.option_id = 5
+        ) AS has_option
+    FROM dt_company co
+    LEFT JOIN dt_specialist s ON s.company_id = co.id
+    LEFT JOIN dt_classification c ON s.classification_id = c.id
+    LEFT JOIN dt_city ci ON s.city_id = ci.id
+    LEFT JOIN dt_metro cm ON cm.id = (
+        SELECT metro 
+        FROM dt_specialist_contacts 
+        WHERE specialist_id = s.id
+    )
+    WHERE co.title $condition ? AND s.city_id = ? $and
+    ORDER BY has_tariff DESC, has_option DESC, rating DESC -- Сортировка: тариф 3 -> тариф 2 -> наличие опции -> рейтинг
+    LIMIT $start, $limit
+", [$search, $_SESSION['city']['id']]);
+
+
     return $companies;
 }
-
+    
 // Возвращает кол-во результатов поиска
 function count_full_search(string $search)
 {
@@ -1157,33 +1341,93 @@ function get_specialists_by_service(string $services, int $limit, int $start = 0
 
     if (!$services) $services = '-1';
 
-
-    $specialists = $data_base->selectAll("SELECT
-                                                s.id,
-                                                s.name,
-                                                s.lastname,
-                                                s.photo,
-                                                s.rating,
-                                                c.title as classification_title,
-                                                ci.name as city_name,
-                                                se.title as specialization,
-                                                cm.name as metro_name,
-                                                co.title as company_name,
-                                                (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)as specialization_count
-                                            FROM dt_specialist s
-                                            LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                            LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                            LEFT JOIN dt_service se ON se.id in ($services)
-                                            LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                            LEFT JOIN dt_company co ON s.company_id = co.id
-                                            WHERE (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id AND service_id IN ($services))
-                                                AND s.city_id = ? $and
-                                            GROUP BY s.id, se.id, cm.name
-                                            ORDER BY s.rating DESC
-                                            LIMIT $start, $limit", [$_SESSION['city']['id']]);
+    $specialists = $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг из отзывов
+            c.title AS classification_title,
+            ci.name AS city_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN ($services)) AS specialization, -- Все услуги в одну строку
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name, -- Метро в одну строку
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE EXISTS (
+            SELECT 1
+            FROM dt_specialist_specialization
+            WHERE specialist_id = s.id AND service_id IN ($services)
+        )
+          AND s.city_id = ? $and
+        GROUP BY s.id
+        ORDER BY rating DESC
+        LIMIT $start, $limit
+    ", [$_SESSION['city']['id']]);
 
     return $specialists;
 }
+
+
+function get_specialists_by_service_with_tariffs(string $services, int $limit, int $start = 0)
+{
+    global $data_base;
+    $and = '';
+    if (isset($_GET['company']) && !isset($_GET['specialist'])) {
+        $and = 'AND s.company_id IS NOT NULL';
+    }
+    if (isset($_GET['specialist']) && !isset($_GET['company'])) {
+        $and = 'AND s.company_id IS NULL';
+    }
+
+    if (!$services) $services = '-1';
+
+    // Обновлённый SQL-запрос
+    $specialists = $data_base->selectAll("
+    SELECT
+        s.id,
+        s.name,
+        s.lastname,
+        s.photo,
+        IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг из отзывов
+        c.title AS classification_title,
+        ci.name AS city_name,
+        (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN ($services)) AS specialization, -- Все услуги в одну строку
+        (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name, -- Метро в одну строку
+        co.title AS company_name,
+        (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+        -- Вычисление максимального подключенного тарифа
+        COALESCE(
+            (SELECT MAX(tariff_id)
+             FROM dt_tariff_list
+             WHERE specialist_id = s.id AND tariff_id IN (2, 3)
+            ), 0
+        ) AS max_tariff,
+        EXISTS(
+            SELECT 1
+            FROM dt_options_list
+            WHERE specialist_id = s.id AND option_id = 5
+        ) AS has_option -- Проверка на наличие опции
+    FROM dt_specialist s
+    LEFT JOIN dt_classification c ON s.classification_id = c.id
+    LEFT JOIN dt_city ci ON s.city_id = ci.id
+    LEFT JOIN dt_company co ON s.company_id = co.id
+    WHERE (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id AND service_id IN ($services))
+      AND s.city_id = ? $and
+    GROUP BY s.id
+    -- Сортировка: тариф 3 -> тариф 2 -> наличие опции -> рейтинг
+    ORDER BY max_tariff DESC, has_option DESC, rating DESC
+    LIMIT $start, $limit
+", [$_SESSION['city']['id']]);
+
+
+    return $specialists;
+}
+
 
 // Добавляет запись в таблицу блогов
 function set_specialist_email(int $specialist_id, string $email)
@@ -1233,10 +1477,8 @@ function add_tariff_to_specialist(int $specialist_id, int $tariff_id, string $en
     $existing_tariff = $data_base->selectRow("SELECT id FROM dt_tariff_list WHERE specialist_id = ?", [$specialist_id]);
 
     if ($existing_tariff) {
-        // Обновляем запись, если она существует
         $data_base->update("UPDATE dt_tariff_list SET tariff_id = ?, end_date = ?, duration = ? WHERE specialist_id = ?", [$tariff_id, $end_date, $duration, $specialist_id]);
     } else {
-        // Добавляем новый тариф, если записи нет
         $data_base->add("INSERT INTO dt_tariff_list (specialist_id, tariff_id, end_date, duration) VALUES (?, ?, ?, ?)", [$specialist_id, $tariff_id, $end_date, $duration]);
     }
 }
@@ -1253,7 +1495,7 @@ function get_tariff_name(int $tariff_id)
 {
     global $data_base;
     $result = $data_base->selectRow("SELECT name FROM dt_tariff WHERE id = ?", [$tariff_id]);
-    return $result['name'] ?? ''; // Возвращает имя тарифа или пустую строку
+    return $result['name'] ?? '';
 }
 
 // Функция для получения всех опций
@@ -1286,7 +1528,22 @@ function get_all_banners() {
 function get_connected_banners(int $specialist_id)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT banner_id, start_date, end_date FROM dt_banners_list WHERE specialist_id = ?", [$specialist_id]);
+
+    $currentDate = date('Y-m-d');
+
+    return $data_base->selectAll("
+        SELECT banner_id, start_date, end_date
+        FROM dt_banners_list
+        WHERE specialist_id = ?
+        AND end_date >= ?
+    ", [$specialist_id, $currentDate]);
+}
+
+
+// Функция для получения всех подключенных баннеров
+function get_all_connected_banners() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_banners_list");
 }
 
 // Функция для добавления записи в таблицу dt_banners_list
@@ -1302,11 +1559,25 @@ function get_all_journals() {
     return $data_base->selectAll("SELECT * FROM dt_journal");
 }
 
+// Функция для получения всех подключений в журнале
+function get_all_connected_journals() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_journal_list");
+}
+
 // Функция для получения данных в журнал
 function get_connected_journals(int $specialist_id)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT journal_id, start_date, end_date FROM dt_journal_list WHERE specialist_id = ?", [$specialist_id]);
+
+    $currentDate = date('Y-m-d');
+
+    return $data_base->selectAll("
+        SELECT journal_id, start_date, end_date
+        FROM dt_journal_list
+        WHERE specialist_id = ?
+        AND end_date >= ?
+    ", [$specialist_id, $currentDate]);
 }
 
 // Функция для добавления записи в таблицу dt_journal_list
@@ -1322,18 +1593,50 @@ function get_all_promo() {
     return $data_base->selectAll("SELECT * FROM dt_promo_placement");
 }
 
-// Функция для добавления записи в таблицу dt_journal_list
-function add_promo_placement($specialist_id, $promo_id, $service_id, string $start_date, string $end_date, string $price)
+// Функция для добавления записи в таблицу dt_promo_list
+function add_promo_list($specialist_id, $block_id, $service_id, $end_date, $sort)
 {
     global $data_base;
-    $data_base->add("INSERT INTO dt_promo_placement_list (specialist_id, promo_id, service_id, start_date, end_date, price) VALUES (?, ?, ?, ?, ?)", [$specialist_id, $promo_id, $service_id, $start_date, $end_date, $price]);
+
+    if (in_array($service_id, [''])) {
+        $service_id = null;
+    }
+
+    $formatted_date = DateTime::createFromFormat('d.m.Y', $end_date)->format('Y-m-d');
+
+    // Выполняем SQL-запрос
+    $data_base->add(
+        "INSERT INTO dt_promo_list (specialist_id, block_id, sort, service_id, date_expires) VALUES (?, ?, ?, ?, ?)",
+        [$specialist_id, $block_id, $sort, $service_id, $formatted_date]
+    );
+}
+
+function add_promo_placement($specialist_id, $promo_id, $service_id, string $start_date, string $end_date, string $price, string $service_name)
+{
+    global $data_base;
+    $data_base->add("INSERT INTO dt_promo_placement_list (specialist_id, promo_id, service_id, start_date, end_date, price, service_name) VALUES (?, ?, ?, ?, ?, ?, ?)", [$specialist_id, $promo_id, $service_id, $start_date, $end_date, $price, $service_name]);
+}
+
+// Возвращает все записи из таблицы dt_banners_journal
+function get_journal_banners()
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_banners_journal ORDER BY id"); 
 }
 
 // Функция для получения данных из промо
 function get_connected_promo(int $specialist_id)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT * FROM dt_promo_placement_list WHERE specialist_id = ?", [$specialist_id]);
+
+    $currentDate = date('Y-m-d');
+
+    return $data_base->selectAll("
+        SELECT * 
+        FROM dt_promo_placement_list 
+        WHERE specialist_id = ? 
+        AND STR_TO_DATE(end_date, '%d.%m.%Y') >= STR_TO_DATE(?, '%Y-%m-%d')
+    ", [$specialist_id, $currentDate]);
 }
 
 // Функция для получения деталей промо по promo_id
@@ -1352,42 +1655,93 @@ function set_company($company, $classification)
 }
 
 // Тестовая функция
-function add_promo_list($specialist_id, $block_id, $sort, $date)
+/* function add_promo_list($specialist_id, $block_id, $sort, $date)
 {
     global $data_base;
     return $data_base->add("INSERT INTO dt_promo_list (specialist_id, block_id, sort, date_expires)
                                     VALUE (?, ?, ?, ?)", [$specialist_id, $block_id, $sort, $date]);
-}
+} */
 
-// Возвращает специалистов выбранного промоблока
 function get_promo_list(int $block_id, int $limit = 8)
 {
     global $data_base;
 
-    return $data_base->selectAll("SELECT
-                                        s.id,
-                                        s.name,
-                                        s.lastname,
-                                        s.photo,
-                                        s.rating,
-                                        c.title as classification_title,
-                                        ci.name as city_name,
-                                        se.title as specialization,
-                                        cm.name as metro_name,
-                                        co.title as company_name,
-                                        (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)as specialization_count
-                                    FROM `dt_promo_list` pl
-                                    LEFT JOIN dt_specialist s ON pl.specialist_id = s.id
-                                    LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                    LEFT JOIN dt_city ci ON s.city_id = ci.id
-                                    LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                    LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                    LEFT JOIN dt_company co ON s.company_id = co.id
-                                    WHERE pl.block_id = ?
-                                    GROUP BY s.id, pl.sort, se.id, cm.name, pl.date_expires
-                                    ORDER BY pl.sort, pl.date_expires
-                                    LIMIT $limit", [$block_id]);
+    // Получаем alias из URL
+    $alias = get_alias_from_url();
+
+    // Основной SQL запрос с фильтрацией по alias или NULL в service_id
+    $query = "SELECT
+                    s.id,
+                    s.name,
+                    s.lastname,
+                    s.photo,
+                    s.rating,
+                    c.title as classification_title,
+                    ci.name as city_name,
+                    se.title as specialization,
+                    cm.name as metro_name,
+                    co.title as company_name,
+                    (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) as specialization_count,
+                    (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id) AS rating, -- Средний рейтинг из отзывов
+                    (SELECT COUNT(rating) FROM dt_specialist_review WHERE specialist_id = s.id) AS count_rating -- Количество отзывов
+                FROM `dt_promo_list` pl
+                LEFT JOIN dt_specialist s ON pl.specialist_id = s.id
+                LEFT JOIN dt_classification c ON s.classification_id = c.id
+                LEFT JOIN dt_city ci ON s.city_id = ci.id
+                LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
+                LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+                LEFT JOIN dt_company co ON s.company_id = co.id
+                WHERE pl.block_id = ?";
+
+    // Если alias есть, добавляем фильтрацию по service_id
+    if ($alias) {
+        $query .= " AND pl.service_id = ?";  // Фильтруем по service_id (alias)
+    } else {
+        $query .= " AND pl.service_id IS NULL"; // Если alias нет, фильтруем по NULL
+    }
+
+    $query .= " GROUP BY s.id, pl.sort, se.id, cm.name, pl.date_expires
+                ORDER BY pl.sort, pl.date_expires
+                LIMIT $limit";
+
+    // Если alias задан, передаем его в запрос
+    if ($alias) {
+        return $data_base->selectAll($query, [$block_id, $alias]);
+    } else {
+        return $data_base->selectAll($query, [$block_id]);
+    }
 }
+
+function get_alias_from_url() {
+    $uri = $_SERVER['REQUEST_URI'];
+
+    // Убираем параметры запроса, если они есть, оставляя только путь
+    $uri = parse_url($uri, PHP_URL_PATH);
+
+    // Убираем возможный слэш в конце
+    $uri = rtrim($uri, '/');
+
+    // Разбиваем URL на части
+    $uri_arr = explode('/', $uri);
+
+    // Получаем последний сегмент URL
+    $last_segment = end($uri_arr);
+
+    // Массив допустимых окончаний
+    $valid_endings = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+
+    // Если последний элемент в URL соответствует одному из указанных значений и это не alias,
+    // добавляем слэш в конец
+    if (in_array($last_segment, $valid_endings)) {
+        $uri .= '/';
+        return null;  
+    }
+
+    // Возвращаем alias
+    return $last_segment;
+}
+
+
 
 
 // Возвращает способы связи
@@ -1573,6 +1927,12 @@ function get_faq_page($alias) {
 function faq_pages() {
     global $data_base;
     return $data_base->selectAll("SELECT * FROM dt_faq_pages");
+}
+
+// Возвращает ЧаВо для ПРОМО
+function faq_promo() {
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_faq_promo");
 }
 
 // Возвращает пользователя по email
@@ -1838,3 +2198,11 @@ function fillNewsList() {
     return $data_base->selectAll("SELECT alias, title FROM dt_post WHERE post_type='news' ORDER BY id DESC LIMIT 4");
 }
 
+/**
+ * @return array
+ */
+function get_all_social(): array
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_social_network");
+}
