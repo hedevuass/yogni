@@ -20,7 +20,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" id="optionEdit">Редактировать опцию</button>
+                <button type="button" class="btn btn-primary" id="optionEdit">Сохранить</button>
             </div>
         </div>
     </div>

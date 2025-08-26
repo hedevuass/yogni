@@ -1,126 +1,195 @@
 <style>
-.reg {
-  padding: 16px 40px !important;
-}
+  .reg {
+    padding: 16px 40px 40px !important;
+  }
 
-.flatpickr-day.disabled-red {
-  background: #a0a0a091 !important; 
-  cursor: not-allowed;
-  color: white !important;
-}
+  .flatpickr-day.flatpickr-disabled {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
 
-.name-tariff {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-align: center;
-}
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    position: static !important;
+  }
 
-.form-tariff {
-  margin-top: 20px;
-}
+  .flatpickr-month {
+    justify-content: center !important;
+    background: unset !important;
+  }
 
-.text-only-tariff {
-  margin: 10px 0;
-  line-height: 1.5;
-}
+  .flatpickr-day.nextMonthDay,
+  .flatpickr-day.prevMonthDay:not(.flatpickr-disabled) {
+    color: #393939 !important;
+  }
 
-.right-side {
-  float: right;
-}
+  .flatpickr-day.disabled-red,
+  .flatpickr-day.flatpickr-disabled {
+    cursor: not-allowed;
+    color: rgba(57, 57, 57, 0.1) !important;
+  }
 
-.mb-100 {
-  margin-bottom: 100px;
-}
+  .flatpickr-day.today {
+    background: #FF9E68 !important;
+    color: #393939 !important;
+  }
 
-#banner-period {
-  font-weight: 400;
-}
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: #569ff7 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    border-color: #569ff7 !important;
+  }
 
-.confirm-btn-tariff {
-  background-color: #ff7f27;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-size: 16px;
-  margin-top: 80px;
-}
-.confirm-btn-option {
-  margin-top: 80px;
-}
+  .range-highlight {
+    background: #cbcaca91 !important;
+  }
 
-.confirm-btn-tariff:hover {
-  background-color: #ff9f57;
-}
+  .name-tariff {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+  }
 
-.confirm-btn-tariff.inactive-button {
-  background-color: #fbcbae;
-  color: #ffffff;
-  cursor: not-allowed;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
+  .form-tariff {
+    margin-top: 20px;
+  }
 
-.confirm-btn-tariff,
-.confirm-btn-tariff.inactive-button {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
+  .text-only-tariff {
+    margin: 10px 0;
+    line-height: 1.5;
+  }
 
-.for-pay {
-  font-weight: 500;
-}
+  .right-side {
+    float: right;
+  }
 
-.reklam-text {
-  margin-top: 18px;
-  font-size: 12px;
-  color: #373737;
-  font-weight: 300;
-}
-.popup-body-succes {
-  height: 400px;
-  text-align: center;
-  padding: 25px;
-}
-.popup-body-succes .successful-title {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 100px 0 30px 0;
-}
-.popup-body-succes .middle-text {
-  font-size: 14px;
-  font-weight: 300;
-}
+  .mb-100 {
+    margin-bottom: 100px;
+  }
 
-.select-toggle {
-  cursor: pointer;
-    padding: 10px;
+  #banner-period {
+    font-weight: 400;
+  }
+
+  .confirm-btn-tariff {
+    background-color: #ff7f27;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 16px;
+    margin-top: 80px;
+  }
+
+  .confirm-btn-option {
+    margin-top: 80px;
+  }
+
+  .confirm-btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: #FFF;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 12px;
+    background: #FF8139;
+    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    height: 40px;
+    text-decoration: none;
+    margin-top: 60px;
+    text-decoration: none;
+  }
+
+  .confirm-btn-tariff:hover {
+    background-color: #ff9f57;
+  }
+
+  .confirm-btn-tariff.inactive-button {
+    background-color: #fbcbae;
+    color: #ffffff;
+    cursor: not-allowed;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .confirm-btn-tariff,
+  .confirm-btn-tariff.inactive-button {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+
+  .for-pay {
+    font-weight: 500;
+  }
+
+  .reklam-text {
+    margin-top: 18px;
+    font-size: 12px;
+    color: #373737;
+    font-weight: 300;
+  }
+
+  .popup-body-succes {
+    height: 400px;
+    text-align: center;
+    padding: 25px;
+  }
+
+  .popup-body-succes .successful-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 70px 0 30px 0;
+  }
+
+  .popup-body-succes .middle-text {
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .popup .window .reg .popup-body .button button:not(:first-child) {
+    margin-top: 10px;
+  }
+
+  .select-toggle {
+    cursor: pointer;
+    padding: 7px;
     border: 1px solid #ccc;
     background: #fff;
     display: block;
     position: relative;
     margin-top: 10px;
     color: #373737;
-}
+  }
 
-.custom-select .expanded {
-  border-radius: 8px 8px 0 0 !important;
-}
+  #select-option-promo {
+    margin-top: 14px !important;
+    padding: 4px 0;
+  }
 
-.popup-content .expanded {
-  border-radius: 8px 8px 0 0 !important;
-}
+  .custom-select .expanded {
+    border-radius: 8px 8px 0 0 !important;
+  }
 
-.input {
-  border-radius: 8px !important;
-}
+  .popup-content .expanded {
+    border-radius: 8px 8px 0 0 !important;
+  }
 
-.select-toggle:after {
+  .input {
+    border-radius: 8px !important;
+  }
+
+  .select-toggle:after {
     content: '';
     position: absolute;
     right: 5px;
@@ -130,16 +199,17 @@
     height: 10px;
     background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
     transition: background 0.3s ease;
-}
+  }
 
-/* Когда .select-toggle содержит класс .expanded, меняем изображение на крест */
-.select-toggle.expanded:after {
+  /* Когда .select-toggle содержит класс .expanded, меняем изображение на крест */
+  .select-toggle.expanded:after {
     background: url(../assets/img/cabinet/select-close.svg) no-repeat center center;
-    width: 16px; /* Обновляем размеры в зависимости от картинки */
+    width: 16px;
+    /* Обновляем размеры в зависимости от картинки */
     height: 16px;
-}
+  }
 
-.select-dropdown {
+  .select-dropdown {
     display: none;
     background-color: white;
     border: 1px solid #ccc;
@@ -149,255 +219,263 @@
     overflow-y: auto;
     border-radius: 0 0 8px 8px !important;
     padding: 20px 0;
-}
-.select-dropdown::-webkit-scrollbar {
-    width: 8px;
-}
+  }
 
-.select-dropdown::-webkit-scrollbar-track {
+  .select-dropdown::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .select-dropdown::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
-}
+  }
 
-.select-dropdown::-webkit-scrollbar-thumb {
+  .select-dropdown::-webkit-scrollbar-thumb {
     background-color: #888;
     border-radius: 10px;
     border: 2px solid #fff;
-}
+  }
 
-.select-dropdown::-webkit-scrollbar-thumb:hover {
+  .select-dropdown::-webkit-scrollbar-thumb:hover {
     background-color: #555;
-}
-.select-option {
+  }
+
+  .select-option {
     display: flex !important;
-    justify-content: space-between; 
+    justify-content: space-between;
     align-items: center;
-    padding: 2px 10px;
+    padding: 4px 10px;
     padding-left: 40px;
     cursor: pointer;
-    font-size: unset !important; 
-    font-weight: unset !important; 
-    margin-top: unset !important; 
+    font-size: unset !important;
+    font-weight: unset !important;
+    margin-top: unset !important;
     margin-bottom: unset !important;
     color: #222222;
 
-}
-.select-option > span {
-  color: #373737;
-  width: 90%;
-}
-.select-option-journal::before {
+  }
+
+  .select-option>span {
+    color: #373737;
+    width: 90%;
+  }
+
+  .select-option-journal::before {
     content: '';
     position: absolute;
     margin-left: -30px;
     width: 20px;
     height: 20px;
     background: url('../assets/img/cabinet/journal-select-svg.svg') no-repeat center center;
-    background-size: contain; 
-}
+    background-size: contain;
+  }
 
-.select-option-banner::before {
+  .select-option-banner::before {
     content: '';
     position: absolute;
     margin-left: -30px;
     width: 20px;
     height: 20px;
     background: url('../assets/img/cabinet/banner-select-svg.svg') no-repeat center center;
-    background-size: contain; 
-}
+    background-size: contain;
+  }
 
-.select-option input[type="checkbox"] {
+  .select-option input[type="checkbox"] {
     appearance: none;
-    background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
+    background: url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center;
     border: none;
     cursor: pointer;
     width: 24px;
     height: 30px;
     order: 2;
-}
+  }
 
-.select-option-promo input[type="radio"] {
-  order: 0 !important;
-}
-.select-option-promo {
-  padding-left: 0;
-  gap: 10px;
-}
+  .select-option-promo input[type="radio"] {
+    order: 0 !important;
+  }
 
-.select-option input[type="checkbox"]:checked {
+  .select-option-promo {
+    padding-left: 0;
+    gap: 10px;
+  }
+
+  .select-option input[type="checkbox"]:checked {
     background: url(../assets/img/cabinet/checkbox_checked_orange.svg) no-repeat center center;
-}
+  }
 
-.select-option input[type="radio"] {
+  .select-option input[type="radio"] {
     appearance: none;
-    background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
+    background: url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center;
     border: none;
     cursor: pointer;
     width: 100%;
     max-width: 24px;
     height: 24px;
     order: 2;
-}
+  }
 
-.select-option input[type="radio"]:checked {
+  .select-option input[type="radio"]:checked {
     background: url(../assets/img/cabinet/checkbox_checked_orange.svg) no-repeat center center;
-}
-.select-option input[type="radio"]::before {
-  background:  url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center; 
-}
-.option-label {
-  font-weight: 500;
-  color: #373737;
-  padding: 0px 0 10px 15px;
-  font-size: 16px !important; 
-  margin-top: unset !important; 
-  margin-bottom: unset !important;
-  padding-left: 40px;
-}
+  }
 
-.promo-icon.special-padding {
+  .select-option input[type="radio"]::before {
+    background: url(../assets/img/cabinet/checkbox_unchecked.svg) no-repeat center center;
+  }
+
+  .option-label {
+    font-weight: 500;
+    color: #373737;
+    padding: 0px 0 10px 15px;
+    font-size: 16px !important;
+    margin-top: unset !important;
+    margin-bottom: unset !important;
+    padding-left: 40px;
+  }
+
+  .promo-icon.special-padding {
     margin-left: -12px;
-}
+  }
 
-.promo-icon {
-    padding: 12px 0;
-}
+  .promo-icon {
+    padding: 8px 0 0;
+  }
 
-.promo-description {
-  font-size: 12px;
-}
+  .promo-description {
+    font-size: 12px;
+  }
 
-.popup-content .button .add-more-promo {
-  margin-bottom: 12px;
-  margin-top: 106px !important;
-}
+  .popup-content .button .add-more-promo {
+    margin-bottom: 12px;
+    margin-top: 106px !important;
+  }
 
-.popup-content .selected-promo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-}
+  .popup-content .selected-promo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+  }
 
-.popup-content .selected-promo .promo-number {
-  width: 5%;
-  font-weight: 14px;
-  margin-bottom: auto;
-}
+  .popup-content .selected-promo .promo-number {
+    width: 5%;
+    font-weight: 14px;
+    margin-bottom: auto;
+  }
 
-.popup-content .selected-promo .promo-details {
-  display: flex;
-  align-items: center;
-  width: 65%;
-}
+  .popup-content .selected-promo .promo-details {
+    display: flex;
+    align-items: center;
+    width: 65%;
+  }
 
-.delete-selected-promo {
-  border-radius: 8px;
-  padding: 0 2px;
-}
+  .delete-selected-promo {
+    border-radius: 8px;
+    padding: 0 2px;
+  }
 
-.popup-content .selected-promo .promo-info {
-  display: flex;
-  flex-direction: column;
-  margin-right: 10px;
-}
+  .popup-content .selected-promo .promo-info {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+  }
 
-.popup-content .selected-promo .promo-title {
-  font-weight: 400;
-  margin: 0 5px 3px 0;
-}
+  .popup-content .selected-promo .promo-title {
+    font-weight: 400;
+    margin: 0 5px 3px 0;
+  }
 
-.popup-content .selected-promo .promo-dates {
-  color: #373737;
-  font-size: 14px;
-  text-wrap: nowrap;
-  font-weight: 300;
-}
+  .popup-content .selected-promo .promo-dates {
+    color: #373737;
+    font-size: 14px;
+    text-wrap: nowrap;
+    font-weight: 300;
+  }
 
-.popup-content .selected-promo .promo-icon {
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
-  padding: 0 !important;
-}
+  .popup-content .selected-promo .promo-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    padding: 0 !important;
+  }
 
-.popup-content .selected-promo .promo-price {
-  margin-right: 10px;
-}
+  .popup-content .selected-promo .promo-price {
+    margin-right: 10px;
+  }
 
-.popup-content .selected-promo .delete-promo {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
+  .popup-content .selected-promo .delete-promo {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
 
-.popup-content .selected-promo .delete-promo img {
-  width: 24px;
-  height: 24px;
-}
+  .popup-content .selected-promo .delete-promo img {
+    width: 24px;
+    height: 24px;
+  }
 
-.popup-content .selected-promo .promo-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 50%;
-}
+  .popup-content .selected-promo .promo-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 50%;
+  }
 
-.promo-title {
-  font-weight: 500;
-}
+  .promo-title {
+    font-weight: 500;
+  }
 
-.light {
-  font-weight: 300;
-}
+  .light {
+    font-weight: 300;
+  }
 
-.start_end_date {
-  margin-top: 8px;
-}
+  .start_end_date {
+    margin-top: 8px;
+  }
 
-.regular {
-  font-weight: 400;
-}
+  .regular {
+    font-weight: 400;
+  }
 
-.total-price {
-  font-weight: 500;
-}
+  .total-price {
+    font-weight: 500;
+  }
 
-.popup_discount {
-  font-weight: 500;
-  margin-bottom: 8px;
-}
+  .popup_discount {
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
 
-#second-popup-content {
-  margin-bottom: 48px;
-}
+  #second-popup-content {
+    margin-bottom: 48px;
+  }
 
-.total_price, .popup_total_discount {
-  font-weight: 400;
-}
+  .total_price,
+  .popup_total_discount {
+    font-weight: 400;
+  }
 
-#popup-old-price {
-  font-weight: 700;
-  text-decoration: line-through;
-}
+  #popup-old-price {
+    font-weight: 700;
+    text-decoration: line-through;
+  }
 
-.select-dropdown-childrens {
+  .select-dropdown-childrens {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
-}
+  }
 
-.select-dropdown-childrens.open {
+  .select-dropdown-childrens.open {
     max-height: 500px;
-}
+  }
 
-.select-toggle-parrent {
+  .select-toggle-parrent {
     position: relative;
     cursor: pointer;
     height: 30px;
-}
+  }
 
-.select-toggle-parrent::after {
+  .select-toggle-parrent::after {
     content: '';
     position: absolute;
     right: 18px;
@@ -407,25 +485,75 @@
     height: 16px;
     background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
     transition: background 0.3s ease;
-}
-
-.select-toggle-parrent.open::after {
-    transform: translateY(-50%) rotate(180deg);
-}
-
-/* Если родитель имеет дочерние элементы */
-.select-toggle-parrent + .select-dropdown-childrens {
-    /* Это условие применяет стили только к родителям, у которых есть дочерние элементы */
-}
-
-@media (max-width: 430px) {
-  .popup-content .selected-promo .promo-dates {
-    text-wrap: wrap;
   }
-}
 
+  .select-toggle-parrent.open::after {
+    transform: translateY(-50%) rotate(180deg);
+  }
 
+  /* Контейнер для кнопок */
+  .flatpickr-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 36px 0 41px;
+  }
 
+  /* Кнопка "Подтвердить" */
+  .flatpickr-confirm-btn {
+    width: 120px;
+    height: 32px;
+    background-color: #FF9E68;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .flatpickr-confirm-btn:hover {
+    background-color: #e68a4d;
+  }
+
+  /* Кнопка "Сбросить" */
+  .flatpickr-reset-btn {
+    width: 120px;
+    height: 32px;
+    background-color: #FFE6D9;
+    color: #FF9E68;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .flatpickr-reset-btn:hover {
+    background-color: #ffcb9d;
+  }
+
+  @media (max-width: 911px) {
+    .confirm-btn-option {
+      width: 100% !important;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .popup-content .selected-promo .promo-dates {
+      text-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 511px) {
+    .order-photo-btn {
+      margin-bottom: 20px;
+    }
+
+    .reg {
+      padding: 16px 20px 40px !important;
+    }
+  }
 </style>
 <div id="obzor-href" class="heading__mobile support-heading">
   <a href="/cabinet/"></a>
@@ -436,204 +564,215 @@
     <ul class="blog-menu desktop-blog-menu">
       <li><a href="#obzor-section-href" class="">ОБЗОР</a></li>
       <li><a href="#tariff-href" class="">ТАРИФЫ</a></li>
-      <li><a href="#promo-href" class="">ПРОМО-БЛОКИ</a></li>
+      <li><a href="#promo-href" class="">ПРОМО</a></li>
       <li><a href="#option-href" class="">ОПЦИИ</a></li>
     </ul>
 
     <ul class="blog-menu mobile-blog-menu">
-      <li><button data-target="#obzor-href" id="obzor-href-mob" class="promo-button-mob">ОБЗОР</button></li>
-      <li><button data-target="#tariff-href" id="tariff-href-mob" class="promo-button-mob">ТАРИФЫ</button></li>
-      <li><button data-target=".promo-section" id="promo-section-mob" class="promo-button-mob">ПРОМО-БЛОКИ</button></li>
-      <li><button data-target="#option-href" id="option-href-mob" class="promo-button-mob">ОПЦИИ</button></li>
+      <li><button data-target="#obzor-href" id="obzor-href-mob" class="promo-button-mob">
+          <div>ОБЗОР</div>
+        </button></li>
+      <li><button data-target="#tariff-href" id="tariff-href-mob" class="promo-button-mob">
+          <div>ТАРИФЫ</div>
+        </button></li>
+      <li><button data-target=".promo-section" id="promo-section-mob" class="promo-button-mob">
+          <div>ПРОМО</div>
+        </button></li>
+      <li><button data-target="#option-href" id="option-href-mob" class="promo-button-mob">
+          <div>ОПЦИИ</div>
+        </button></li>
     </ul>
   </nav>
 
-<div class="obzor-mobile hidden-comp">
-  <div id="cards-block" class="cards-container">
-    <!--data:top_cards--><!--data:top_cards-->
-</div>
+  <div class="obzor-mobile hidden-comp">
+    <div id="cards-block" class="hidden-comp cards-container cards-block-promo">
+      <!--data:top_cards--><!--data:top_cards-->
+    </div>
+    <div id="cards-block" class="mobile-only cards-container cards-block-promo">
+      <!--data:top_cards_mobile--><!--data:top_cards_mobile-->
+    </div>
 
-  
-  <div id="banner-block" class="banner-promo">
-    <span class="name-promo">Мощный старт вашей страницы</span><br>
-    <span>Эффективные инструменты для продвижения ваших услуг</span>
-    <!-- Desktop version container -->
-    <div class="container-promo hidden-comp">
+    <div id="banner-block" class="banner-promo">
+      <span class="name-promo">Мощный старт вашей страницы</span><br>
+      <span>Эффективные инструменты для продвижения ваших услуг</span>
+      <!-- Desktop version container -->
+      <div class="container-promo hidden-comp">
         <div class="element-promo">
-            <div class="icon-promo"></div>
-            <div class="promo-tariffs">Тарифы</div>
-            <p>Наборы опций для максимально эффективного продвижения страницы</p>
-            <a href="#tariff-href">Подробнее</a>
+          <div class="icon-promo"></div>
+          <div class="promo-tariffs">Тарифы</div>
+          <p>Наборы опций для максимально эффективного продвижения страницы</p>
+          <a href="#tariff-href">Подробнее</a>
         </div>
         <div class="element-promo">
-            <div class="icon-promo"></div>
-            <div class="promo-blocks">Промо-блоки</div>
-            <p>Карточки и баннеры на самых заметных позициях сайта</p>
-            <a href="#promo-href">Подробнее</a>
+          <div class="icon-promo"></div>
+          <div class="promo-blocks">Промо</div>
+          <p>Карточка профиля на самых заметных позициях в каталоге сайта</p>
+          <a href="#promo-href">Подробнее</a>
         </div>
+        <!-- <div class="element-promo">
+          <div class="icon-promo"></div>
+          <div class="promo-banners">Баннеры</div>
+          <p>Крупный формат в ключевых точках каталога</p>
+          <a href="#promo-banners">Подробнее</a>
+        </div> -->
         <div class="element-promo">
-            <div class="icon-promo"></div>
-            <div class="promo-banners">Баннеры</div>
-            <p>Крупный формат в ключевых точках каталога</p>
-            <a href="#promo-banners">Подробнее</a>
+          <div class="icon-promo"></div>
+          <div class="promo-options">Опции</div>
+          <p>Отдельные опции для индивидуальной настройки продвижения</p>
+          <a href="#option-href">Подробнее</a>
         </div>
-        <div class="element-promo">
-            <div class="icon-promo"></div>
-            <div class="promo-options">Опции</div>
-            <p>Отдельные опции для индивидуальной настройки продвижения</p>
-            <a href="#option-href">Подробнее</a>
-        </div>
-    </div>
-    <!-- Mobile version swiper -->
-    <div class="swiper-container-tariff mobile-only">
+      </div>
+      <!-- Mobile version swiper -->
+      <div class="swiper-container-tariff mobile-only">
         <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <div class="element-promo promo-tariffs">
-                    <div class="icon-promo"></div>
-                    <div class="promo-tariffs">Тарифы</div>
-                    <p>Наборы опций для максимально эффективного продвижения страницы</p>
-                    <a class="promo-button-mob" data-target="#tariff-href">Подробнее</a>
-                </div>
+          <div class="swiper-slide">
+            <div class="element-promo promo-tariffs">
+              <div class="icon-promo"></div>
+              <div class="promo-tariffs">Тарифы</div>
+              <p>Наборы опций для максимально эффективного продвижения страницы</p>
+              <a class="promo-button-mob" data-target="#tariff-href">Подробнее</a>
             </div>
-            <div class="swiper-slide">
-                <div class="element-promo promo-blocks">
-                    <div class="icon-promo"></div>
-                    <div class="promo-blocks">Промо-блоки</div>
-                    <p>Карточки и баннеры на самых заметных позициях сайта</p>
-                    <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
-                </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="element-promo promo-blocks">
+              <div class="icon-promo"></div>
+              <div class="promo-blocks">Промо</div>
+              <p>Карточка профиля на самых заметных позициях в каталоге сайта</p>
+              <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
             </div>
-            <div class="swiper-slide">
-                <div class="element-promo promo-banners">
-                    <div class="icon-promo"></div>
-                    <div class="promo-banners">Баннеры</div>
-                    <p>Крупный формат в ключевых точках каталога</p>
-                    <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
-                </div>
+          </div>
+          <!-- <div class="swiper-slide">
+            <div class="element-promo promo-banners">
+              <div class="icon-promo"></div>
+              <div class="promo-banners">Баннеры</div>
+              <p>Крупный формат в ключевых точках каталога</p>
+              <a class="promo-button-mob" data-target=".promo-section">Подробнее</a>
             </div>
-            <div class="swiper-slide">
-                <div class="element-promo promo-options">
-                    <div class="icon-promo"></div>
-                    <div class="promo-options">Опции</div>
-                    <p>Отдельные опции для индивидуальной настройки продвижения</p>
-                    <a class="promo-button-mob" data-target="#option-href">Подробнее</a>
-                </div>
+          </div> -->
+          <div class="swiper-slide">
+            <div class="element-promo promo-options">
+              <div class="icon-promo"></div>
+              <div class="promo-options">Опции</div>
+              <p>Отдельные опции для индивидуальной настройки продвижения</p>
+              <a class="promo-button-mob" data-target="#option-href">Подробнее</a>
             </div>
+          </div>
         </div>
-       
+
         <div class="swiper-pagination"></div>
+      </div>
     </div>
-</div>
-</div>
+  </div>
   <div id="tariff-href" class="tariff-section section hidden-comp">
     <h2>Выберите <span class="highlight">подходящий тариф</span></h2>
     <p>Наборы опций для максимально эффективного продвижения страницы.</p>
     <div class="switch-container">
-        <span>На месяц</span>
-        <label class="switch">
-            <input type="checkbox" id="duration-switch">
-            <span class="slider round"></span>
-        </label>
-        <span>На 3 месяца</span>
+      <span>На месяц</span>
+      <label class="switch">
+        <input type="checkbox" id="duration-switch">
+        <span class="slider round"></span>
+      </label>
+      <span>На 3 месяца</span>
     </div>
     <div class="tariff-cards hidden-comp">
       <!--data:tariff_cards--><!--data:tariff_cards-->
-  </div>
-  <div class="swiper-container mobile-only">
+    </div>
+    <div class="swiper-container mobile-only">
       <div class="swiper-wrapper">
-          <!--data:mobile_tariff_cards--><!--data:mobile_tariff_cards-->
+        <!--data:mobile_tariff_cards--><!--data:mobile_tariff_cards-->
       </div>
       <div class="swiper-pagination"></div>
-  </div>
-</div>
-<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-<div class="promo-section white-mobile-promo mobile-only hidden-comp">
-  <div style="margin-bottom: 20px;" class="promo-text">
-    <h2>Промо-блоки и баннеры</h2>
-    <p>
-      Размещения на <span class="highlight">самых заметных позициях</span> в каталоге и журнале.
-    </p>
-  </div>
-  <div style="text-align: center;" class="img-block">
-  <img style="max-width: 400px; width: 100%;" src="../assets/img/cabinet/promoblock-banners.png" alt="Image 1" />
-</div>
-</div>
-<div id="promo-href" class="promo-section hidden-comp">
-  <div class="promo-text">
-    <h2>Размещение карточки в <span class="highlight">промо-блоках</span></h2>
-    <div class="connected-banners">
-      <!--data:promo_connected--><!--data:promo_connected-->
     </div>
-    <p>
-      Размещение карточки на самых заметных позициях каталога. Выберите первое место или позиции со второй по восьмую. Доступно на страницах разделов и подразделов, а также на главной странице.
-    </p>
-    <p class="bold">Подробнее – в карусели.</p>
-    <button class="promo-button promo-card-button hidden-comp">Подключить</button>
   </div>
-  <button class="promo-button promo-card-button mobile-only">Подключить</button>
-  <div class="promo-slider swiper swiper-autoheight">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide1.png" alt="Image 1" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide2.png" alt="Image 2" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide3.png" alt="Image 3" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide4.png" alt="Image 4" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/tariff-slide5.png" alt="Image 5" /></div>
+  <!-- <div class="promo-section white-mobile-promo mobile-only hidden-comp">
+    <div style="margin-bottom: 20px;" class="promo-text">
+      <h2>Промо-блоки и баннеры</h2>
+      <p>
+        Размещения на <span class="highlight">самых заметных позициях</span> в каталоге и журнале.
+      </p>
     </div>
-    <div class="swiper-pagination swiper-pagination-autoheight"></div>
+    <div style="text-align: center;" class="img-block">
+      <img style="max-width: 400px; width: 100%;" src="../assets/img/cabinet/promoblock-banners.png" alt="Image 1" />
+    </div>
+  </div> -->
+  <div id="promo-href" class="promo-section white-mobile-promo hidden-comp">
+    <div class="promo-text">
+      <h2 class="promo-placement-title">Размещение карточки в <span class="highlight">промо-блоках</span></h2>
+        <!--data:promo_connected--><!--data:promo_connected-->
+      <p>
+        Размещение карточки на самых заметных позициях каталога. Выберите первое место или позиции со второй по восьмую.
+        Доступно на страницах разделов и подразделов, а также на главной странице.
+      </p>
+      <p class="bold">Ваша карточка – всегда в топе.</p>
+      <button class="promo-button promo-card-button hidden-comp">Подключить</button>
+    </div>
+    <button class="promo-button promo-card-button mobile-only">Подключить</button>
+    <div class="promo-slider swiper swiper-autoheight">
+      <div class="swiper-wrapper">
+        <!--data:swiper-tarrif--><!--data:swiper-tarrif-->
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
   </div>
-</div>
 
-<div id="promo-banners" class="promo-section white-mobile-promo hidden-comp">
-  <div class="promo-text">
-    <h2>Рекламные <span class="highlight">баннеры</span></h2>
-    
-      <!--data:banners--><!--data:banners-->
-    
-    <p>
-      Крупный формат на главной странице. Отличный выбор для проведения имиджевых кампаний, продвижения по широким запросам и повышения узнаваемости.
-    </p>
-    <p class="bold">Подробнее – в карусели.</p>
-    <button class="promo-button reklama-button hidden-comp">Подключить</button>
-  </div>
-  <button class="promo-button reklama-button mobile-only">Подключить</button>
-  <div class="promo-slider swiper">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide1.svg" alt="Image 1" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide2.svg" alt="Image 2" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/banner-slide3.svg" alt="Image 3" /></div>
-    </div>
-    <div class="swiper-pagination"></div>
-  </div>
-</div>
+  <!-- <div id="promo-banners" class="promo-section white-mobile-promo hidden-comp">
+    <div class="promo-text">
+      <h2>Рекламные <span class="highlight">баннеры</span></h2> -->
 
-<div class="promo-section hidden-comp">
-  <div class="promo-text">
-    <h2>Продвижение в <span class="highlight">журнале</span></h2>
-    
-      <!--data:journal--><!--data:journal-->
-  
-    <p>
-      Журнал – медиа с новостями, статьями, а также блогами специалистов и компаний, рассчитанное на широкую аудиторию. Промо-блоки расположены в ленте журнала и позволяют продвигать статьи или привлекать трафик непосредственно на свою страницу.
-    </p>
-    <p class="bold">Подробнее – в карусели.</p>
-    <button class="promo-button journal-button hidden-comp">Подключить</button>
-  </div>
-  <button class="promo-button journal-button mobile-only">Подключить</button>
-  <div class="promo-slider swiper">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide1.svg" alt="Image 1" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide2.svg" alt="Image 2" /></div>
-      <div class="swiper-slide slider-img"><img src="../assets/img/cabinet/journal-slide3.svg" alt="Image 3" /></div>
-    </div>
-    <div class="swiper-pagination"></div>
-  </div>
-</div>
+  <!--data:banners--><!--data:banners-->
 
-<div id="option-href" class="options-section hidden-comp">
-  <div class="option-block-mobile">
-    <h2><span class="highlight">Опции</span> страницы</h2>
-    <p>Отдельные опции для повышения эффективности работы с каталогом.</p>
-  </div>
+  <!-- <p>
+        Крупный формат на главной странице. Отличный выбор для проведения имиджевых кампаний, продвижения по широким
+        запросам и повышения узнаваемости.
+      </p>
+      <p class="bold">Подробнее – в карусели.</p>
+      <button class="promo-button reklama-button hidden-comp">Подключить</button>
+    </div>
+    <button class="promo-button reklama-button mobile-only">Подключить</button>
+    <div class="promo-slider swiper">
+      <div class="swiper-wrapper"> -->
+  <!--data:swiper-banner--><!--data:swiper-banner-->
+  <!-- </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </div> -->
+
+  <!-- <div class="promo-section hidden-comp">
+    <div class="promo-text">
+      <h2>Продвижение в <span class="highlight">журнале</span></h2> -->
+
+  <!--data:journal--><!--data:journal-->
+
+  <!--  <p>
+        Журнал – медиа с новостями, статьями, а также блогами специалистов и компаний, рассчитанное на широкую
+        аудиторию. Промо-блоки расположены в ленте журнала и позволяют продвигать статьи или привлекать трафик
+        непосредственно на свою страницу.
+      </p>
+      <p class="bold">Подробнее – в карусели.</p>
+      <button class="promo-button journal-button hidden-comp">Подключить</button>
+    </div>
+    <button class="promo-button journal-button mobile-only">Подключить</button>
+    <div class="promo-slider swiper">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide slider-img">
+          <img class="journal-image" src="../assets/img/cabinet/journal-slide1.png" alt="Image 1" />
+        </div>
+        <div class="swiper-slide slider-img">
+          <img class="journal-image" src="../assets/img/cabinet/journal-slide2.png" alt="Image 2" />
+        </div>
+        <div class="swiper-slide slider-img">
+          <img class="journal-image" src="../assets/img/cabinet/journal-slide3.png" alt="Image 3" />
+        </div>
+      </div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </div> -->
+
+  <div id="option-href" class="options-section hidden-comp">
+    <div class="option-block-mobile">
+      <h2><span class="highlight">Опции</span> страницы</h2>
+      <p>Отдельные опции для повышения эффективности работы с каталогом.</p>
+    </div>
     <hr class="divider hidden-comp" />
     <div class="options-table">
       <div class="table-row table-header">
@@ -652,17 +791,18 @@
       <a href="/pro-photo"><button class="order-photo-btn">Подробнее</button></a>
     </div>
     <div class="order-photo-images">
-      <img src="../assets/img/cabinet/ellipse1.png" alt="Image 1" class="circle-image">
+      <!-- <img src="../assets/img/cabinet/ellipse1.png" alt="Image 1" class="circle-image">
       <img src="../assets/img/cabinet/ellipse2.png" alt="Image 2" class="circle-image">
-      <img src="../assets/img/cabinet/ellipse3.png" alt="Image 3" class="circle-image">
+      <img src="../assets/img/cabinet/ellipse3.png" alt="Image 3" class="circle-image"> -->
+      <img src="../assets/img/cabinet/order-photo-images.png" alt="Image 1">
     </div>
   </div>
-  
+
   <div class="mobile-only mobile-title hidden-comp">Ответы на частые вопросы</div>
   <div id="faq-block" class="faq-section hidden-comp">
-  <h2 style="margin-bottom: 35px !important;">Ответы на частые вопросы</h2>
-  <!--data:faqs--><!--data:faqs-->
-</div>
+    <h2 style="margin-bottom: 35px !important;">Ответы на частые вопросы</h2>
+    <!--data:faqs--><!--data:faqs-->
+  </div>
 
 </div>
 
@@ -674,37 +814,41 @@
     <div class="close"></div>
     <div class="reg">
       <div class="popup-body">
-      <form method="POST" id="tariff-popup-form">
-        <div class="name">
-          Подключение тарифа
-        </div>
-        <div class="form-tariff mb-100">
-          <p class="text-only-tariff">
-            <!--data:connected_tariff--><!--data:connected_tariff-->
-            <span class="popup-connected-tariff-bold">Тариф <span id="popup-tariff-name"></span></span> <span class="right-side" id="popup-tariff-price"></span><br>
-            <hr>
-            <p class="text-only-tariff-p"><span class="popup-connected-tariff-bold">Период <span class="right-side" id="popup-tariff-period"></span></span></p>
+        <form method="POST" id="tariff-popup-form">
+          <div class="name">
+            Подключение тарифа
+          </div>
+          <div class="form-tariff mb-100">
+            <p class="text-only-tariff">
+              <!--data:connected_tariff--><!--data:connected_tariff-->
+              <span class="popup-connected-tariff-bold">Тариф <span id="popup-tariff-name"></span></span> <span
+                class="right-side" id="popup-tariff-price"></span><br>
+              <hr>
+            <p class="text-only-tariff-p"><span class="popup-connected-tariff-bold">Период <span class="right-side"
+                  id="popup-tariff-period"></span></span></p>
             <span class="right-side thin" id="popup-tariff-duration"></span><br>
-           
+
             <div class="switch-container right-side">
               <span class="one-month thin">На месяц</span>
               <label class="switch">
-                  <input type="checkbox" id="duration-switch-popup">
-                  <span class="slider round"></span>
+                <input type="checkbox" id="duration-switch-popup">
+                <span class="slider round"></span>
               </label>
               <span class="three-month thin">На 3 месяца</span>
             </div>
           </div>
-          </p> 
+          </p>
           <input type="hidden" name="specialist_id" id="popup-specialist-id">
           <input type="hidden" name="tariff_id" id="popup-tariff-id">
           <input type="hidden" name="duration" id="popup-duration" value="1">
-          <div class="for-pay"><span class="popup-connected-tariff-bold">К оплате: </span><span id="popup-tariff-total"></span></div>
+          <div class="for-pay"><span class="popup-connected-tariff-bold">К оплате: </span><span
+              id="popup-tariff-total"></span></div>
           <div class="button">
-            <button type="submit" class="confirm-btn-tariff">Подключить за <span id="popup-tariff-total-button"></span></button>
+            <button type="submit" class="confirm-btn-tariff">Подключить за <span
+                id="popup-tariff-total-button"></span></button>
             <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
           </div>
-        </div>
+      </div>
       </form>
     </div>
   </div>
@@ -722,12 +866,14 @@
           </div>
           <div class="form-option">
             <div class="mb-100">
-            <p class="text-only-option">
-              <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price-after"></span><span class="right-side" id="popup-option-price"></span><br>
-              <hr>
-              <span class="popup-connected-tariff-bold">Период <span class="right-side" id="popup-option-period"></span></span><br>
-              <span class="right-side" id="popup-option-duration"></span><br>
-            </p> 
+              <p class="text-only-option">
+                <span id="popup-option-name"></span> <span class="right-side" id="popup-option-price-after"></span><span
+                  class="right-side" id="popup-option-price"></span><br>
+                <hr>
+                <span class="popup-connected-tariff-bold">Период <span class="right-side"
+                    id="popup-option-period"></span></span><br>
+                <span class="right-side" id="popup-option-duration"></span><br>
+              </p>
             </div>
             <input type="hidden" name="specialist_id" id="popup-specialist-option-id">
             <input type="hidden" name="option_id" id="popup-option-id">
@@ -736,12 +882,13 @@
               Примененная скидка: <span class="popup_total_discount" id="popup-option-discount"></span>
             </div>
             <div class="for-pay">
-                К оплате: 
-                <span id="popup-option-old-price" style="font-weight: 700; text-decoration: line-through;"></span>
-                <span class="total_price" id="popup-option-total"></span>
+              К оплате:
+              <span id="popup-option-old-price" style="font-weight: 700; text-decoration: line-through;"></span>
+              <span class="total_price" id="popup-option-total"></span>
             </div>
             <div class="button">
-              <button type="submit" class="confirm-btn-option">Подключить за <span id="popup-option-total-button"></span></button>
+              <button type="submit" class="confirm-btn-option">Подключить за <span
+                  id="popup-option-total-button"></span></button>
               <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
             </div>
           </div>
@@ -751,15 +898,17 @@
   </div>
 </div>
 
- <!--data:banner-popup--><!--data:banner-popup-->
- <!--data:banner-popup2--><!--data:banner-popup2-->
+<!--data:banner-popup--><!--data:banner-popup-->
+<!--data:banner-popup2--><!--data:banner-popup2-->
 
- <!--data:journal-popup--><!--data:journal-popup-->
- <!--data:journal-popup2--><!--data:journal-popup2-->
+<!--data:journal-popup--><!--data:journal-popup-->
+<!--data:journal-popup2--><!--data:journal-popup2-->
 
- <!--data:promo-popup--><!--data:promo-popup-->
+<!--data:promo-popup--><!--data:promo-popup-->
 
- <div class="popup promo-popup" id="promo-popup-2">
+<!--data:forbidden-popup--><!--data:forbidden-popup-->
+
+<div class="popup promo-popup" id="promo-popup-2">
   <div class="bg"></div>
   <div class="window middle">
     <div class="close"></div>
@@ -778,8 +927,10 @@
               К оплате: <span id="popup-old-price"></span> <span class="total_price" id="total-price2"></span>
             </div>
             <div class="button">
-              <button style="background-color: transparent; color: #FF8139; border: 1px solid #FF8139;" type="button" class="add-more-promo">Добавить ещё размещение</button>
-              <button style="margin-top: 0px;" type="submit" class="confirm-promo"><span id="confirm-price"></span></button>
+              <button type="button"
+                class="add-more-promo">Добавить ещё размещение</button>
+              <button style="margin-top: 0px;" type="submit" class="confirm-promo"><span
+                  id="confirm-price"></span></button>
               <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
             </div>
           </form>
@@ -789,7 +940,7 @@
   </div>
 </div>
 
- <div class="popup successful-popup" id="successful-popup">
+<div class="popup successful-popup" id="successful-popup-tariff">
   <div class="bg"></div>
   <div class="window middle">
     <div class="close"></div>
@@ -798,13 +949,45 @@
         <form method="POST" id="successful-popup-form">
           <div class="form-successful">
             <div class="text">
-            <div class="successful-title">
+              <div style="margin-top: 40px; margin-bottom: 40px;" class="bold">
+              </div>
+              <div class="middle-text">
+              </div>
             </div>
-            <div class="middle-text">
+            <div class="button">
+              <a style="margin-top: 120px;" href="/cabinet/page_promo" type="submit"
+                class="confirm-btn-option connect-button popup-link">Перейти в раздел <span
+                  id="popup-successful-total-button"></span></a>
+              <p>Чек по операции придет на электронную почту</p>
             </div>
           </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="popup successful-popup" id="successful-popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body popup-body-succes">
+        <form method="POST" id="successful-popup-form">
+          <div class="form-successful">
+            <div class="text">
+              <div class="successful-title">
+              </div>
+              <div class="middle-text">
+              </div>
+            </div>
             <div class="button">
-              <a href="/cabinet/page_promo" type="submit" class="confirm-btn-option connect-button popup-link">Перейти в раздел <span id="popup-successful-total-button"></span></a>
+              <!-- <a id="download-pdf" href="#" class="confirm-btn-download connect-button" style="display:none;"
+                target="_blank">
+                Скачать счёт (PDF)
+              </a> -->
+              <a href="/cabinet/page_promo" id="download-pdf" class="confirm-btn-download">Скачать счёт
+                (PDF) <span id="popup-successful-total-button"></span></a>
               <p class="check"></p>
             </div>
           </div>
@@ -814,374 +997,999 @@
   </div>
 </div>
 
+<div class="popup payment-popup" id="payment-popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <div class="name">Оплата подключения</div>
+        <div class="popup-content">
 
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+          <!-- Выпадающий список категории плательщика -->
+          <!-- <div class="form-group mb-20">
+            <div class="payer-type-wrapper">
+              <select id="payer-type" class="payer-type-select">
+                <option value="" disabled selected>Выберите категорию плательщика</option>
+                <option value="physical">Физическое лицо</option>
+                <option value="ip_form">Индивидуальный предприниматель</option>
+                <option value="legal">Юридическое лицо</option>
+              </select>
+            </div>
+          </div> -->
+
+          <!--data:payment_form--><!--data:payment_form-->
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="popup payment-popup" id="qr-popup" style="display: none;">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <div class="name">Оплата подключения</div>
+        <div class="popup-content">
+          <div id="qr-content" style="text-align: center;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/swiper/swiper-bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+<link rel="stylesheet" href="/assets/flatpickr/dist/flatpickr.min.css">
+<script src="/assets/flatpickr/dist/flatpickr.min.js"></script>
+<script src="/assets/flatpickr/dist/l10n/ru.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
+<script src="https://widget.cbrpay.ru/v1/widget.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+
+<!--data:script--><!--data:script-->
 
 <script>
 
-  $(document).ready(function(){
-    console.log($.ui);
-    flatpickr('#date-select', {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru', 
-    weekNumbers: true, 
-  });
+  $(document).ready(function () {
+    $('.sbp-redirect-button').on('click', function () {
+      const $form = $(this).closest('form');
+      const isIpForm = $form.attr('id') == 'ip-form-payment-form';
 
-  flatpickr('#date-select-journal', {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru', 
-    weekNumbers: true, 
-  });
+      // Выбираем правильные селекторы в зависимости от формы
+      const payAmountId = isIpForm ? '#js-pay-amount-ip' : '#js-pay-amount';
+      const orderIdId = isIpForm ? '#js-order-id-ip' : '#js-order-id';
+      const serviceNameId = isIpForm ? '#js-service-name-ip' : '#js-service-name';
 
-  flatpickr('#promo-date-select', {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru', 
-    weekNumbers: true, 
-  });
-
-  function initializeFlatpickr(selector) {
-  flatpickr(selector, {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru',
-    weekNumbers: true,
-    onChange: function (selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        const startDate = selectedDates[0];
-        const endDate = selectedDates[1];
-        const diffInDays = ((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-        if (diffInDays % 7 !== 0) {
-          $('.popup-footer').removeClass('hidden').addClass('red').text(
-            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
-          );
-
-          instance.clear();
-        }
+      const raw = $(payAmountId).val() || '';
+      const rub = parseFloat(raw.replace(/[^\d.]/g, ''));
+      if (isNaN(rub) || rub <= 0) {
+        return alert('Укажите сумму');
       }
-    },
-    onReady: function (selectedDates, dateStr, instance) {
-      const input = instance.input;
-      const calendar = instance.calendarContainer;
-      calendar.style.width = `${input.offsetWidth}px`;
-    },
-    onOpen: function (selectedDates, dateStr, instance) {
-      const input = instance.input;
-      const calendar = instance.calendarContainer;
-      calendar.style.width = `${input.offsetWidth}px`;
-    },
-  });
-}
+      const orderId = $(orderIdId).val() || '';
+      const serviceName = $(serviceNameId).val() || '';
+      const kopeks = Math.round(rub * 100);
 
-function initializeJournalFlatpickr(selector) {
-  flatpickr(selector, {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru',
-    weekNumbers: true,
-    disable: disabledRanges,
-    onChange: function (selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        const startDate = selectedDates[0];
-        const endDate = selectedDates[1];
-        const diffInDays = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+      // Очищаем старый QR
+      $('#qr-content').empty();
 
-        if (diffInDays % 7 !== 0) {
-          $('.popup-footer').removeClass('hidden').addClass('red').text(
-            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
-          );
+      $.ajax({
+        url: '/actions/payment/tochka_sbp.php',
+        method: 'GET',
+        dataType: 'json',
+        data: {
+          sumKopek: kopeks,
+          orderId: orderId,
+          serviceName: serviceName,
 
-          instance.clear();
-        }
-      }
-    },
-    onReady: function (selectedDates, dateStr, instance) {
-      const disabledElements = instance.calendarContainer.querySelectorAll(
-        '.flatpickr-day.flatpickr-disabled'
-      );
-
-      disabledElements.forEach((el) => {
-        const elDate = instance.parseDate(el.dateObj);
-
-        disabledRanges.forEach((range) => {
-          const rangeStart = instance.parseDate(range.from, 'd.m.Y');
-          const rangeEnd = instance.parseDate(range.to, 'd.m.Y');
-
-          if (elDate >= rangeStart && elDate <= rangeEnd) {
-            el.classList.add('disabled-red');
+          // Добавляем новые поля
+          service_id: $form.find('input[name="service_id"]').val(),
+          date_start: $form.find('input[name="date_start"]').val(),
+          date_end: $form.find('input[name="date_end"]').val()
+        },
+        beforeSend: function () {
+          $('#qr-content').text('Генерируем QR…');
+          // Показываем попап только для десктопа
+          if (window.innerWidth >= 768) {
+            $('#payment-popup').hide();
+            $('#qr-popup').show();
           }
-        });
-      });
-    },
-  });
-}
-
-function initializeBannerFlatpickr(selector) {
-  flatpickr(selector, {
-    dateFormat: 'd.m.Y',
-    minDate: 'today',
-    mode: 'range',
-    showMonths: 1,
-    locale: 'ru',
-    weekNumbers: true,
-    disable: disabledBannerRanges,
-    onChange: function (selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        const startDate = selectedDates[0];
-        const endDate = selectedDates[1];
-        const diffInDays = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
-
-        if (diffInDays % 7 !== 0) {
-          $('.popup-footer').removeClass('hidden').addClass('red').text(
-            'Пожалуйста, выберите диапазон, кратный одной или нескольким неделям.'
-          );
-
-          instance.clear();
-        }
-      }
-    },
-    onReady: function (selectedDates, dateStr, instance) {
-      const disabledElements = instance.calendarContainer.querySelectorAll(
-        '.flatpickr-day.flatpickr-disabled'
-      );
-
-      disabledElements.forEach((el) => {
-        const elDate = instance.parseDate(el.dateObj);
-
-        disabledBannerRanges.forEach((range) => {
-          const rangeStart = instance.parseDate(range.from, 'd.m.Y');
-          const rangeEnd = instance.parseDate(range.to, 'd.m.Y');
-
-          if (elDate >= rangeStart && elDate <= rangeEnd) {
-            el.classList.add('disabled-red');
+        },
+        success: function (res) {
+          if (!res.success || !res.payload) {
+            $('#qr-content').text('Ошибка: ' + (res.error || 'нет QR'));
+            return;
           }
-        });
-      });
-    },
-    onOpen: function (selectedDates, dateStr, instance) {
-      const input = instance.input;
-      const calendar = instance.calendarContainer;
-      calendar.style.width = `${input.offsetWidth}px`;
-    },
-  });
-}
 
+          // Проверка на мобильное устройство
+          if (window.innerWidth < 768) {
+            // Мобильная версия: перенаправление
+            window.location.href = res.payload;
+          } else {
+            // Десктоп: генерация QR-кода
+            const formattedAmount = rub.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' руб.';
+            $('#qr-content').html(`
+                        <p style="font-size: 18px; font-weight: bold; margin: 10px 0;">Итого к оплате: ${formattedAmount}</p>
+                        <p style="font-size: 16px; margin: 5px 0;">Отсканируйте QR-код для оплаты в приложении вашего банка</p>
+                        <div id="qrcode" style="display: inline-block; margin: 10px 0;"></div>
+                        <p id="timer" style="font-size: 16px; margin: 10px 0;">Осталось: 10:00</p>
+                    `);
 
-// Инициализация flatpickr для всех полей
-initializeBannerFlatpickr('#date-select');
-initializeJournalFlatpickr('#date-select-journal');
-initializeFlatpickr('#promo-date-select');
-  
-  
-    $('a[href^="#"]').on('click', function(event) {
-        var target = $(this.getAttribute('href'));
-        if( target.length ) {
-            event.preventDefault();
-            $('html, body').stop().animate({
-                scrollTop: target.offset().top
+            QRCode.toDataURL(res.payload, {
+              errorCorrectionLevel: 'H',
+              width: 200,
+              height: 200
+            }, function (error, url) {
+              if (error) {
+                console.error('Ошибка генерации QR-кода:', error);
+                $('#qr-content').text('Ошибка генерации QR-кода');
+                return;
+              }
+              $('#qrcode').html(`<img src="${url}" alt="QR-код" />`);
+            });
+
+            // Таймер на 10 минут
+            let timeLeft = 600;
+            const timerElement = $('#timer');
+            const timerInterval = setInterval(function () {
+              timeLeft--;
+              if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerElement.text('QR-код истёк');
+                $('#qrcode').empty();
+                $('#qr-popup').hide();
+                $('#payment-popup').show();
+                return;
+              }
+              const minutes = Math.floor(timeLeft / 60);
+              const seconds = timeLeft % 60;
+              timerElement.text(`Осталось: ${minutes}:${seconds.toString().padStart(2, '0')}`);
             }, 1000);
+          }
+          // Периодическая проверка статуса (только для десктопа)
+          /* if (res.qrcId) {
+            const statusInterval = setInterval(function () {
+              $.ajax({
+                url: '/actions/payment_callback/sbp_callback.php',
+                method: 'GET',
+                dataType: 'json',
+                data: { qrcId: res.qrcId },
+                success: function (statusRes) {
+                  if (statusRes.success && statusRes.response.Data && statusRes.response.Data.paymentList && statusRes.response.Data.paymentList.length > 0) {
+                    const status = statusRes.response.Data.paymentList[0].status;
+                    if (status !== 'NotStarted') {
+                      clearInterval(statusInterval);
+                      clearInterval(timerInterval);
+                      if (status === 'PAID') {
+                        $('#qr-content').html('<p style="font-size: 18px; font-weight: bold;">Платёж успешно выполнен!</p>');
+                      } else {
+                        $('#qr-content').html('<p style="font-size: 18px; font-weight: bold;">Платёж не удался или QR-код истёк.</p>');
+                      }
+                      setTimeout(function () {
+                        $('#qr-popup').hide();
+                        $('#payment-popup').show();
+                      }, 2000);
+                    }
+                  }
+                },
+                error: function () {
+                  console.error('Ошибка проверки статуса платежа');
+                }
+              });
+            }, 10000); // Проверка каждые 20 секунд
+          } */
+        },
+        error: function () {
+          $('#qr-content').text('Сервис недоступен, попробуйте позже.');
+          if (window.innerWidth >= 768) {
+            $('#qr-popup').hide();
+            $('#payment-popup').show();
+          }
         }
+      });
     });
-});
+
+    // Закрытие попапа для десктопа
+    $('#qr-popup .close').on('click', function () {
+      $('#qr-popup').hide();
+      $('#payment-popup').show();
+      $('#qr-content').empty();
+    });
+  });
 
 
-const swiperElements = document.querySelectorAll('.swiper');
-swiperElements.forEach((element) => {
-  const autoHeightSetting = element.classList.contains('swiper-autoheight') ? true : false; // add autoheight prop if .swiper-autoheight
+  $(document).ready(function () {
 
-  new Swiper(element, {
-    slidesPerView: 1,
-    centeredSlides: true,
+    // Получаем начало недели (понедельник)
+    function getWeekStart(date) {
+      const dayOfWeek = date.getDay();
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() + diffToMonday);
+      return weekStart;
+    }
+
+    // Получаем конец недели (воскресенье)
+    function getWeekEnd(date) {
+      const weekStart = getWeekStart(date);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      return weekEnd;
+    }
+
+    // Подсвечиваем диапазон
+    function highlightRange(instance, startDate, endDate) {
+      instance.calendarContainer.querySelectorAll('.flatpickr-day').forEach(day => {
+        const dayDate = day.dateObj;
+        day.classList.remove('range-highlight', 'inRange', 'endRange', 'startRange');
+        if (dayDate) {
+          if (isSameDay(dayDate, startDate)) {
+            day.classList.add('startRange');
+          }
+          if (isSameDay(dayDate, endDate)) {
+            day.classList.add('endRange');
+          }
+          if (dayDate >= startDate && dayDate <= endDate) {
+            day.classList.add('inRange');
+          }
+        }
+      });
+    }
+
+    // Подсвечиваем занятые даты
+    function highlightDisabledDates(instance, disableRanges) {
+      const disabledElements = instance.calendarContainer.querySelectorAll('.flatpickr-day.flatpickr-disabled');
+      disabledElements.forEach(el => {
+        const elDate = instance.parseDate(el.dateObj);
+        disableRanges.forEach(range => {
+          const rangeStart = new Date(range.from);
+          const rangeEnd = new Date(range.to);
+          if (elDate >= rangeStart && elDate <= rangeEnd) {
+            el.classList.add('disabled-red');
+          }
+        });
+      });
+    }
+
+    // Сравнение двух дат (без времени)
+    function isSameDay(date1, date2) {
+      return date1.getFullYear() === date2.getFullYear() &&
+        date1.getMonth() === date2.getMonth() &&
+        date1.getDate() === date2.getDate();
+    }
+
+    function enablePrevMonthButton(instance) {
+      setTimeout(() => {
+        const prevButton = instance.calendarContainer.querySelector('.flatpickr-prev-month');
+        if (prevButton) {
+          prevButton.classList.remove('flatpickr-disabled');
+        }
+      }, 0);
+    }
+
+    function initializeWeekRangeFlatpickr(selector, options = {}) {
+      const {
+        disableRanges = [],
+        addStartRange = false,
+        errorMessage = null
+      } = options;
+
+      let startDate = null;
+      let isRangeFinalized = false; // Флаг, указывающий, что диапазон выбран
+
+      flatpickr(selector, {
+        dateFormat: 'd.m.Y',
+        minDate: 'today',
+        mode: 'range',
+        closeOnSelect: false, // не закрываем календарь автоматически
+        showMonths: 1,
+        locale: 'ru',
+        weekNumbers: true,
+        monthSelectorType: "static",
+        disable: [
+          ...disableRanges,
+          function (date) {
+            // Блокируем неделю, если её начало раньше сегодняшнего дня
+            const dow = date.getDay();
+            const diff = dow === 0 ? -6 : 1 - dow;
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() + diff);
+            weekStart.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return weekStart < today;
+          }
+        ],
+        onMonthChange: function (selectedDates, dateStr, instance) {
+          enablePrevMonthButton(instance);
+          highlightDisabledDates(instance);
+        },
+        onChange: function (selectedDates, dateStr, instance) {
+          if (selectedDates.length === 1) {
+            const clickedDate = selectedDates[0];
+            const weekStart = getWeekStart(clickedDate);
+            const weekEnd = getWeekEnd(clickedDate);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Проверяем: есть ли прошедшие дни в неделе
+            const weekHasPastDays = [...Array(7)].some((_, i) => {
+              const d = new Date(weekStart);
+              d.setDate(weekStart.getDate() + i);
+              d.setHours(0, 0, 0, 0);
+              return d < today;
+            });
+
+            if (weekHasPastDays) {
+              // Отменяем выбор
+              instance.clear();
+              return;
+            }
+
+            const hasDisabledRed = [...Array(7)].some((_, i) => {
+              const d = new Date(weekStart);
+              d.setDate(weekStart.getDate() + i);
+              d.setHours(0, 0, 0, 0);
+
+              // Находим DOM-элемент для этой даты
+              const selector = `.flatpickr-day[aria-label="${instance.formatDate(d, 'F j, Y')}"]`;
+              const dayEl = instance.calendarContainer.querySelector(selector);
+
+              return dayEl?.classList.contains('disabled-red');
+            });
+
+            if (hasDisabledRed) {
+              instance.clear();
+              return;
+            }
+
+            if (!startDate) {
+              startDate = weekStart;
+              endDate = weekEnd;
+            } else {
+              if (weekStart > startDate) {
+                endDate = weekEnd;
+              } else {
+                startDate = weekStart;
+              }
+            }
+
+            if (hasDisabledDatesInRange(instance, startDate, endDate)) {
+              showWarningMessage("В выбранном диапазоне присутствуют занятые даты.\nПериод будет рассчитан с учетом только свободных дней.");
+            }
+
+            instance.setDate([startDate, endDate], false);
+            highlightRange(instance, startDate, endDate);
+            highlightDisabledDates(instance);
+          }
+        },
+
+        onReady: function (selectedDates, dateStr, instance) {
+          enablePrevMonthButton(instance);
+          // Общие настройки для onReady
+          adjustCalendarWidth(instance);
+          highlightDisabledDates(instance);
+
+          // Если есть диапазоны для отключения – подсвечиваем их красным
+          if (disableRanges.length) {
+            const disabledElements = instance.calendarContainer.querySelectorAll('.flatpickr-day.flatpickr-disabled');
+
+            disabledElements.forEach(el => {
+              const elDate = el.dateObj;
+              const today = new Date();
+              today.setHours(0, 0, 0, 0); // убираем время
+
+              // Пропускаем прошедшие даты
+              if (elDate < today) return;
+
+              disableRanges.forEach(range => {
+                const rangeStart = instance.parseDate(range.from, 'd.m.Y');
+                const rangeEnd = instance.parseDate(range.to, 'd.m.Y');
+                if (elDate >= rangeStart && elDate <= rangeEnd) {
+                  el.classList.add('disabled-red');
+                }
+              });
+            });
+          }
+
+          // Добавляем обработчики для наведения и клика для подсветки недели
+          instance.calendarContainer.addEventListener("mouseover", highlightWeek);
+          instance.calendarContainer.addEventListener("click", highlightWeek);
+
+          function highlightWeek(e) {
+            if (!isRangeFinalized && e.target.classList.contains('flatpickr-day')) {
+              const hoveredDate = e.target.dateObj;
+              const weekStart = getWeekStart(hoveredDate);
+              const weekEnd = getWeekEnd(hoveredDate);
+
+              // 1) блокируем недели с прошедшими днями
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const hasPast = [...Array(7)].some((_, i) => {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
+                d.setHours(0, 0, 0, 0);
+                return d < today;
+              });
+              if (hasPast) return;
+
+              // 2) вычисляем объединённые границы:
+              // если уже есть startDate /endDate — объединяем их с hovers
+              // иначе — просто weekStart…weekEnd
+              let dynamicStart, dynamicEnd;
+              if (startDate && endDate) {
+                dynamicStart = weekStart < startDate ? weekStart : startDate;
+                dynamicEnd = weekEnd > endDate ? weekEnd : endDate;
+              } else {
+                dynamicStart = weekStart;
+                dynamicEnd = weekEnd;
+              }
+
+              // === ВСТАВЬ ЗДЕСЬ: проверка на disabled-red в диапазоне ===
+              const totalDays = Math.floor((dynamicEnd - dynamicStart) / (1000 * 60 * 60 * 24)) + 1;
+              const hasRedInRange = [...Array(totalDays)].some((_, i) => {
+                const d = new Date(dynamicStart);
+                d.setDate(dynamicStart.getDate() + i);
+                d.setHours(0, 0, 0, 0);
+
+                // Найти элемент по дате
+                const dayEl = Array.from(instance.calendarContainer.querySelectorAll('.flatpickr-day'))
+                  .find(day => +day.dateObj === +d);
+                return dayEl?.classList.contains('disabled-red');
+              });
+              if (hasRedInRange) return; // Прекращаем подсветку, если есть disabled-red
+
+              // 3) перерисовываем ВСЁ (на раз):
+              const days = instance.calendarContainer.querySelectorAll('.flatpickr-day');
+              days.forEach(day => {
+                const d = day.dateObj;
+                day.classList.remove('startRange', 'inRange', 'endRange');
+                if (d >= dynamicStart && d <= dynamicEnd) {
+                  if (isSameDay(d, dynamicStart)) day.classList.add('startRange');
+                  else if (isSameDay(d, dynamicEnd)) day.classList.add('endRange');
+                  else day.classList.add('inRange');
+                }
+              });
+            }
+          }
+
+        },
+
+        onOpen: function (selectedDates, dateStr, instance) {
+          console.log('active');
+          adjustCalendarWidth(instance);
+          highlightDisabledDates(instance);
+
+          startDate = null;
+          endDate = null;
+          isRangeFinalized = false;
+
+          instance.clear();
+
+          const input = instance.input;
+          const calendarContainer = instance.calendarContainer;
+          calendarContainer.style.width = `${input.offsetWidth}px`;
+
+          // Перемещаем календарь сразу после инпута и задаём позиционирование
+          input.parentNode.insertBefore(calendarContainer, input.nextSibling);
+          calendarContainer.style.position = "static";
+          calendarContainer.style.width = "100%";
+
+          const currentMonth = calendarContainer.querySelector('.flatpickr-current-month');
+          if (currentMonth) {
+            currentMonth.style.position = "static";
+          }
+
+          // Добавляем кнопки "Сбросить" и "Подтвердить", если их ещё нет
+          if (!calendarContainer.querySelector('.flatpickr-buttons-container')) {
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'flatpickr-buttons-container';
+            buttonsContainer.innerHTML = `
+        <button type="button" class="flatpickr-reset-btn">Сбросить</button>
+        <button type="button" class="flatpickr-confirm-btn">Подтвердить</button>
+      `;
+            calendarContainer.appendChild(buttonsContainer);
+
+            buttonsContainer.querySelector('.flatpickr-reset-btn').addEventListener('click', function () {
+              clearWarningMessage();
+              instance.clear();
+              // Для первого варианта обнуляем startDate и endDate,
+              // для второго — сбрасываем isRangeFinalized, как было задумано
+              startDate = null;
+              endDate = null;
+              isRangeFinalized = false;
+
+              highlightDisabledDates(instance);
+            });
+            buttonsContainer.querySelector('.flatpickr-confirm-btn').addEventListener('click', function () {
+              instance.close();
+            });
+          }
+        }
+      });
+    }
+
+    function adjustCalendarWidth(instance) {
+      const input = instance.input;
+      const calendar = instance.calendarContainer;
+      calendar.style.width = `${input.offsetWidth}px`;
+    }
+
+    function highlightDisabledDates(instance) {
+      const disabledElements = instance.calendarContainer.querySelectorAll('.flatpickr-day.flatpickr-disabled');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Сравнение только по дате
+
+      disabledElements.forEach((el) => {
+        const elDate = el.dateObj;
+
+        // Пропускаем прошедшие даты
+        if (elDate < today) return;
+
+        // Проверяем, есть ли прошедшие дни в неделе этой даты
+        const dow = elDate.getDay();
+        const diff = dow === 0 ? -6 : 1 - dow; // понедельник – начало недели
+        const weekStart = new Date(elDate);
+        weekStart.setDate(elDate.getDate() + diff);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const hasPastDaysInWeek = [...Array(7)].some((_, i) => {
+          const d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + i);
+          d.setHours(0, 0, 0, 0);
+          return d < today;
+        });
+
+        // Если неделя уже неактуальна — не подсвечиваем
+        if (hasPastDaysInWeek) return;
+
+        const disabledRanges = instance.config.disable;
+        disabledRanges.forEach((range) => {
+          const rangeStart = new Date(range.from);
+          const rangeEnd = new Date(range.to);
+
+          if (elDate >= rangeStart && elDate <= rangeEnd) {
+            el.classList.add('disabled-red');
+          }
+        });
+      });
+    }
+
+
+    function getPastWeeksDisableFn() {
+      return function (date) {
+        const dow = date.getDay();
+        const diff = dow === 0 ? -6 : 1 - dow; // смещение до понедельника
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() + diff);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayDay = today.getDay(); // 1 = понедельник
+
+        // Если сегодня понедельник — не отключаем текущую неделю
+        if (todayDay === 1 && weekStart.getTime() === today.getTime()) {
+          return false; // не блокировать
+        }
+
+        return weekStart < today;
+      };
+    }
+
+
+    function updateCalendarDisabledDates(slug, sort) {
+      $.ajax({
+        url: '',
+        method: 'POST',
+        data: { service_slug: slug, sort: sort },
+        success: function (response) {
+          let occupiedRanges;
+          try {
+            occupiedRanges = typeof response === 'string' ? JSON.parse(response) : response;
+          } catch (e) {
+            console.error('Ошибка обработки ответа сервера:', e);
+            return;
+          }
+
+          const disabledDates = occupiedRanges.map(range => ({
+            from: new Date(range.date_start * 1000),
+            to: new Date(range.date_expires * 1000),
+          }));
+
+          console.log('Занятые даты (service_slug):', disabledDates);
+
+          // Получаем flatpickr инстанс
+          const calendar = document.querySelector("#promo-date-select")?._flatpickr;
+          if (calendar) {
+            calendar.set('disable', [...disabledDates, getPastWeeksDisableFn()]);
+            highlightDisabledDates(calendar);
+          } else {
+            console.error('Flatpickr не найден для #promo-date-select');
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error('Ошибка при загрузке занятых дат:', error);
+        },
+      });
+    }
+
+    //Альтернатива если service_slug = null
+    function updateCalendarDisabledDatesByBlock(blockId, sort) {
+      $.ajax({
+        url: '',
+        method: 'POST',
+        data: { block_id: blockId, sort: sort },
+        success: function (response) {
+          let occupiedRanges;
+          try {
+            occupiedRanges = typeof response === 'string' ? JSON.parse(response) : response;
+          } catch (e) {
+            console.error('Ошибка обработки ответа сервера:', e);
+            return;
+          }
+
+          const disabledDates = occupiedRanges.map(range => ({
+            from: new Date(range.date_start * 1000),
+            to: new Date(range.date_expires * 1000),
+          }));
+
+          console.log('Занятые даты (block_id):', disabledDates);
+
+          // Получаем flatpickr инстанс
+          const calendar = document.querySelector("#promo-date-select")?._flatpickr;
+          if (calendar) {
+            calendar.set('disable', [...disabledDates, getPastWeeksDisableFn()]);
+            highlightDisabledDates(calendar);
+          } else {
+            console.error('Flatpickr не найден для #promo-date-select');
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error('Ошибка при загрузке занятых дат:', error);
+        },
+      });
+    }
+
+    function hasDisabledDatesInRange(instance, startDate, endDate) {
+      if (!startDate || !endDate) return false;
+
+      let currentDate = new Date(startDate);
+      currentDate.setHours(0, 0, 0, 0);
+      const lastDate = new Date(endDate);
+      lastDate.setHours(0, 0, 0, 0);
+
+      while (currentDate <= lastDate) {
+        const label = instance.formatDate(currentDate, "F j, Y");
+        const dayEl = instance.calendarContainer.querySelector(`.flatpickr-day[aria-label="${label}"]`);
+        if (dayEl && dayEl.classList.contains("flatpickr-disabled")) {
+          return true; // Нашли заблокированную дату
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      return false; // Заблокированных дат в диапазоне нет
+    }
+
+    function showWarningMessage(message) {
+      const buttonsContainer = document.querySelector('.flatpickr-buttons-container');
+      if (!buttonsContainer) return;
+
+      let warningEl = buttonsContainer.querySelector('.flatpickr-warning-message');
+
+      if (!warningEl) {
+        warningEl = document.createElement('div');
+        warningEl.className = 'flatpickr-warning-message hidden';
+        buttonsContainer.insertAdjacentElement('afterend', warningEl);
+        warningEl.style.marginTop = '-20px';
+        warningEl.style.marginBottom = '30px';
+        warningEl.style.whiteSpace = 'pre-wrap'; // чтобы переносы \n работали
+        warningEl.style.lineHeight = '1.2';
+      }
+
+      warningEl.textContent = message;
+      warningEl.classList.remove('hidden');
+      warningEl.classList.add('red');
+    }
+
+    function clearWarningMessage() {
+      const warningEl = document.querySelector('.flatpickr-warning-message');
+      if (warningEl) {
+        warningEl.classList.add('hidden');
+        warningEl.classList.remove('red');
+        warningEl.textContent = '';
+      }
+    }
+
+
+    initializeWeekRangeFlatpickr('#promo-date-select', {
+      disableRanges: [] /* или обновляем через AJAX */,
+      addStartRange: false
+    });
+
+    // Календарь для журнала
+    initializeWeekRangeFlatpickr('#date-select-journal', {
+      disableRanges: disabledJournalRanges,
+      addStartRange: true
+    });
+
+    // Календарь для баннера
+    initializeWeekRangeFlatpickr('#date-select', {
+      disableRanges: disabledBannerRanges,
+      addStartRange: true,
+      errorMessage: "Пожалуйста, выберите диапазон, кратный одной или нескольким неделям."
+    });
+
+    $('input[name="service_ids[]"], input[name="promo_id"]').on('change', function () {
+      console.log('change');
+      const selectedSlug = $('input[name="service_ids[]"]:checked').val();
+      const selectedSort = $('input[name="promo_id"]:checked').val();
+      const selectedBlock = $('input[name="service_ids[]"]:checked').data('block');
+
+      const calendar = document.querySelector("#promo-date-select")?._flatpickr;
+      // Сбрасываем выбранные даты в календаре
+      calendar.clear();
+
+      if (selectedSort) {
+        if (selectedSlug) {
+          updateCalendarDisabledDates(selectedSlug, selectedSort);
+        } else if (selectedBlock) {
+          // Если service_slug пустой, передаем block_id
+          updateCalendarDisabledDatesByBlock(selectedBlock, selectedSort);
+        }
+      }
+    });
+
+    $('a[href^="#"]').on('click', function (event) {
+      var target = $(this.getAttribute('href'));
+      if (target.length) {
+        event.preventDefault();
+        $('html, body').stop().animate({
+          scrollTop: target.offset().top
+        }, 1000);
+      }
+    });
+  });
+
+
+  const swiperElements = document.querySelectorAll('.swiper');
+  swiperElements.forEach((element) => {
+
+    new Swiper(element, {
+      slidesPerView: 1,
+      centeredSlides: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    var toggles = document.querySelectorAll('.select-toggle-parrent');
+
+    toggles.forEach(function (toggle) {
+      toggle.addEventListener('click', function () {
+        var dropdown = this.nextElementSibling;
+
+        if (dropdown.classList.contains('open')) {
+          this.classList.remove('open');
+          dropdown.classList.remove('open');
+        } else {
+          dropdown.classList.add('open');
+          this.classList.add('open');
+        }
+      });
+    });
+
+    const buttons = document.querySelectorAll('.promo-button-mob');
+    const allSections = document.querySelectorAll('.obzor-mobile, .mobile-title, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
+
+    function showSections(sectionSelectors) {
+      allSections.forEach(section => section.classList.add('hidden-comp'));
+      sectionSelectors.forEach(selector => {
+        const sections = document.querySelectorAll(selector);
+        sections.forEach(section => section.classList.remove('hidden-comp'));
+      });
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', function () {
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const tariff_href = document.getElementById('tariff-href-mob');
+        const promo_section = document.getElementById('promo-section-mob');
+        const option_href = document.getElementById('option-href-mob');
+
+        const target = button.getAttribute('data-target');
+        let sectionsToShow = [];
+
+        if (target !== '#obzor-href') {
+          const targetParam = target.replace('#', '').replace('.', '');
+          const url = new URL(window.location);
+          url.searchParams.set('target', targetParam);
+          window.history.pushState({}, '', url);
+        } else {
+          // Удалим параметр target, если нажали на ОБЗОР
+          const url = new URL(window.location);
+          url.searchParams.delete('target');
+          window.history.pushState({}, '', url);
+        }
+
+        if (target === '#obzor-href') {
+          sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title'];
+        } else if (target === '#tariff-href') {
+          sectionsToShow = ['#tariff-href'];
+          tariff_href.classList.add('active');
+        } else if (target === '.promo-section') {
+          sectionsToShow = ['.promo-section'];
+          promo_section.classList.add('active');
+        } else if (target === '#option-href') {
+          sectionsToShow = ['#option-href'];
+          option_href.classList.add('active');
+        }
+
+        showSections(sectionsToShow);
+      });
+    });
+
+    showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title']);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const target = urlParams.get('target');
+    let sectionsToShowFromURL = [];
+
+    if (target === 'tariff-href') {
+      sectionsToShowFromURL = ['#tariff-href'];
+    } else if (target === 'promo-section') {
+      sectionsToShowFromURL = ['.promo-section'];
+    } else if (target === 'option-href') {
+      sectionsToShowFromURL = ['#option-href'];
+    }
+
+    if (!target) {
+      document.getElementById('obzor-href-mob').classList.add('active');
+    }
+
+    if (sectionsToShowFromURL.length > 0) {
+      console.log(`Target from URL: ${target}`);
+      showSections(sectionsToShowFromURL);
+
+      const buttons = document.querySelectorAll('.promo-button-mob');
+
+      for (let i = 0; i < buttons.length; i++) {
+        const buttonAtr = buttons[i];
+        const buttonTarget = buttonAtr.getAttribute('data-target');
+
+        // Если дата-таргет совпадает с target из URL
+        if (buttonTarget === `#${target}` || buttonTarget === `.${target}`) {
+          buttons.forEach(btn => btn.classList.remove('active'));
+
+          buttonAtr.classList.add('active');
+
+          break;
+        }
+      }
+    }
+  });
+
+
+  const swiper_container = new Swiper('.swiper-container', {
+    slidesPerView: 1.1,
+    spaceBetween: 5,
     pagination: {
       el: '.swiper-pagination',
       clickable: true,
     },
-    autoHeight: autoHeightSetting,
-  });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-
-  var toggles = document.querySelectorAll('.select-toggle-parrent');
-
-  toggles.forEach(function(toggle) {
-      toggle.addEventListener('click', function() {
-          var dropdown = this.nextElementSibling;
-          
-          if (dropdown.classList.contains('open')) {
-              this.classList.remove('open');
-              dropdown.classList.remove('open');
-          } else {
-              dropdown.classList.add('open');
-              this.classList.add('open');
-          }
-      });
   });
 
-  const buttons = document.querySelectorAll('.promo-button-mob');
-  const allSections = document.querySelectorAll('.obzor-mobile, .mobile-title, .banner-promo, .order-photo-section, .faq-section, .tariff-section, .promo-section, .options-section');
-
-  function showSections(sectionSelectors) {
-    allSections.forEach(section => section.classList.add('hidden-comp'));
-    sectionSelectors.forEach(selector => {
-      const sections = document.querySelectorAll(selector);
-      sections.forEach(section => section.classList.remove('hidden-comp'));
-    });
-  }
-
-  buttons.forEach(button => {
-    button.addEventListener('click', function() {
-      buttons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      const tariff_href = document.getElementById('tariff-href-mob');
-      const promo_section = document.getElementById('promo-section-mob');
-      const option_href = document.getElementById('option-href-mob');
-
-      const target = button.getAttribute('data-target');
-      let sectionsToShow = [];
-
-      if (target === '#obzor-href') {
-        sectionsToShow = ['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title'];
-      } else if (target === '#tariff-href') {
-        sectionsToShow = ['#tariff-href'];
-        tariff_href.classList.add('active');
-      } else if (target === '.promo-section') {
-        sectionsToShow = ['.promo-section'];
-        promo_section.classList.add('active');
-      } else if (target === '#option-href') {
-        sectionsToShow = ['#option-href'];
-        option_href.classList.add('active');
-      }
-
-      showSections(sectionsToShow);
-    });
-  });
-
-  showSections(['.obzor-mobile', '#banner-block', '#photo-block', '#faq-block', '.mobile-title']);
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const target = urlParams.get('target');
-  let sectionsToShowFromURL = [];
-
-  if (target === 'tariff-href') {
-    sectionsToShowFromURL = ['#tariff-href'];
-  } else if (target === 'promo-section') {
-    sectionsToShowFromURL = ['.promo-section'];
-  } else if (target === 'option-href') {
-    sectionsToShowFromURL = ['#option-href'];
-  }
-
-  if (!target) {
-    document.getElementById('obzor-href-mob').classList.add('active');
-  }
-
-  if (sectionsToShowFromURL.length > 0) {
-    console.log(`Target from URL: ${target}`);
-    showSections(sectionsToShowFromURL);
-    
-    const buttons = document.querySelectorAll('.promo-button-mob');
-    
-    for (let i = 0; i < buttons.length; i++) {
-      const buttonAtr = buttons[i];
-      const buttonTarget = buttonAtr.getAttribute('data-target');
-
-      // Если дата-таргет совпадает с target из URL
-      if (buttonTarget === `#${target}` || buttonTarget === `.${target}`) {
-        buttons.forEach(btn => btn.classList.remove('active'));
-        
-        buttonAtr.classList.add('active');
-        
-        break;
-      }
-    }
-  }
-});
-
-
-    const swiper_container = new Swiper('.swiper-container', {
-      slidesPerView: 1.1,
-      spaceBetween: 5, 
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
+  const swiper_tarif = new Swiper('.swiper-container-tariff', {
+    slidesPerView: 1,
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    breakpoints: {
+      768: {  // Настройка для экранов с шириной больше 768px
+        slidesPerView: 1.1,  // Показываем немного больше одного слайда
       },
-    });
-
-    const swiper_tarif = new Swiper('.swiper-container-tariff', {
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-    });
+    },
+  });
 
 
-window.addEventListener('DOMContentLoaded', function() {
-    const scrollTarget = localStorage.getItem('scrollTarget'); 
+  window.addEventListener('DOMContentLoaded', function () {
+    const scrollTarget = localStorage.getItem('scrollTarget');
 
     if (scrollTarget) {
-        const targetElement = document.querySelector(scrollTarget);
-        if (targetElement) {
-            
-            window.scrollTo({
-                top: targetElement.offsetTop,
-                behavior: 'smooth'
-            });
-        }
-        localStorage.removeItem('scrollTarget');  
-    }
-});
+      const targetElement = document.querySelector(scrollTarget);
+      if (targetElement) {
 
-document.addEventListener('DOMContentLoaded', function() {
+        window.scrollTo({
+          top: targetElement.offsetTop,
+          behavior: 'smooth'
+        });
+      }
+      localStorage.removeItem('scrollTarget');
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
     const selectToggles = document.querySelectorAll('.select-toggle');
     const dropdowns = document.querySelectorAll('.select-dropdown');
 
-    selectToggles.forEach(function(toggle, index) {
-        toggle.addEventListener('click', function() {
-            const dropdown = dropdowns[index]; // Привязка к соответствующему выпадающему списку
-            const isExpanded = dropdown.style.display === 'block';
-            dropdown.style.display = isExpanded ? 'none' : 'block';
-            toggle.classList.toggle('expanded', !isExpanded);
+    selectToggles.forEach(function (toggle, index) {
+      toggle.addEventListener('click', function () {
+        const dropdown = dropdowns[index]; // Привязка к соответствующему выпадающему списку
+        const isExpanded = dropdown.style.display === 'block';
+        dropdown.style.display = isExpanded ? 'none' : 'block';
+        toggle.classList.toggle('expanded', !isExpanded);
+      });
+
+      // Закрытие списка при выборе любого элемента
+      const dropdownItems = dropdowns[index].querySelectorAll('.select-option input'); // Выбираем все input внутри списка
+      dropdownItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+          dropdowns[index].style.display = 'none'; // Закрываем выпадающий список
+          toggle.classList.remove('expanded'); // Убираем класс "expanded", если был
+
+          // Обновляем текст выбранного элемента
+          const selectedText = item.getAttribute('data-name');
+          toggle.textContent = selectedText;
         });
-
-        // Закрытие списка при выборе любого элемента
-        const dropdownItems = dropdowns[index].querySelectorAll('.select-option input'); // Выбираем все input внутри списка
-        dropdownItems.forEach(function(item) {
-            item.addEventListener('click', function() {
-                dropdowns[index].style.display = 'none'; // Закрываем выпадающий список
-                toggle.classList.remove('expanded'); // Убираем класс "expanded", если был
-
-                // Обновляем текст выбранного элемента
-                const selectedText = item.getAttribute('data-name');
-                toggle.textContent = selectedText;
-            });
-        });
+      });
     });
-});
+  });
 
-document.querySelectorAll('a[data-scroll-target]').forEach(link => {
-    link.addEventListener('click', function(event) {
-        const scrollTarget = this.getAttribute('data-scroll-target');
-        localStorage.setItem('scrollTarget', scrollTarget);  // Сохраняем цель скролла
+  document.querySelectorAll('a[data-scroll-target]').forEach(link => {
+    link.addEventListener('click', function (event) {
+      const scrollTarget = this.getAttribute('data-scroll-target');
+      localStorage.setItem('scrollTarget', scrollTarget);  // Сохраняем цель скролла
     });
-});
+  });
 
+  function updateImagePaths() {
+    const isMobile = window.innerWidth <= 768; // Определяем, если это мобильное устройство
+    const tariffImages = document.querySelectorAll('.tariff-image');
+    const bannerImages = document.querySelectorAll('.banner-image');
+    const journalImages = document.querySelectorAll('.journal-image');
+
+    // Для каждого изображения в тарифах
+    tariffImages.forEach((img) => {
+      const src = img.getAttribute('src');
+      if (isMobile) {
+        // Заменяем префикс 'tariff-' на 'mob-tariff-' для мобильных устройств
+        const newSrc = src.replace('tariff-', 'mob-tariff-');
+        img.setAttribute('src', newSrc);
+      }
+    });
+
+    // Для каждого изображения в баннерах
+    bannerImages.forEach((img) => {
+      const src = img.getAttribute('src');
+      if (isMobile) {
+        // Заменяем префикс 'banner-' на 'mob-banner-' для мобильных устройств
+        const newSrc = src.replace('banner-', 'mob-banner-');
+        img.setAttribute('src', newSrc);
+      }
+    });
+
+    journalImages.forEach((img) => {
+      const src = img.getAttribute('src');
+      if (isMobile) {
+        // Заменяем префикс 'journal-' на 'mob-journal-' для мобильных устройств
+        const newSrc = src.replace('journal-', 'mob-journal-');
+        img.setAttribute('src', newSrc);
+      }
+    });
+  }
+
+  // Запускаем функцию при загрузке страницы и при изменении размера окна
+  window.addEventListener('load', updateImagePaths);
 </script>

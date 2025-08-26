@@ -41,15 +41,18 @@ if (!$user['company'] && $page['id'] == 17) responseRedirect('/cabinet');
 // Если нотариус пытается попасть в раздел "Направления", то редиректим на главную
 if (($user['classification_id'] == 4) && $menu_page['id'] == 6) responseRedirect('/cabinet');
 
-$user['photo'] = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/gray-circle.svg';
+$hasPhoto = !empty($user['photo']);
+
+$user['photo'] = $hasPhoto ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
+$user['class'] = $hasPhoto ? 'filled' : '';
 $userNameDisplay = ($user['company'] ? " {$user['company']}" : " {$user['name']}");
 
 $data['user_header'] = <<<EOF
-<i><img src="{$user['photo']}"></i><img class="arrow-down" src="/assets/img/cabinet/arrow-down.svg">
+<i><img class="{$user['class']}" src="{$user['photo']}"></i><img class="arrow-down" src="/assets/img/cabinet/arrow-down.svg">
     <div class="dropdown-content">
-        <div class="img-user-dropdown"><img src="{$user['photo']}"> <div class="header-column"><p class="user-name">$userNameDisplay</p><a href="/redaktirovat-informatsiyu">Редактировать страницу</a></div></div>
+        <div class="img-user-dropdown"><i><img class="{$user['class']}" src={$user['photo']}></i> <div class="header-column"><p class="user-name">$userNameDisplay</p><a href="/redaktirovat-informatsiyu">Редактировать страницу</a></div></div>
+		<a href="../specialist/id{$user['id']}"><img src="/assets/img/cabinet/cabinet-dropdown.svg"> Перейти на страницу</a>
         <a href="../faq"><img src="/assets/img/cabinet/faq-dropdown.svg"> Частые вопросы</a>
-        <a href="../specialist/id{$user['id']}"><img src="/assets/img/cabinet/cabinet-dropdown.svg"> Перейти на страницу</a>
         <a href="/actions/account/logout.php"><img src="/assets/img/cabinet/exit-dropdown.svg"> Выйти</a>
     </div>
 EOF;
@@ -240,6 +243,35 @@ function generate_tariff_status($tariffs, $connected_tariffs_map) {
     return ['status' => $status, 'class' => $status_class];
 }
 
+function generate_pro_photo_status($pro_photo_records, $registered_at)
+{
+    // По умолчанию статус – "Не проведена"
+    $status = 'Не проведена';
+    $status_class = 'red-dot';
+
+    // Если найдена хоть одна запись, где moderation равен 0 – статус "Проведена"
+    foreach ($pro_photo_records as $record) {
+        if ($record['moderation'] == 0) {
+            $status = 'Проведена';
+            $status_class = 'blue-dot';
+            return ['status' => $status, 'class' => $status_class];
+        }
+    }
+
+    // Если не было подходящих записей, проверим дату регистрации
+    if (!empty($registered_at)) {
+        $registered_at_ts = strtotime($registered_at);
+        $now = time();
+        $diff = $now - $registered_at_ts;
+
+        if ($diff >= 14 * 24 * 60 * 60) { // 14 дней в секундах
+            $status = 'Проведена';
+            $status_class = 'blue-dot';
+        }
+    }
+
+    return ['status' => $status, 'class' => $status_class];
+}
 
 function generate_option_status($connected_options_map, $connected_tariffs_map)
 {
@@ -276,7 +308,7 @@ function generate_option_status($connected_options_map, $connected_tariffs_map)
 
 $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
 $option_status_data = generate_option_status($connected_options_map, $connected_tariffs_map);
-
+$promo_status_data = generate_promo_status($connected_promo_map);
 
 
 $top_cards = '
@@ -322,6 +354,24 @@ $top_cards = '
 	$social_links = get_all_social();
 
 	$code['mobile'] = '
+	<div class="popup feedback feedback-cabinet">
+		<div class="bg"></div>
+		<div class="window">
+			<div class="close"></div>
+			<div class="reg">
+				<form method="POST" id="feedback-popup">
+					<div class="name">
+						Контакты
+					</div>
+					<div class="form">
+						<p class="text-only">
+							По любым вопросам, а также с жалобами и предложениями о сотрудничестве вы можете обращаться на электронную почту <a href="mailto:info@urfaq.ru" class="blue-link">info@urfaq.ru</a>
+						</p> 
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 	<div class="mob-nav2">
 		<div class="greeting__wrapper">
 			<div class="profile-greeting">
@@ -333,32 +383,20 @@ $top_cards = '
 			<a href="/specialist/id' . $user['id'] . '">Перейти на страницу</a>
 		</div>
 		<div>
-			<div class="name">Актуальное</div>
-			<div class="mob-menu__actual">
-				<div class="actual__name">
-                	<span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
-				</div>
-				<div class="actual__descr">
-					Первый инструмент для продвижения страницы
-				</div>
-				<div class="actual__price">
-					<span class="high-price">
-						' . $old_price . '
-						<div class="cross-line"></div>
-					</span>
-					<span class="low-price">' . $actual_price . '</span>
-					<span>руб.</span>
-				</div>
-				<div class="actual__postscr">
-					*Первые 2 недели после регистрации
-				</div>
-				<a href="/cabinet/pro-photo" class="actual__link"></a>
-			</div>
-			</div>
+			<ul class="mob-menu__nav">
+				<li class="faq"><a href="/cabinet/faq">Частые вопросы</a></li>
+				<li class="support"><a href="/cabinet/podderzhka">Поддержка</a></li>
+			</ul>
+		</div>
 		<div>
 			<ul class="mob-menu__nav">
-			<li class="support"><a href="/cabinet/podderzhka">Поддержка</a></li>
-			<li class="faq"><a href="/cabinet/faq">Частые вопросы</a></li>
+				<li class="blogs"><a href="/journal">Журнал</a></li>
+			</ul>
+		</div>
+		<div>
+			<ul class="mob-menu__nav">
+				<li class="about"><a href="/o-proekte">О проекте</a></li>
+				<li class="contacts"><a class="feedback-cabinet">Контакты</a></li>
 			</ul>
 		</div>
 		<div>
@@ -376,38 +414,48 @@ $code['mobile'] .= '
 
 	foreach ($menu_pages as $menu_page) {
 		$class = $menu_page['alias'] == $page ? 'active' : '';
-
-		if ((str_starts_with($page, 'redaktirovat-') && $menu_page['id'] == 3) || ($menu_page['id'] == 1 && $page === '')) $class = 'active';
-
+	
+		if ((str_starts_with($page, 'redaktirovat-') && $menu_page['id'] == 3) || ($menu_page['id'] == 1 && $page === '')) {
+			$class = 'active';
+		}
+	
 		$span = '';
 		if ($menu_page['active'] == 0) {
 			if ($menu_page['id'] == 9) {
 				$class = 'disabled-stat';
-				$span = '<span>Собирается</span>';
+				// $span = '<span>Собирается</span>';
 			} else if ($menu_page['id'] == 10) {
-				/* $class = 'disabled-promo';
-				$span = '<span>Скоро</span>'; */
+				// $class = 'disabled-promo';
+				// $span = '<span>Скоро</span>';
 			}
 		}
-
+	
+		if ($menu_page['id'] == 16) {
+			// сохраняем HTML с уже определённым $class
+			$menu_item_16 = "<li><a href='/cabinet/{$menu_page['alias']}' class='cabinet-menu-link{$iteration} {$class}'>{$menu_page['title']}</a></li>";
+			continue;
+		}
+	
 		$code['desctop'] .= "<li><a href='/cabinet/{$menu_page['alias']}' class='cabinet-menu-link{$iteration} {$class}'>{$menu_page['title']}</a>{$span}</li>";
-
+	
 		$iteration++;
 	}
 	$code['desctop'] .= "<li class='line'></li>";
 
 	$blogClass = $page == 'moy-blog' ? 'active' : '';
+	$postClass = $page == 'sozdat-zapis' ? 'active' : '';
 	$helpClass = $page == 'podderzhka' ? 'active' : '';
 	$faqClass = $page == 'faq' ? 'active' : '';
 
-	$code['desctop'] .= "<li><a href='/cabinet/podderzhka' class='cabinet-menu-link7 {$helpClass}'>Поддержка</a></li>";
-	$code['desctop'] .= "<li><a href='/cabinet/faq' class='cabinet-menu-link8 {$faqClass}'>Частые вопросы</a></li>";
-
+	$code['desctop'] .= "<li><a href='/cabinet/moy-blog' class='cabinet-menu-link9 {$blogClass}'>Мой блог</a></li>";
+	$code['desctop'] .= "<li><a href='/cabinet/sozdat-zapis' class='cabinet-menu-link10 {$postClass}'>Написать пост</a></li>";
 	$code['desctop'] .= "<li class='line'></li>";
 
-	$code['desctop'] .= "<li><a href='/cabinet/moy-blog' class='cabinet-menu-link9 {$blogClass}'>Блог</a></li>";
+	$code['desctop'] .= $menu_item_16;
+	$code['desctop'] .= "<li><a href='/cabinet/faq' class='cabinet-menu-link8 {$faqClass}'>Частые вопросы</a></li>";
+	$code['desctop'] .= "<li><a href='/cabinet/podderzhka' class='cabinet-menu-link7 {$helpClass}'>Поддержка</a></li>";
 
-	$code['desctop'] .= "<p class='under-blog'>Делитесь знаниями и продвигайте свой профиль на страницах <a href='/journal' class='orange'>Журнала</a></p>";
+	/* $code['desctop'] .= "<p class='under-blog'>Делитесь знаниями и продвигайте свой профиль на страницах <a href='/journal' class='orange'>Журнала</a></p>"; */
 
 
 	$code['desctop'] .= <<<EOF

@@ -18,10 +18,14 @@ $photo_class = $user['photo'] ? '' : 'default';
 $photo_edit_class = $user['photo'] ? '' : ' no-photo';
 
 //выводим фото для компа
-$data['index_photo_edit'] = '<a href="/cabinet/redaktirovat-informatsiyu" class="photo__edit ' . $photo_edit_class . '" style="background-image: url(' . $photo . ')">
-</a>';
+/* $data['index_photo_edit'] = '<a href="/cabinet/redaktirovat-informatsiyu" class="photo__edit ' . $photo_edit_class . '" style="background-image: url(' . $photo . ')">
+</a>'; */
 
-$data['upload_user_photo'] .= input_photo($user);
+
+
+$faq_page = get_faq_page_by_id(22);
+$data['faq_page'] = '<a href="/cabinet/faq/' . $faq_page . '" class="pro-photo_block-background">';
+$data['faq_page2'] = '<a href="/cabinet/faq/' . $faq_page . '" class="photo__faq-link">';
 
 /**
  * @param array $user
@@ -56,35 +60,55 @@ $data['index_mob_info'] = '<div class="index-mob__info-block"><div class="photo-
 <div class="classification">' . $user['classification'] . '</div>
 </div></div>';
 
+$pro_photo2 = get_pro_photo_by_id(2);
+
 if ($user['company']) {
-    $old_price = '11990';
-    $actual_price = '5990';
+    $old_price = strip_tags(html_entity_decode($pro_photo2['price_old']));
+    $actual_price = strip_tags(html_entity_decode($pro_photo2['price']));
 } else {
-    $old_price = '5990';
-    $actual_price = '2990';
+    $old_price = strip_tags(html_entity_decode(string: $pro_photo2['price_old']));
+    $actual_price = strip_tags(html_entity_decode($pro_photo2['price']));
 }
 
-$data['index_mob_info'] .= '<div class="mob-menu__actual">
-<div class="actual__name">
-    <span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
-</div>
-<div class="actual__descr">
-    Первый инструмент для продвижения страницы
-</div>
-<div class="actual__price">
-    <span class="high-price">
-        ' . $old_price . '
-        <div class="cross-line"></div>
-    </span>
-    <span class="low-price">' . $actual_price . '</span>
-    <span>руб.</span>
-</div>
-<div class="actual__postscr">
-    *Первые 2 недели после регистрации
-</div>
+$pro_photo_records = get_pro_photo_records($user['id']);
+$pro_photo_status = generate_pro_photo_status($pro_photo_records, $user['registered_at']);
+$hide_discount = ($pro_photo_status['status'] === 'Проведена');
 
-<a href="/cabinet/pro-photo" class="actual__link"></a>
-</div>';
+if (!$hide_discount) {
+    $actual__name = '
+        <div class="actual__name">
+            <span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
+        </div>';
+
+    // Блок с выделением скидки
+    $data['highlight_discount'] = '<span class="highlight">&nbsp;со скидкой!</span><div class="circle-pro-photo-text">-50%</div>';
+    $data['postdescr_discount'] = '<div class="pro-photo_postscr pro-photo_postscr-abs">*В первые 2 недели после регистрации</div>';
+
+    // Добавляем весь баннер
+    $data['index_mob_info'] .= '<div class="mob-menu__actual">
+    ' . $actual__name . '
+    <div class="actual__descr">
+        Первый инструмент для продвижения страницы
+    </div>
+    <div class="actual__price">
+        <span class="high-price">
+            ' . $old_price . '
+            <div class="cross-line"></div>
+        </span>
+        <span class="low-price">' . $actual_price . '</span>
+    </div>
+    <div class="actual__postscr">
+        *Первые 2 недели после регистрации
+    </div>
+
+    <a href="/cabinet/pro-photo" class="actual__link"></a>
+    </div>';
+} else {
+    // Скрываем всё — баннер не добавляется вообще
+    $data['highlight_discount'] = '';
+    $data['postdescr_discount'] = '';
+}
+
 //выводим цену на фото
 
 $data['index_mob_edit_menu'] = mob_edit_menu($user);
@@ -105,32 +129,29 @@ function user_info_block(array $user)
         $name = $user['name'] . " " . $user['lastname'];
         $foundation_name = 'Опыт работы (лет)';
     }
+    $otherData = json_decode($user['other'], true);
+    if (json_last_error() === JSON_ERROR_NONE && isset($otherData['email'])) {
+        $email = $otherData['email'];
+    }
     $photo = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
     $photo_class = $user['photo'] ? '' : 'default';
     $phone = is_null($user['phone']) ? "Не указан" : format_phone($user['phone']);
     $foundation = is_null($user['foundation']) ? "Не указано" : $user['foundation'];
+    $name = cut_text($name, 27);
 
     $code = <<<EOF
     <div class="profile-photo {$photo_class}" style="background-image: url('{$photo}')"></div>
     <div class="profile-info"> 
-        <a href="/cabinet/redaktirovat-informatsiyu" class="block__title">{$name}</a>
+        <div href="/cabinet/redaktirovat-informatsiyu" class="block__title">{$name}</div>
 	    <div class="block__subtitle">{$user['classification']}</div>
         <div class="other-info__wrapper">
         <div class="info-pair">
-            <span class="grey">Город:</span>
-            <span>{$user['city']}</span>
-        </div>
-        <div class="info-pair">
-            <span class="grey">{$foundation_name}:</span>
-            <span>{$foundation}</span>
-        </div>
-        <div class="info-pair">
-            <span class="grey">Телефон:</span>
+            <span class="grey">Телефон для звонков:</span>
             <span>{$phone}</span>
         </div>
         <div class="info-pair">
-            <span class="grey">Почта:</span>
-            <span>{$user['email']}</span>
+            <span class="grey">Публичный email:</span>
+            <span>{$email}</span>
         </div>
     </div>
     </div>
@@ -147,7 +168,7 @@ function blog_info_block(array $user)
     $blog_id = get_specialist_blog($user['id'])['id'] ?? null;
     $count = 0;
     $views = 0;
-    $rating = is_null($user['rating']) ? '0' : $user['rating'];
+    $rating = is_null($user['rating']) ? 0 : round($user['rating'], 1);
     $status = 'Не ведется';
     $status_class = 'red-dot';
 
@@ -167,10 +188,6 @@ function blog_info_block(array $user)
         <div class="info-item">
             <span class="grey">Записей:</span>
             <span>{$count}</span>
-        </div>
-        <div class="info-item">
-            <span class="grey">Просмотров:</span>
-            <span>{$views}</span>
         </div>
         <div class="info-item">
             <span class="grey">Рейтинг:</span>
@@ -194,9 +211,12 @@ function mob_edit_menu(array $user)
     $array = get_cabinet_top_menu();
     $code = '';
     foreach ($array as $page) {
-        if (!str_starts_with($page['alias'], 'redaktirovat-')) continue;
-        if (!$user['company'] && $page['id'] == 17) continue;
-        if (($user['classification_id'] == 4) && $page['id'] == 6) continue;
+        if (!str_starts_with($page['alias'], 'redaktirovat-'))
+            continue;
+        if (!$user['company'] && $page['id'] == 17)
+            continue;
+        if (($user['classification_id'] == 4) && $page['id'] == 6)
+            continue;
         $code .= '<a class="menu-item" href="/cabinet/' . $page['alias'] . '">' . $page['menu_title'] . '</a>';
     }
     return $code;
@@ -221,13 +241,10 @@ function mob_input_photo(array $user)
     $code = <<<EOF
         <div class="photo__wrapper">
             <div class="photo__image {$class}" style="background-image: url('{$photo}')"></div>
-            <div class="photo__btn_wrapper">
                 <input type="file" name="photo_file" id="photo_file">
                 <label for="photo_file" class="photo__btn {$class}">
                     {$btn}
                 </label>
-                <a href="/cabinet/pro-photo" class="btn__white-orange">Заказать фотосъёмку</a>
-            </div>
         </div>
     EOF;
     return $code;
@@ -257,17 +274,17 @@ $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
 
 if (isset($connected_tariffs_map[1])) {
     $discount = 10;
-  } elseif (isset($connected_tariffs_map[2])) {
+} elseif (isset($connected_tariffs_map[2])) {
     $discount = 15;
-  } elseif (isset($connected_tariffs_map[3])) {
+} elseif (isset($connected_tariffs_map[3])) {
     $discount = 20;
-  }
-  
-  $discount_html = '';
-  if ($discount > 0) {
-      $discount_html = '<div class="circle-pro-photo">-' . $discount . '%</div>';
-  }
-  
+}
+
+$discount_html = '';
+if ($discount > 0) {
+    $discount_html = '<div class="circle-pro-photo">-' . $discount . '%</div>';
+}
+
 
 $connected_options = get_connected_options($user['id']);
 
@@ -282,7 +299,7 @@ $connected_promo_map = [];
 foreach ($connected_promo as $promo) {
     if (is_array($promo)) {
         $promo_details = get_promo_details($promo['promo_id']);
-       
+
         $connected_promo_map[] = [
             'title' => $promo_details['title']
         ];
@@ -343,7 +360,7 @@ $top_cards_mobile = '
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор для продвижения</p>
+    <p>Стартовый набор <br>для продвижения</p>
     <div class="card-status">
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>

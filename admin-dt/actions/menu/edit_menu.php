@@ -21,10 +21,6 @@ if (isset($_POST['id'])) {
         $response['error']['title'] = 'Укажите название';
     }
 
-    if (!isset($data['slug']) || !$data['slug']) {
-        $response['error']['slug'] = 'Укажите ссылку';
-    }
-
     if ($data['id'] !== '') {
         $service = get_menu_item($data['id']);
         $service_img = $service['img'];
@@ -50,7 +46,8 @@ if (isset($_POST['id'])) {
 
     // Обработка иконки icon
     if (isset($_FILES['icon']) && $_FILES['icon']['error'] === 0) {
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/'; // Убедитесь, что папка для иконок существует
+        // Загружаем новую иконку
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/';
         $fileName = basename($_FILES['icon']['name']);
         $filePath = $uploadDir . $fileName;
     
@@ -59,11 +56,13 @@ if (isset($_POST['id'])) {
         } else {
             $response['error']['icon'] = 'Ошибка при загрузке иконки';
         }
+    } elseif (!empty($_POST['remove_icon'])) {
+        $data['icon'] = '';
     } else {
         if (isset($service_icon)) {
             $data['icon'] = $service_icon;
         }
-    }
+    }    
 
     if (isset($response['error'])) {
         responseJson($response);

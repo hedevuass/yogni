@@ -2,7 +2,7 @@
 
 $data = [];
 
-$specialists = get_promo_list(4);
+$specialists = get_promo_list('block_top_specialists');
 
 $data['specialists_top'] = block($specialists);
 

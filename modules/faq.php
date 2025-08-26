@@ -25,7 +25,7 @@ if ($faq_sub_page) {
     $main_svg = is_null($faq_sub_page['main_svg']) ? '' : $faq_sub_page['main_svg'];
 }
 
-$data['heading_faq'] = '<div class="heading__mobile faq-heading"><a href="/cabinet/'.$alias_back.'"></a><div class="text" style="background-image: url(/assets/img/cabinet/'.$main_svg.')">'.$name.'</div></div>';
+$data['heading_faq'] = '<div class="heading__mobile faq-heading"><a href="/cabinet/'.$alias_back.'"></a><div class="text">'.$name.'</div></div>';
 
 if ($faq_sub_page) {
     $data['heading_faq'] .= '<div class="heading__mobile faq-heading desctop"><a href="/cabinet/faq"></a><div class="text">'.$name.'</div></div>';
@@ -55,5 +55,9 @@ if (!$faq_sub_page) {
 
 $HTML = html_explode([
 	'heading_faq' => $data['heading_faq'],
-    'faq_content' => $data['faq_content']
+    'faq_content' => $data['faq_content'],
+], $HTML);
+
+$HTML = html_replace([
+    'title' => $title . ' - ЮРФАК'
 ], $HTML);

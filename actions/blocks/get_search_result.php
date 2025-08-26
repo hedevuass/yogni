@@ -11,8 +11,8 @@ if (isset($_GET['page'])) {
 
     $start = ($data['page'] - 1) * $data['limit'];
 
-    $companies = full_search_companies($data['requestion'], $start, $data['limit']);
-    $specialists = full_search_specialists($data['requestion'], $start, $data['limit']);
+    $companies = full_search_companies($data['requestion'], $start, $data['limit'], $data['filter']);
+    $specialists = full_search_specialists($data['requestion'], $start, $data['limit'], $data['filter']);
     
     $json['specialists'] = $specialists ? block($specialists) : false;
 

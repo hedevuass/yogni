@@ -12,6 +12,7 @@ if (isset($_POST['id']) && isset($_POST['banner_id'])) {
             'id' => (int)$id,
             'banner_id' => (int)$_POST['banner_id'][$i],
             'title' => clean_elem_form($_POST['title'][$i]),
+            'subtitle' => clean_elem_form($_POST['subtitle'][$i]),
             'description' => json_encode([
                 'line1' => clean_elem_form($_POST['description'][$i]['line1']),
                 'line2' => clean_elem_form($_POST['description'][$i]['line2']),

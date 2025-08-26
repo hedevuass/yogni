@@ -14,22 +14,22 @@ foreach ($socials as $social) {
         $width = 30;
         
         switch ($social['alt']) {
-            case 'youtube':
+            case 'Youtube':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 30;
                 break;
-            case 'telegram':
+            case 'Telegram':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'vk':
+            case 'Vk':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'yandex':
+            case 'Yandex':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
@@ -88,7 +88,7 @@ if (isset($_POST['email']) && isset($_POST['user_id'])) {
 <meta name="x-apple-disable-message-reformatting">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta content="telephone=no" name="format-detection">
-<title>Подтверждение прав</title><!--[if (mso 16)]>
+<title>ЮРФАК - подтверждение прав</title><!--[if (mso 16)]>
 <style type="text/css">
 a {text-decoration: none;}
 </style>
@@ -196,7 +196,7 @@ mso-hide:all;
             <td align="center" valign="top" style="padding:0;Margin:0;width:540px">
             <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                 <tbody><tr style="border-collapse:collapse">
-                <td class="es-m-txt-l" align="left" style="padding:0;Margin:0"><h2 style="Margin:0;line-height:22px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:18px;font-style:normal;font-weight:normal;color:#373737">Здравствуйте, {$mail_name} </h2></td>
+                <td class="es-m-txt-l" align="left" style="padding:0;Margin:0"><h2 style="Margin:0;line-height:22px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:18px;font-style:normal;font-weight:normal;color:#373737">Здравствуйте, {$mail_name}!</h2></td>
                 </tr>
                 <tr style="border-collapse:collapse">
                 <td class="es-m-txt-l es-m-p15b" align="left" style="padding:0;Margin:0;padding-top:30px;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Вы почти у цели.
@@ -206,7 +206,7 @@ mso-hide:all;
                 <td align="center" style="padding:0;Margin:0;padding-left:15px;padding-right:15px;padding-top:40px"><span class="es-button-border" style="border-style:solid;border-color:transparent;background:#ff8139;border-width:0px;display:block;border-radius:32px;width:auto"><a href="{$link_url}" class="confirmation-button es-button es-button-1701729247556" target="_blank" style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:12px;display:block;background:#ff8139;border-radius:32px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-weight:normal;font-style:normal;line-height:14px;width:auto;text-align:center;padding:15px 5px;mso-padding-alt:0;mso-border-alt:10px solid #ff8139">Подтвердить</a></span></td>
                 </tr>
                 <tr style="border-collapse:collapse">
-                <td class="es-m-txt-c" align="center" style="padding:0;Margin:0;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Ссылка действительна в течение 24 часов</p></td>
+                <td class="es-m-txt-c" align="center" style="padding:0;Margin:0;padding-top:15px"></td>
                 </tr>
             </tbody></table></td>
             </tr>
@@ -228,7 +228,7 @@ mso-hide:all;
                     <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
-                    <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772787368194737</p></td>
+                    <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>

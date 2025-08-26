@@ -1,13 +1,17 @@
 <?php
 
 $data = [];
+
+$forbidden_words = getForbiddenWords();
+
 $is_edit = isset(explode('/', $_SERVER['REQUEST_URI'])[3]);
 $article_id = false;
 if($is_edit) {
     $article_id = intval(explode('/', $_SERVER['REQUEST_URI'])[3]);
     $article = get_article_cabinet($article_id);
 }
-$data['edit_input'] = '<input type="hidden" name="is_edit" value="'.($is_edit ? $article_id : 'false').'">';
+$data['edit_input'] = '<input type="hidden" name="is_edit" value="'.($is_edit ? $article_id : 'false').'">
+<input type="hidden" id="popup-forbidden-words" value="' . htmlspecialchars(json_encode($forbidden_words), ENT_QUOTES, "UTF-8") . '">';
 
 $title_input = '';
 $content = '';
@@ -21,9 +25,9 @@ if (isset($article)) {
     $theme_name = $article['service_title'];
 }
 //вывод полей к заполнению
-$data['title_input'] = '<input type="text" name="title" placeholder="Название записи" value="'.$title_input.'">';
-$data['content'] = '<textarea name="content" placeholder="Текст поста" maxlength="15200">'.$content.'</textarea>';
-$data['keywords'] = '<input type="text" name="keywords" class="keywords-input" placeholder="До 4 слов" maxlength="60" value="'.$keywords.'">';
+$data['title_input'] = '<input type="text" name="title" placeholder="Название записи (не более 65 символов)" maxlength="65" value="'.strip_tags(html_entity_decode($title_input)).'"> <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
+$data['content'] = '<textarea name="content" placeholder="Текст поста (не более 7500 символов)" maxlength="7500">'.strip_tags(html_entity_decode($content)).'</textarea> <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
+/* $data['keywords'] = '<input type="text" name="keywords" class="keywords-input" placeholder="До 4 слов" maxlength="60" value="'.$keywords.'">'; */
 
 //скрытое поле айди блога для js
 $blog_id = get_specialist_blog($_SESSION['user']['id'])['id'];
@@ -56,7 +60,9 @@ foreach ($themes as $theme) {
             if ($theme_id == $theme['id']) $selected = 'selected';
         }
         $data['themes'] .= "<option value='{$theme['id']}' {$selected}>{$theme['title']}</option>";
-        $data['themes_list_mobile'] .= '<li class="'.$theme['slug'].'" data-art-id="'.$theme['id'].'">'.$theme['title'].'</li>';
+        $data['themes_list_mobile'] .= '<li class=" service-icon ' . $theme['slug'] . '" data-art-id="' . $theme['id'] . '"'
+        . (!empty($theme['icon']) ? ' style="background-image: url(../assets/img/' . $theme['icon'] . ');"' : '')
+        . '>' . $theme['title'] . '</li>';    
     }
 }
 if (isset($last_theme) && $last_theme != '') {
@@ -65,7 +71,9 @@ if (isset($last_theme) && $last_theme != '') {
         if ($theme_id == $last_theme['id']) $selected = 'selected';
     }
     $data['themes'] .= "<option value='{$last_theme['id']}' {$selected}>{$last_theme['title']}</option>";
-    $data['themes_list_mobile'] .= '<li class="'.$last_theme['slug'].'" data-art-id="'.$last_theme['id'].'">'.$last_theme['title'].'</li>';
+    $data['themes_list_mobile'] .= '<li class="service-icon ' . $last_theme['slug'] . '" data-art-id="' . $last_theme['id'] . '"'
+    . (!empty($last_theme['icon']) ? ' style="background-image: url(../assets/img/' . $last_theme['icon'] . ');"' : '')
+    . '>' . $last_theme['title'] . '</li>';
 }
 
 //разделы экспертиз
@@ -82,7 +90,9 @@ foreach ($themes as $theme) {
             if ($theme_id == $theme['id']) $selected = 'selected';
         }
         $data['themes'] .= "<option value='{$theme['id']}' {$selected}>{$theme['title']}</option>";
-        $data['themes_list_mobile'] .= '<li class="'.$theme['slug'].'" data-art-id="'.$theme['id'].'">'.$theme['title'].'</li>';
+        $data['themes_list_mobile'] .= '<li class="service-icon ' . $theme['slug'] . '" data-art-id="' . $theme['id'] . '"'
+        . (!empty($theme['icon']) ? ' style="background-image: url(../assets/img/' . $theme['icon'] . ');"' : '')
+        . '>' . $theme['title'] . '</li>';    
     }
 }
 if (isset($last_theme) && $last_theme != '') {
@@ -91,7 +101,9 @@ if (isset($last_theme) && $last_theme != '') {
         if ($theme_id == $last_theme['id']) $selected = 'selected';
     }
     $data['themes'] .= "<option value='{$last_theme['id']}' {$selected}>{$last_theme['title']}</option>";
-    $data['themes_list_mobile'] .= '<li class="'.$last_theme['slug'].'" data-art-id="'.$last_theme['id'].'">'.$last_theme['title'].'</li>';
+    $data['themes_list_mobile'] .= '<li class="service-icon ' . $last_theme['slug'] . '" data-art-id="' . $last_theme['id'] . '"'
+    . (!empty($last_theme['icon']) ? ' style="background-image: url(../assets/img/' . $last_theme['icon'] . ');"' : '')
+    . '>' . $last_theme['title'] . '</li>';
 }
 
 $HTML = html_explode($data, $HTML);

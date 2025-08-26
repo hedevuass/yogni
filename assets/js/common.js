@@ -86,27 +86,27 @@ $(function () {
     bannersEl.push(banner5SwiperEl);
   }
 
-  $(document).ready(function() {
+  $(document).ready(function () {
     var windowHeight = $(window).height();
 
-    $(bannersEl).each(function() {
+    $(bannersEl).each(function () {
       var self = $(this);
-      if ($(document).scrollTop() < self.offset().top && $(document).scrollTop() + windowHeight/2 >= self.offset().top) {
+      if ($(document).scrollTop() < self.offset().top && $(document).scrollTop() + windowHeight / 2 >= self.offset().top) {
         document.querySelector('#' + self.attr('id')).swiper.autoplay.start();
       }
     });
-   
-    $(document).on('scroll', function() {
-      $(bannersEl).each(function() {
+
+    $(document).on('scroll', function () {
+      $(bannersEl).each(function () {
         var self = $(this);
-        if ($(document).scrollTop() < self.offset().top && $(document).scrollTop() + windowHeight/2 >= self.offset().top && !document.querySelector('#' + self.attr('id')).swiper.autoplay.running) {
+        if ($(document).scrollTop() < self.offset().top && $(document).scrollTop() + windowHeight / 2 >= self.offset().top && !document.querySelector('#' + self.attr('id')).swiper.autoplay.running) {
           document.querySelector('#' + self.attr('id')).swiper.autoplay.start();
         }
       });
     });
   });
 
-  $("#confirmation .confirmation__button").click(function () {
+  $(".confirmation-sticky .confirmation__button").click(function () {
     $(".popup.confirmation__popup").fadeIn();
     $("body").addClass("hid");
   });
@@ -173,7 +173,7 @@ $(function () {
     if (window.innerWidth > 575) {
       extraHeight = 5;
     } else {
-      extraHeight = 68;
+      extraHeight = 104;
     }
     $("body, html").animate({ scrollTop: top - extraHeight }, 800);
   });
@@ -181,9 +181,9 @@ $(function () {
   $(".company-page .company-blog-btn").click(function () {
     var top = $(".articles").offset().top;
     if (window.innerWidth > 575) {
-      extraHeight = 20;
+      extraHeight = 0;
     } else {
-      extraHeight = 78;
+      extraHeight = 48;
     }
     $("body, html").animate({ scrollTop: top - extraHeight }, 800);
   });
@@ -265,11 +265,11 @@ $(function () {
     $(".index-catalog-block .filter .jq-selectbox.subcat").removeClass(
       "active"
     );
-    selClass=this.value;
+    selClass = this.value;
     $(selClass).addClass("active");
-    setTimeout(function() {
-			$('.sel.subcat'+selClass).trigger('refresh');
-		}, 50);
+    setTimeout(function () {
+      $('.sel.subcat' + selClass).trigger('refresh');
+    }, 50);
   });
   $(".popup .bg, .popup .window .close").click(function () {
     $(".popup").fadeOut();
@@ -309,25 +309,56 @@ $(function () {
 
   $(".big-mobile-popup.mobile-journal-themes .more-article-themes-btn").click(function () {
     $(this).hide(300);
-    $('ul.menu-links-mobile.blog-links-mobile').css('height', blog_mmenu_height+'px');
+    $('ul.menu-links-mobile.blog-links-mobile').css('height', blog_mmenu_height + 'px');
     $('ul.menu-links-mobile.blog-links-mobile').addClass('opened');
   });
 
   var activeBottomItem = $(".mobile-bottom-header .bottom-header__item.active");
 
-  $(".mobile-bottom-header .bottom-header__item#cat-item, .btn__mobile-filters.main-categories").click(function () {
+  function activateCatItemMenu() {
     $(".mobile-menu, .big-mobile-popup").removeClass("opened");
     $(".mobile-menu.m1").addClass("opened");
     $("body").addClass("hid");
     $(".mobile-bottom-header .bottom-header__item").removeClass("active");
     $(".mobile-bottom-header .bottom-header__item#cat-item").addClass("active");
-  });
-  $(".mobile-bottom-header .bottom-header__item:not(#cat-item)").click(
-    function () {
+  }
+
+  $(document).ready(function () {
+    function activateCatItemMenu() {
+      // Сначала плавно скроем меню, если оно открыто
       $(".mobile-menu.m1").removeClass("opened");
       $("body").removeClass("hid");
+
+      // Небольшая задержка для плавности (300ms совпадает с CSS transition)
+      setTimeout(() => {
+        $(".mobile-menu, .big-mobile-popup").removeClass("opened");
+        $(".mobile-menu.m1").addClass("opened");
+        $("body").addClass("hid");
+        $(".mobile-bottom-header .bottom-header__item").removeClass("active");
+        $(".mobile-bottom-header .bottom-header__item#cat-item").addClass("active");
+      }, 200);
     }
-  );
+
+    // При клике
+    $(".mobile-bottom-header .bottom-header__item#cat-item, .btn__mobile-filters.main-categories").click(function () {
+      activateCatItemMenu();
+    });
+
+    $(".mobile-bottom-header .bottom-header__item:not(#cat-item)").click(function () {
+      $(".mobile-menu.m1").removeClass("opened");
+      $("body").removeClass("hid");
+    });
+
+    // При загрузке страницы — если в URL есть параметр openCatalog=1
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openCatalog') === '1') {
+      // Добавим задержку чтобы меню не "мигало"
+      setTimeout(() => {
+        activateCatItemMenu();
+      }, 100);
+    }
+  });
+
 
   $(".mobile-menu.m2 .close").click(function () {
     $(".mobile-menu.m2").removeClass("opened");
@@ -437,12 +468,13 @@ $(function () {
     $(".popup.metro").fadeIn();
     $("body").addClass("hid");
   });
-  $(
+  // Открытие попапа выбора города
+  /* $(
     ".mobile-filter-block .city, .index-catalog-block .filter .city-link, .topbar .city, .mobile-header .city"
   ).click(function () {
     $(".popup.cities").fadeIn();
     $("body").addClass("hid");
-  });
+  }); */
   $(".sel:not(.subcat, .themes-sel)").styler({
     selectSmartPositioning: false,
     onSelectOpened: function () {
@@ -463,40 +495,29 @@ $(function () {
   $(".sel.tags-sel").styler({
     selectSmartPositioning: true,
   });
-  $('select.sel.themes-sel, select.sel.tags-sel').on('change', function() {
-    window.location.href = '/journal/'+this.value;
+  $('select.sel.themes-sel, select.sel.tags-sel').on('change', function () {
+    window.location.href = '/journal/' + this.value;
   });
   $(".docs-block .list").slick({
-    arrows: false,
+    arrows: true,
+    prevArrow: $(".docs-block .slider-arrows .slick-prev"),
+    nextArrow: $(".docs-block .slider-arrows .slick-next"),
     speed: 300,
     slidesToShow: 5,
     slidesToScroll: 1,
     responsive: [
-      {
-        breakpoint: 1200,
-        settings: {
-          slidesToShow: 4,
-        },
-      },
-      {
-        breakpoint: 992,
-        settings: {
-          slidesToShow: 3,
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: "unslick",
-      },
+      { breakpoint: 1200, settings: { slidesToShow: 4 } },
+      { breakpoint: 992, settings: { slidesToShow: 3 } },
+      { breakpoint: 768, settings: "unslick" }
     ],
   });
   $(".search-window .search-categories").slick({
     arrows: false,
-    variableWidth:true,
-    draggable:true,
-    touchMove:true,
-    swipeToSlide:true,
-    infinite:false,
+    variableWidth: true,
+    draggable: true,
+    touchMove: true,
+    swipeToSlide: true,
+    infinite: false,
     slidesToShow: 5,
     responsive: [
       {
@@ -522,7 +543,7 @@ $(function () {
     $('.mobile-menu.m1.big-mobile-popup').addClass('opened');
   });
 
-  $(".search__wrap input.search__input, .search__wrap .search__btn, .mobile-header .search__btn").on("click", function() {
+  $(".search__wrap input.search__input, .search__wrap .search__btn, .mobile-header .search__btn").on("click", function () {
     $('.search-popup').fadeIn().addClass('opened');
     $("body").addClass("hid");
     $('.search__input').blur();
@@ -534,8 +555,8 @@ $(function () {
   });
   $(".search-window .search__find-btn").click(function (event) {
     let value = $("input#search-query").val();
-    if (value!='') {
-      $(location).attr('href', '/poisk?zapros=' + value);
+    if (value != '') {
+      $(location).attr('href', '/search?text=' + value);
     }
   });
   $("input#search-query").on("input", function () {
@@ -543,24 +564,24 @@ $(function () {
       $(".clear-search").addClass("active");
     } else {
       $(".clear-search").removeClass("active");
-      $(".search__find-btn").prop( "disabled", true);
+      $(".search__find-btn").prop("disabled", true);
       $(".search__result").empty();
     }
   });
   $(".clear-search").on("click", function () {
     $("#search-query").val("");
     $(this).removeClass("active");
-    $(".search__find-btn").prop( "disabled", true);
+    $(".search__find-btn").prop("disabled", true);
     $(".search__result").empty();
   });
   $("#registration-popup").on("click", '.recovery_popup_call', function () {
     $(".popup").fadeOut(200);
-    setTimeout(function (){
+    setTimeout(function () {
       $(".popup.pass").fadeIn(200);
     }, 200)
   });
-  $('body').keyup(function(event) {
-    if(event.which == 13 && !$('.search__find-btn').prop('disabled') && $(".search-popup").hasClass('opened')) {
+  $('body').keyup(function (event) {
+    if (event.which == 13 && !$('.search__find-btn').prop('disabled') && $(".search-popup").hasClass('opened')) {
       $('.search__find-btn').click();
     }
   });
@@ -568,14 +589,14 @@ $(function () {
   $(window).on('scroll', function () {
     if (window.innerWidth > 1200 && $('.contacts-block:not(.mobile-contacts)').length > 0) {
       if ($(window).scrollTop() > $(".company-page").offset().top && $(window).scrollTop() < $(".company-page").offset().top + $(".company-page").height() - 32 - $('.contacts-block:not(.mobile-contacts)').height()) {
-        if(!$('.contacts-block:not(.mobile-contacts)').hasClass('affix')) {
+        if (!$('.contacts-block:not(.mobile-contacts)').hasClass('affix')) {
           $('.contacts-block:not(.mobile-contacts)').addClass('affix');
-          if(window.innerWidth > 1920) {
-            let right_pos = $('body > .wrap').offset().left + 32;
-            $('.contacts-block:not(.mobile-contacts)').css('right', right_pos +'px');
-          } else {
+          /* if(window.innerWidth > 1920) { */
+          let right_pos = $('body > .wrap').offset().left + 32;
+          $('.contacts-block:not(.mobile-contacts)').css('right', right_pos + 'px');
+          /* } else {
             $('.contacts-block:not(.mobile-contacts)').css('right', '32px');
-          }
+          } */
         }
       } else {
         $('.contacts-block:not(.mobile-contacts)').removeClass('affix').css('right', '0');
@@ -584,63 +605,75 @@ $(function () {
       if ($(window).scrollTop() >= $(".company-page").offset().top + $(".company-page").height() - 32 - $('.contacts-block:not(.mobile-contacts)').height()) {
         $('.contacts-block:not(.mobile-contacts)').addClass('after-affix');
       }
-    } else if ($('.contacts-block:not(.mobile-contacts)').hasClass('affix')){
+    } else if ($('.contacts-block:not(.mobile-contacts)').hasClass('affix')) {
       $('.contacts-block:not(.mobile-contacts)').removeClass('affix').css('right', '0');
     }
   })
 
   $(".company-fav").on("click", function () {
-    let favorite = { lawyers: [], experts: [], notaries: [] };
+    let favorite = { lawyers: [], experts: [], notaries: [], all: [] };
     let classification_id = parseInt($("#favorite_cat").val());
     let entity_id = parseInt($("#favorite_id").val());
-    let lawyers_id = [1, 2, 5, 6, 7];
-    let experts_id = [3, 8];
-    let notaries_id = [4];
+    const lawyers_id = [1, 2, 5, 6, 7];
+    const experts_id = [3, 8];
+    const notaries_id = [4];
 
     if (localStorage.getItem("favorite")) {
       favorite = JSON.parse(localStorage.getItem("favorite"));
+      if (!favorite.all) favorite.all = [];
     }
+
+    let category = '';
+    if (lawyers_id.includes(classification_id)) category = 'lawyers';
+    else if (experts_id.includes(classification_id)) category = 'experts';
+    else if (notaries_id.includes(classification_id)) category = 'notaries';
 
     if ($(this).hasClass("active")) {
-		  let fav_index = -1;
-      if (lawyers_id.includes(classification_id)) {
-		    fav_index = favorite["lawyers"].indexOf(entity_id);
-		    if (fav_index !== -1) {
-        	favorite["lawyers"].splice(fav_index, 1);
-		    }
-      } else if (experts_id.includes(classification_id)) {
-        fav_index = favorite["experts"].indexOf(entity_id);
-		    if (fav_index !== -1) {
-        	favorite["experts"].splice(fav_index, 1);
-		    }
-      } else if (notaries_id.includes(classification_id)) {
-        fav_index = favorite["notaries"].indexOf(entity_id);
-		    if (fav_index !== -1) {
-        	favorite["notaries"].splice(fav_index, 1);
-		    }
-      }
+      // удалить из категории
+      const indexCat = favorite[category].indexOf(entity_id);
+      if (indexCat !== -1) favorite[category].splice(indexCat, 1);
+
+      // удалить из общего массива
+      const indexAll = favorite.all.indexOf(entity_id);
+      if (indexAll !== -1) favorite.all.splice(indexAll, 1);
     } else {
-      if (lawyers_id.includes(classification_id)) {
-        favorite["lawyers"].push(entity_id);
-      } else if (experts_id.includes(classification_id)) {
-        favorite["experts"].push(entity_id);
-      } else if (notaries_id.includes(classification_id)) {
-        favorite["notaries"].push(entity_id);
-      }
+      // добавить в категорию
+      favorite[category].push(entity_id);
+
+      // добавить в конец общего массива
+      favorite.all.push(entity_id);
     }
-    favorite = JSON.stringify(favorite);
 
-    localStorage.setItem("favorite", favorite);
+    localStorage.setItem("favorite", JSON.stringify(favorite));
 
-    $.post("/actions/set_favorite.php", { favorite: favorite, company_page: true}).done(function () {
-		  $(".company-fav").toggleClass("active");
-	  });
+    $.post("/actions/set_favorite.php", { favorite: favorite, company_page: true })
+      .done(function () {
+        $(".company-fav").toggleClass("active");
+      });
   });
+
 
   $('#copy-adress').on("click", function () {
-    copytext(this);
+    copyCleanText(this);
   });
 });
+
+function copyCleanText(el) {
+  const text = el.innerText.trim(); // убираем лишние пробелы/переносы
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+
+  // Стили, чтобы не мигал на экране
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'absolute';
+  textarea.style.left = '-9999px';
+
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textarea);
+
+}
 
 function setCookie(name, value, days) {
   let expires = "";
@@ -656,8 +689,8 @@ function getCookie(name) {
   let matches = document.cookie.match(
     new RegExp(
       "(?:^|; )" +
-        name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") +
-        "=([^;]*)"
+      name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") +
+      "=([^;]*)"
     )
   );
   return matches ? decodeURIComponent(matches[1]) : undefined;
@@ -675,8 +708,12 @@ function checkCookies() {
         start: function () {
           $("#cookie_note").css("display", "flex");
           button = $('.btn__mobile-filters').length ? $('.btn__mobile-filters') : $('.contacts-button');
+          button_journal = $('.journal-filter-button').length ? $('.journal-filter-button') : $('.contacts-button');
           if ($(button)) {
-            $(button).css({"transform":"translate(-50%, -52px)"});
+            $(button).css({ "transform": "translate(-50%, -52px)" });
+          }
+          if ($(button_journal)) {
+            $(button_journal).css({ "transform": "translate(-50%, -52px)" });
           }
         },
       });
@@ -687,8 +724,12 @@ function checkCookies() {
     setCookie("cookies_policy", "true", 365);
     $("#cookie_note").hide(300);
     button = $('.btn__mobile-filters').length ? $('.btn__mobile-filters') : $('.contacts-button');
+    button_journal = $('.journal-filter-button').length ? $('.journal-filter-button') : $('.contacts-button');
     if ($(button)) {
-      $(button).css({"transform":"translateX(-50%)"});
+      $(button).css({ "transform": "translateX(-50%)" });
+    }
+    if ($(button_journal)) {
+      $(button_journal).css({ "transform": "translateX(-50%)" });
     }
   });
 }
@@ -698,9 +739,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function copytext(el) {
-    var $tmp = $("<textarea>");
-    $("body").append($tmp);
-    $tmp.val($(el).text()).select();
-    document.execCommand("copy");
-    $tmp.remove();
+  var $tmp = $("<textarea>");
+  $("body").append($tmp);
+  $tmp.val($(el).text()).select();
+  document.execCommand("copy");
+  $tmp.remove();
 }  

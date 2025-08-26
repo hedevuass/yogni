@@ -24,7 +24,7 @@ else
 	$ip_current_user = '0.0.0.0';
 
 // Email's
-const EMAIL_FEEDBACK = 'urfaq.ru@mail.ru';
+const EMAIL_FEEDBACK = 'info@urfaq.ru';
 
 // Урл сайта
 const SITE_URL = 'yrfak/';
@@ -34,7 +34,7 @@ const SITE_URL = 'yrfak/';
 // Показ ошибок: ERRMODE_SILENT - не показывать ошибки, ERRMODE_EXCEPTION - показывать ошибки
 const ERRMODE_SET = PDO::ERRMODE_EXCEPTION;
 
-const DB_HOSTNAME = 'localhost';
+const DB_HOSTNAME = 'MySQL-8.0';
 const DB_DATABASE = 'urfac';
 const DB_USERNAME = 'root';
 const DB_PASSWORD = '';
@@ -47,17 +47,18 @@ if (!isset($_SESSION['city'])) $_SESSION['city'] = [
 
 // Админская часть приложения
 $settings = [
-    'login' => 'admin',
-    'password' => 'password',
+    /* 'login' => 'admin',
+    'password' => 'password1', */
     'admin_href' => '/admin-dt/',
+	'favicon' => '/uploads/fav-icon/favicon.png',
 ];
 
-define('LOGIN', $settings['login']);
-define('PASSWORD', $settings['password']);
+/* define('LOGIN', $settings['login']);
+define('PASSWORD', $settings['password']); */
 define('ADMIN_HREF', $settings['admin_href']);
 
 return $settings;
 
- ini_set('error_reporting', E_ALL);
- ini_set('display_errors', 1);
- ini_set('display_startup_errors', 1);
+/*  ini_set('error_reporting', E_ALL);
+ ini_set('display_errors', 1	);
+ ini_set('display_startup_errors', 1); */

@@ -1,9 +1,9 @@
 <style>
 	@media screen and (max-width: 768px) {
-    #create-note-form {
-        padding-top: 30px;
-    }
-}
+		#create-note-form {
+			padding-top: 30px;
+		}
+	}
 </style>
 <form class="create-note-block main-part" id="create-note-form">
 	<div class="field">
@@ -16,8 +16,8 @@
 	<!-- <div class="field">
 		<div class="field-name">Ключевые слова</div>
 		<div class="keywords"> -->
-			<!--data:keywords   --><!-- data:keywords     -->
-		<!-- </div>
+	<!--data:keywords--><!-- data:keywords-->
+	<!-- </div>
 	</div> -->
 	<div class="field">
 		<div class="field-name">Заголовок</div>
@@ -36,8 +36,9 @@
 	<div class="bg"></div>
 	<div class="window middle">
 		<div class="close"></div>
-	  	<div class="delete-article">
-			<p>Запись в блоге успешно опубликована. Модерация занимает до 24 часов, после чего ваш пост появится в публичном доступе.</p>
+		<div class="delete-article">
+			<p>Запись в блоге успешно опубликована. Модерация занимает до 24 часов, после чего ваш пост появится в
+				публичном доступе.</p>
 		</div>
 		<!--data:blog_id_input--><!--data:blog_id_input-->
 	</div>
@@ -50,5 +51,29 @@
 		<ul>
 			<!--data:themes_list_mobile--><!--data:themes_list_mobile-->
 		</ul>
+	</div>
+</div>
+
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
 	</div>
 </div>

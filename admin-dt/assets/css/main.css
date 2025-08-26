@@ -24,10 +24,81 @@ footer {
     border-radius: 50%;
 }
 
+.flatpickr-day.flatpickr-disabled {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    position: static !important;
+  }
+
+  .flatpickr-month {
+    justify-content: center !important;
+    background: unset !important;
+  }
+
+  .flatpickr-day.nextMonthDay,
+  .flatpickr-day.prevMonthDay:not(.flatpickr-disabled) {
+    color: #393939 !important;
+  }
+
+  .flatpickr-day.disabled-red,
+  .flatpickr-day.flatpickr-disabled {
+    cursor: not-allowed;
+    color: rgba(57, 57, 57, 0.1) !important;
+  }
+
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: #569ff7 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    border-color: #569ff7 !important;
+  }
+
+  .range-highlight {
+    background: #cbcaca91 !important;
+  }
+
+.table-striped>tbody>.highlight:nth-of-type(odd)>*, 
+.highlight {
+    --bs-table-accent-bg: #cef8fd !important;
+    background-color: #cef8fd !important;
+    --bs-table-bg-type: unset !important;
+}
+
+.yellow-highlight:nth-of-type(odd)>*, .yellow-highlight {
+    --bs-table-accent-bg: #fbe6a7!important;
+    background-color: #fbe6a7 !important;
+    --bs-table-bg-type: unset !important;
+}
+
+.ui-autocomplete {
+    z-index: 9999 !important;  /* Устанавливаем высокий z-index, чтобы он отображался поверх модального окна */
+}
+
+.form-check-input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.crossed {
+    text-decoration: line-through;
+}
+.select-faded {
+    opacity: 0.5;
+}
+
 .image-container {
     position: relative;
     min-height: 100%;
     max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .avatar {
@@ -42,18 +113,44 @@ footer {
     font-weight: bold;
 }
 
+.nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.navbar-nav .nav-item .nav-link.active {
+    font-weight: 600;
+    position: relative;
+}
+
+.navbar-nav .nav-item .nav-link.active::after {
+    content: '';
+    position: absolute;
+    top: 90%;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background-color: #000;
+    border-radius: 20px;
+}
+
+.navbar.navbar-expand-lg {
+    margin-bottom: 20px;
+} 
+
 .badge.bg-warning {
     background-color: orange !important;
     border-radius: 50%;
     width: 18px;
     height: 18px;
     position: absolute;
+    top: -2px;
+    right: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 30px;
     color: #fff;
-    top: 5px;
     font-size: 10px;
 }
 
@@ -73,6 +170,32 @@ footer {
     box-shadow: 0px 2px 5px #21252975;
     cursor: pointer;
 }
+.upload-avatar-specialist {
+    display: flex;
+    padding: 0;
+    gap: 5px;
+}
+.upload-avatar button {
+    width: 32px;
+    height: 32px;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    cursor: pointer;
+    padding: 0;
+  }
+  .upload-avatar-add {
+    background-image: url('https://img.icons8.com/ios-filled/50/000000/plus-math.png');
+  }
+  
+  /* Корзина */
+  .upload-avatar-delete {
+    background-image: url('https://img.icons8.com/ios-glyphs/30/000000/trash--v1.png');
+  }
 #servicePage td {
     vertical-align: middle;
 }

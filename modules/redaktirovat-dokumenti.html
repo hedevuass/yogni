@@ -1,14 +1,15 @@
-<form style="padding-top: 30px;" class="docs flex" id="cabinet-docs">
-	<table>
-		<thead>
-			<tr>
-				<td>Описание</td>
-				<td>Файл</td>
-				<td><a class="edit-price-mobile"></a><a class="delete"></a></td>
-			</tr>
-		</thead>
-		<tbody>
-			<!--data:documents-->
+<form class="docs flex" id="cabinet-docs">
+	<div style="padding-top: 30px;" class="docs-div">
+		<table>
+			<thead>
+				<tr>
+					<td>Описание</td>
+					<td>Файл</td>
+					<td><a class="edit-price-mobile"></a><a class="delete"></a></td>
+				</tr>
+			</thead>
+			<tbody>
+				<!--data:documents-->
 				<tr>
 					<td><input type="text" placeholder="Описание"
 							value="Диплом Московского государственного Университета"></td>
@@ -38,35 +39,59 @@
 					<td><input type="text" placeholder="Описание"></td>
 					<td><a class="upload">Загрузить</a></td>
 				</tr>
-			<!--data:documents-->
-		</tbody>
-	</table>
-	<div class="requirements">
+				<!--data:documents-->
+			</tbody>
+		</table>
+		<span class="add">Добавить документ</span>
+		<span class="mob-add">Добавить документ</span>
+		<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+
+		<div class="cabinet-popup" id="cabinet-docs-popup">
+			<div class="popup__close"></div>
+			<div class="popup__title">Добавление документа</div>
+			<div class="popup__body">
+				<div class="popup__field">
+					<div class="popup__mob-subtitle small-margin">Наименование</div>
+					<input type="text" class="popup__input" id="popup-docs-name" placeholder="Наименование документа (не более 65 символов)" maxlength="65">
+					<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
+				</div>
+				<div class="popup__field">
+					<div class="popup__mob-subtitle small-margin">Файл</div>
+					<div class="docs-load">
+						<div class="popup-delete-doc"></div>
+					</div>
+				</div>
+				<input type="hidden" id="popup-doc-key">
+				<input type="hidden" id="popup-doc-file">
+				<div class="mob-docs-btn">Подтвердить</div>
+			</div>
+		</div>
 	</div>
-	<span class="add">Добавить документ</span>
-	<span class="mob-add">Добавить документ</span>
 	<div class="refresh">
 		<button type="submit" disabled>Сохранить информацию</button>
 	</div>
-	<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+</form>
 
-	<div class="cabinet-popup" id="cabinet-docs-popup">
-		<div class="popup__close"></div>
-		<div class="popup__title">Добавление документа</div>
-		<div class="popup__body">
-			<div class="popup__field">
-				<div class="popup__mob-subtitle small-margin">Наименование</div>
-				<input type="text" class="popup__input" id="popup-docs-name" placeholder="Наименование документа">
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
+						</div>
+					</div>
+				</form>
 			</div>
-			<div class="popup__field">
-				<div class="popup__mob-subtitle small-margin">Файл</div>
-				<div class="docs-load">
-					<div class="popup-delete-doc"></div>
-				</div>
-			</div>
-			<input type="hidden" id="popup-doc-key">
-			<input type="hidden" id="popup-doc-file">
-			<div class="mob-docs-btn">Подтвердить</div>
 		</div>
 	</div>
-</form>
+</div>

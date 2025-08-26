@@ -11,13 +11,13 @@
                     <div class="col-9">
                         <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $document['id'] ?? '' ?>">
                         <div class="mb-3">
-                            <label for="input-title" class="form-label">Название</label>
+                            <label for="input-title" class="form-label">Заголовок</label>
                             <input type="text" name="title" class="form-control" id="input-title" value="<?= $document['title'] ?? '' ?>" require>
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="mb-3">
-                            <label for="input-content" class="form-label">Контент</label>
+                            <label for="input-content" class="form-label">Описание</label>
                             <textarea name="content" class="form-control" style="height: 300px;" id="input-content" required><?= ($document['content'] ?? '') ?></textarea>
                         </div>
                     </div>

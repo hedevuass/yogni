@@ -1,0 +1,11 @@
+2025-02-02 17:23:06 - Response: 
+2025-02-02 17:24:44 - Request: {
+    "amount": 1000,
+    "description": "Оплата услуги: Тестовая услуга",
+    "client": {
+        "name": "Тестовый клиент",
+        "email": "hedevuass@gmail.com"
+    }
+}
+Response (HTTP 404): 404: Not Found
+

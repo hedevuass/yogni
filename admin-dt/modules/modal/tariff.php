@@ -14,12 +14,12 @@
                     <input type="text" name="name" class="form-control" id="input-name" value="<?= $tariff['name'] ?? '' ?>" require>
                 </div>
                 <div class="mb-3">
-                    <label for="input-price" class="form-label">Цена тарифа</label>
-                    <input type="number" name="price" class="form-control" id="input-price" value="<?= $tariff['price'] ?? '' ?>" require>
+                    <label for="input-price_old" class="form-label">Цена</label>
+                    <input type="number" name="price_old" class="form-control" id="input-price_old" value="<?= $tariff['price_old'] ?? '' ?>" require>
                 </div>
                 <div class="mb-3">
-                    <label for="input-price_old" class="form-label">Старая цена</label>
-                    <input type="number" name="price_old" class="form-control" id="input-price_old" value="<?= $tariff['price_old'] ?? '' ?>" require>
+                    <label for="input-price" class="form-label">Цена cо скидкой</label>
+                    <input type="number" name="price" class="form-control" id="input-price" value="<?= $tariff['price'] ?? '' ?>" require>
                 </div>
 
                 <div class="mb-3">
@@ -48,7 +48,7 @@
             <div class="modal-footer">
                 <button type="button" id="add-option-btn" class="btn btn-primary">Добавить опцию</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" id="tariffEdit">Редактировать тариф</button>
+                <button type="button" class="btn btn-primary" id="tariffEdit">Сохранить</button>
             </div>
         </div>
     </div>

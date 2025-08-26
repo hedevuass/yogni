@@ -13,13 +13,43 @@ function send_mail_smtp($email, $title, $body)
 	$mail->isSMTP();
 	$mail->SMTPDebug  = 0;
 	$mail->CharSet    = 'UTF-8';
-	$mail->Host 	  = 'smtp.beget.com';  // Замените на адрес вашего SMTP сервера
+	$mail->Host 	  = 'smtp.beget.com'; 
     $mail->SMTPAuth   = true;
-    $mail->Username   = 'test-noreply@urfaq.ru';  // Замените на ваше имя пользователя SMTP сервера
-	$mail->Password   = '&yMUy77w';
+    $mail->Username   = 'noreply@urfaq.ru'; 
+	$mail->Password   = 'iQi90TT*';
 	$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
 	$mail->Port       = 465;
-	$mail->setFrom('test-noreply@urfaq.ru', 'ЮРФАК');
+	$mail->setFrom('noreply@urfaq.ru', 'ЮРФАК');
+	$mail->addAddress($email);
+	$mail->isHTML(true);
+	$mail->Subject = $title;
+
+	$mail->Body = '<html>
+					<head>
+						<title>' . $title . '</title>
+					</head>
+					<body>
+						<p>' . $body . '</p>
+					</body>
+				</html>';
+
+
+	return ($mail->send()) ? true : false;
+}
+
+function send_mail_notification($email, $title, $body)
+{
+	$mail = new PHPMailer(true);
+	$mail->isSMTP();
+	$mail->SMTPDebug  = 0;
+	$mail->CharSet    = 'UTF-8';
+	$mail->Host 	  = 'smtp.beget.com'; 
+    $mail->SMTPAuth   = true;
+    $mail->Username   = 'notification@urfaq.ru'; 
+	$mail->Password   = 'aG1p*y5z6pQP';
+	$mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+	$mail->Port       = 465;
+	$mail->setFrom('notification@urfaq.ru', 'ЮРФАК');
 	$mail->addAddress($email);
 	$mail->isHTML(true);
 	$mail->Subject = $title;

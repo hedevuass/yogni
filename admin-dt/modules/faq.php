@@ -16,16 +16,18 @@ $faqs_pro_photo = get_all_faq_pro_photo();
             <table id="faq" class="table table-striped" style="width:100%">
                 <thead>
                 <tr>
-                    <td class="text-nowrap">Заголовок</td>
-                    <td>Контент</td>
+                    <td>id</td>
+                    <td class="text-nowrap col-5">Заголовок</td>
+                    <td class="col-5">Описание</td>
                     <td>Действие</td>
                 </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($faq_pages as $faq_page): ?>
                     <tr>
+                        <td><?= $faq_page['id'] ?></td>
                         <td><?= $faq_page['name'] ?></td>
-                        <td><?= ($faq_page['alias']) ? $faq_page['alias'] : "-" ?></td>
+                        <td><?= ($faq_page['content']) ? truncate_text(strip_tags(html_entity_decode($faq_page['content'])), 300) : "-" ?></td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Basic mixed styles example">
                                 <button type="submit" class="btn btn btn-info modalEdit" data-id="<?= $faq_page['id'] ?>>">
@@ -53,16 +55,18 @@ $faqs_pro_photo = get_all_faq_pro_photo();
             <table id="faqPromo" class="table table-striped" style="width:100%">
                 <thead>
                 <tr>
-                    <td class="text-nowrap">Заголовок</td>
-                    <td>Контент</td>
+                    <td>id</td>
+                    <td class="text-nowrap col-5">Заголовок</td>
+                    <td class="col-5">Описание</td>
                     <td>Действие</td>
                 </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($faqs_promo as $faq_promo): ?>
                     <tr>
+                        <td><?= $faq_promo['id'] ?></td>
                         <td><?= $faq_promo['title'] ?></td>
-                        <td><?= $faq_promo['description'] ?></td>
+                        <td><?= truncate_text(strip_tags(html_entity_decode($faq_promo['description'])), 300) ?></td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Basic mixed styles example">
                                 <button type="submit" class="btn btn btn-info modalEditFaqPromo" data-id="<?= $faq_promo['id'] ?>>">
@@ -90,16 +94,18 @@ $faqs_pro_photo = get_all_faq_pro_photo();
             <table id="faqProPhoto" class="table table-striped" style="width:100%">
                 <thead>
                 <tr>
-                    <td class="text-nowrap">Заголовок</td>
-                    <td>Контент</td>
+                    <td>id</td>
+                    <td class="text-nowrap col-5">Заголовок</td>
+                    <td class="col-5">Описание</td>
                     <td>Действие</td>
                 </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($faqs_pro_photo as $faq_pro_photo): ?>
                     <tr>
+                        <td><?= $faq_pro_photo['id'] ?></td>
                         <td><?= $faq_pro_photo['title'] ?></td>
-                        <td><?= $faq_pro_photo['description'] ?></td>
+                        <td><?= truncate_text(strip_tags(html_entity_decode($faq_pro_photo['description'])), 300) ?></td>
                         <td>
                             <div class="btn-group" role="group" aria-label="Basic mixed styles example">
                                 <button type="submit" class="btn btn btn-info modalEditFaqProPhoto" data-id="<?= $faq_pro_photo['id'] ?>>">

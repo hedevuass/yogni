@@ -26,7 +26,7 @@ if (isset($_POST['id'])) {
     }
 
     if (isset($data['id'])) {
-        $service = get_service($data['id']);
+        $service = get_service_actual($data['id']);
         $service_img = $service['img'];
     }
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {

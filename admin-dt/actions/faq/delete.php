@@ -7,17 +7,18 @@ if (isset($_POST['id'])) {
     $id = clean_elem_form($_POST['id']);
     $type = clean_elem_form($_POST['type']);
 
-    if ($type === 'promo') {
+    try {
+        if ($type === 'promo') {
             delete_faq_promo($id);
-    } elseif ($type === 'pro_photo') {
+            $json['success'] = 'Раздел удалён';
+        } elseif ($type === 'pro_photo') {
             delete_faq_pro_photo($id);
-    } else {
+            $json['success'] = 'Раздел удалён';
+        } else {
             delete_faq_page($id);
-    }
-
-    if (delete_service($id)) {
-        $json['success'] = 'Раздел удалён';
-    } else {
+            $json['success'] = 'Раздел удалён';
+        }
+    } catch (Exception $e) {
         $json['error'] = 'Удаление раздела временно недоступно';
     }
 

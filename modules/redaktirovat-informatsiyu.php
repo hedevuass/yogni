@@ -2,6 +2,10 @@
 
 $data = [];
 
+$forbidden_words = getForbiddenWords();
+
+$escaped_forbidden_words = htmlspecialchars(json_encode($forbidden_words), ENT_QUOTES, "UTF-8");
+
 $user = get_specialist($_SESSION['user']['id']);
 
 $data['main_info'] = "<div class='block1'>";
@@ -10,15 +14,21 @@ $data['main_info'] .= input_photo($user);
 
 $data['main_info'] .= input_company($user);
 
+$nameLabel = $user['company'] ? 'Имя контактного лица' : 'Имя';
+$lastnameLabel = $user['company'] ? 'Фамилия контактного лица' : 'Фамилия';
+
+$namePlaceholder = $user['company'] ? 'Имя контактного лица' : 'Ваше имя';
+$lastnamePlaceholder = $user['company'] ? 'Фамилия контактного лица' : 'Ваша фамилия';
+
 $data['main_info'] .= <<<EOF
-        <div class="item">
-            <p>Имя</p>
-            <input type="text" name="name" placeholder="Ваше имя" value="{$user['name']}">
-        </div>
-        <div class="item">
-            <p>Фамилия</p>
-            <input type="text" name="lastname" placeholder="Ваша фамилия" value="{$user['lastname']}">
-        </div>
+    <div class="item">
+        <p>{$nameLabel}</p>
+        <input type="text" name="name" placeholder="{$namePlaceholder}" value="{$user['name']}">
+    </div>
+    <div class="item">
+        <p>{$lastnameLabel}</p>
+        <input type="text" name="lastname" placeholder="{$lastnamePlaceholder}" value="{$user['lastname']}">
+    </div>
 EOF;
 
 $data['main_info'] .= input_change_status($user);
@@ -26,8 +36,9 @@ $data['main_info'] .= input_change_status($user);
 $data['main_info'] .= <<<EOF
         <div class="item">
             <p>Город</p>
-            <input type="hidden" name="city_id" value="{$user['city_id']}">
-            <input type="text" name="city" placeholder="Основной город" data-id="{$user['city_id']}" value="{$user['city']}">
+            <input type="hidden" name="city_id" value="{$user['city_id']}" readonly>
+            <input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
+            <input type="text" name="city" placeholder="Основной город" data-id="{$user['city_id']}" value="{$user['city']}" readonly>
         </div>
 EOF;
 
@@ -50,28 +61,33 @@ $HTML = html_explode($data, $HTML);
  */
 function input_university(array $universities)
 {
-    // Формируем HTML документов
     $code = <<<EOF
     <div class="item">
         <p>Образование</p>
         <div class="university-inputs">
     EOF;
+
     if ($universities) {
         foreach ($universities as $key => $university) {
+            $university = htmlspecialchars($university, ENT_QUOTES); // защита от XSS
             $code .= <<<EOF
-                <input type="text" name="university[$key]" data-key="{$key}" placeholder="Наименование учебного заведения" value="{$university}">
+                <input type="text" name="university[$key]" data-key="{$key}" placeholder="Наименование учебного заведения (не более 70 символов)" value="{$university}" maxlength="70">
+                <div class="invalid-feedback" style="display: none;">Превышено допустимое количество символов</div>
             EOF;
         }
     } else {
         $code .= <<<EOF
-            <input type="text" name="university[1]" data-key="1" placeholder="Наименование учебного заведения" value="">
+            <input type="text" name="university[1]" data-key="1" placeholder="Наименование учебного заведения (не более 70 символов)" value="" maxlength="70">
+            <div class="invalid-feedback" style="display: none;">Превышено допустимое количество символов</div>
         EOF;
     }
+
     $code .= <<<EOF
         </div>
         <span class="add-university">Добавить образование</span>
     </div>
     EOF;
+
     return $code;
 }
 
@@ -93,15 +109,13 @@ function input_photo(array $user)
     $code = <<<EOF
         <div class="item photo__item">
             <p class="photo__title">Фото профиля</p>
-            <div class="flex photo__wrapper">
-                <div class="photo__block">
+            <div style="justify-content: center;" class="flex photo__wrapper">
+                <div style="padding: 8px 0 16px;  min-width: 0; min-height: 0;" class="photo__block">
                     <div class="photo__image {$class}" style="background-image: url('{$photo}')"></div>
+                    <label class="photo-btn" for="photo_file"></label>
                     <input type="file" name="photo_file" id="photo_file">
-                    <label for="photo_file" class="photo__btn {$class}">
-                        {$btn}
-                    </label>
+                    <div class="photo__rules-block">
                 </div>
-                <div class="photo__rules-block">
                 </div>
             </div>
         </div>
@@ -215,16 +229,21 @@ function input_about_block(array $user)
         $title = 'О себе';
         $descr = 'Расскажите о своем опыте, успешно завершенных делах и любимых направлениях деятельности. Любая информация может быть полезна.';
     }
+
+    $description = strip_tags(html_entity_decode($user['description']));
+
     $code = <<<EOF
         </div>
-            <div class="block2">
+        <div class="block2">
             <div class="name">
                 {$title}
             </div>
             <p>{$descr}</p>
             <p class="orange">Внимание: контакты размещаются в отдельном блоке.</p>
-            <textarea name="description" placeholder="Текст">{$user['description']}</textarea>
+            <textarea name="description" placeholder="Текст (не более 850 символов)" maxlength="850">{$description}</textarea>
+            <div class="invalid-feedback" style="display: none;">Превышено допустимое количество символов</div>
         </div>
     EOF;
+
     return $code;
 }

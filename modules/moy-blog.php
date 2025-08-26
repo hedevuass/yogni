@@ -7,10 +7,15 @@ $data['info_blog'] = '';
 
 // Получаем блог и выводим последние записи
 $blog = get_specialist_blog($_SESSION['user']['id']);
+if (!$blog) {
+    // Если блога нет — создаём его
+    add_blog($_SESSION['user']['id']);
+    $blog = get_specialist_blog($_SESSION['user']['id']); // Получаем снова после добавления
+}
 if ($blog) {
     $blog_id = $blog['id'];
     $data['blog_id_input'] = '<input type="hidden" name="blog_id" value="' . $blog_id . '">';
-    $articles = get_blog_articles($blog_id, 0, 5, 0, 1);
+    $articles = get_blog_articles($blog_id, 0, 5, 0, [0, 1, 2]);
     $data['articles'] = block_articles_cabinet($articles, true);
     if (count($articles) == 5) {
         $data['articles_more_btn'] = '<button class="more-articles">Больше записей</button>';
@@ -25,7 +30,7 @@ if ($blog) {
     $rating = is_null($user['rating']) ? '0' : intval($user['rating']);
 
     $data['info_blog'] .= <<<EOF
-<div>
+<!-- <div>
     <div class="stat-info">{$rating}<span class="red">-0</span></div>
     <div class="stat-descr">В рейтинге</div>
 </div>
@@ -36,11 +41,11 @@ if ($blog) {
 <div>
     <div class="stat-info">{$views_count}<span class="green">+0</span></div>
     <div class="stat-descr">Просмотров</div>
-</div>
+</div> -->
 EOF;
 
 $data['info_blog_mobile'] .= <<<EOF
-<div>
+<!-- <div>
     <div class="stat-info">{$rating}<span class="red">-0</span></div>
     <div class="stat-descr">В рейтинге</div>
 </div>
@@ -51,7 +56,7 @@ $data['info_blog_mobile'] .= <<<EOF
 <div>
     <div class="stat-info">{$views_count}<span class="green">+0</span></div>
     <div class="stat-descr">Просмотров</div>
-</div>
+</div> -->
 EOF;
 }
 

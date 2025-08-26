@@ -1,19 +1,21 @@
-<form style="padding-top: 30px;" class="prices-block" id="cabinet-price">
-	<table>
-		<thead>
-			<tr>
-				<td>Услуга</td>
-				<td>Стоимость</td>
-				<td>От</td>
-				<td></td>
-			</tr>
-		</thead>
-		<tbody>
-			<!--data:cabinet_price--><!--data:cabinet_price-->
-		</tbody>
-	</table>
-	<span class="add">Добавить услугу</span>
-	<span class="mob-add">Добавить услугу</span>
+<form class="prices-block" id="cabinet-price">
+	<div style="padding-top: 30px;" class="prices-block-div">
+		<table>
+			<thead>
+				<tr>
+					<td>Услуга</td>
+					<td>Стоимость</td>
+					<td>От</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+				<!--data:cabinet_price--><!--data:cabinet_price-->
+			</tbody>
+		</table>
+		<span class="add">Добавить услугу</span>
+		<span class="mob-add">Добавить услугу</span>
+	</div>
 	<button type="submit" class="bottom-button" disabled>Сохранить информацию</button>
 </form>
 
@@ -23,16 +25,45 @@
 	<div class="popup__body">
 		<div class="popup__field">
 			<div class="popup__mob-subtitle">Услуга</div>
-			<input type="text" class="popup__input" id="popup-price-name" placeholder="Наименование услуги">
+			<input type="text" class="popup__input" id="popup-price-name" placeholder="Наименование услуги (не более 40 символов)" maxlength="40">
+			<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
 		</div>
 		<div class="popup__field">
 			<div class="popup__mob-subtitle">Стоимость</div>
-			<input type="text" class="popup__input small" id="popup-price" placeholder="Цена">
-			<span class="price-from">От</span>
-			<input type="checkbox" class="checkbox" id="popup-price-from">
-            <label for="popup-price-from"></label>
+			<div class="price-flex-row">
+				<div class="price-input-wrapper">
+					<input type="text" class="popup__input small" id="popup-price" placeholder="Цена">
+				</div>
+				<span class="price-from">От</span>
+				<input type="checkbox" class="checkbox" id="popup-price-from">
+				<label for="popup-price-from"></label>
+			</div>
 		</div>
 		<input type="hidden" id="popup-price-id">
 		<div class="mob-prices-btn">Подтвердить</div>
+	</div>
+</div>
+
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
 	</div>
 </div>

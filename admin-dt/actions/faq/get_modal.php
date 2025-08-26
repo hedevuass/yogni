@@ -7,9 +7,6 @@ if (isset($_POST['id'])) {
     $id = clean_elem_form($_POST['id']);
 
     $faq_pages = get_faq_page((int)$id);
-    $faq_pages['id'] = $faq_pages['id'];
-    $faq_pages['name'] = $faq_pages['name'];
-    $faq_pages['alias'] = $faq_pages['alias'];
 
     $json['code'] = get_view($_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'modules/modal/faq_modal.php', [
         'faq_pages' => $faq_pages,

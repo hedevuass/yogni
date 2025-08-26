@@ -29,7 +29,7 @@ if (isset($_POST['name'])) {
         // Удаляем апострофы из цены
         $price = $data['price'][$key] ?? 0;
         if ($price != 0) {
-            $price = intval(str_replace("'", '', $price)); // Удаление апострофа
+            $price = intval(preg_replace('/[^\d]/', '', $price)); // Удаление апострофа
         }
         
         // Устанавливаем значение для 'of'

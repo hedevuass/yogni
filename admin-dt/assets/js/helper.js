@@ -74,6 +74,12 @@ let Helper = {
     }
 }
 
+$(document).ready(function() {
+    setTimeout(function() {
+        $('input[type="search"]').attr('autocomplete', 'off');
+    }, 100);
+});
+
 export {
     Helper
 }

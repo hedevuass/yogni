@@ -1,4 +1,21 @@
 <?php
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/S.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Cases.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/CasesHelper.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Gender.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/BaseInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/NamesInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/RussianLanguage.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/Cases.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/RussianCasesHelper.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/FirstNamesInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/MiddleNamesInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/LastNamesInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/functions.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/GeographicalNamesInflection.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/NounDeclension.php';
+
+use Morphos\Russian\GeographicalNamesInflection;
 
 // Личный кабинет
 if (isset($_SESSION['user'])) {
@@ -13,6 +30,32 @@ if (isset($_SESSION['user'])) {
     $data['user_links2'] = <<<EOF
     <button class="btn btn__orange reg">Создать аккаунт</button>
     EOF;
+}
+
+if (isset($_SESSION['metro']) && strpos($_SERVER['REQUEST_URI'], '/notariusy') !== 0) {
+    unset($_SESSION['metro']);
+}
+
+$cityName = $_SESSION['city']['name'];
+
+// Получаем в родительном падеже
+$cityGenitive = GeographicalNamesInflection::getCase($cityName, 'родительный');
+$cityPrepositional = GeographicalNamesInflection::getCase($cityName, 'предложный');
+$_SESSION['city_genitive'] = $cityGenitive;
+$_SESSION['city_prepositional'] = $cityPrepositional;
+
+$slugs = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+
+foreach ($slugs as $slug) {
+    $service = get_service_parent_catalog($slug); // вернёт ['title' => ..., 'icon' => ..., ...]
+    if ($service) {
+        $key = match ($slug) {
+            'yuristy-i-advokaty' => 'menu1_lawyer',
+            'experty'            => 'menu1_expert',
+            'notariusy'          => 'menu1_notarius',
+        };
+        $data[$key] = htmlspecialchars($service['title']);
+    }
 }
 
 // Социальные сети

@@ -6,7 +6,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/functions.php';
 if (isset($_POST['search'])) {
     // если строка поиска пустая
     if ($_POST['search'] == "") {
-?>
+        ?>
         <div class="search-categories">
             <?php
             //получение и вывод категорий (кругляшей)
@@ -28,7 +28,7 @@ if (isset($_POST['search'])) {
                 echo '<a href="/yuristy-i-advokaty/' . $last_category['slug'] . '" class="category">' . $last_category['title'] . '</a>';
             } ?>
         </div>
-    <?php die();
+        <?php die();
     }
     //если строка поиска не пустая
     $cats = [];
@@ -71,31 +71,32 @@ if (isset($_POST['search'])) {
     // выводим специалистов
     if ($specialists) {
         foreach ($specialists as $specialist) {
-            // проверяем, что ищется (имя или фамилия)
-            if (mb_stripos($specialist['name'], $search_str) !== false) {
-                // вывод только имени
-                $specialist['text1'] = $specialist['name'];
-            } else if (mb_stripos($specialist['lastname'], $search_str) !== false) {
-                // вывод только фамилии
-                $specialist['text1'] = $specialist['lastname'];
-            }
-            // ссылка на результаты поиска
-            $specialist['link1'] = '/poisk?zapros=' . $search_str;
-            if (($specialist['classification_id'] == 1 || $specialist['classification_id'] == 2) && !$lawyers) {
-                $specialist['bottom_text'] = 'В категории "' . 'юристы и адвокаты"';
-                $specialist['link1'] .= '&filter=lawyers';
-                $found_in_categories[] = $specialist;
-                $lawyers = true;
-            } else if ($specialist['classification_id'] == 3 && !$experts) {
-                $specialist['bottom_text'] = 'В категории "' . 'эксперты"';
-                $specialist['link1'] .= '&filter=experts';
-                $found_in_categories[] = $specialist;
-                $experts = true;
-            } else if ($specialist['classification_id'] == 4 && !$notaries) {
-                $specialist['bottom_text'] = 'В категории "' . 'нотариусы"';
-                $specialist['link1'] .= '&filter=notaries';
-                $found_in_categories[] = $specialist;
-                $notaries = true;
+            $full_name = $specialist['name'] . ' ' . $specialist['lastname'];
+
+            if (mb_stripos($full_name, $search_str) !== false) {
+                $specialist['text1'] = $full_name;
+                $specialist['link1'] = '/specialist/id' . $specialist['id'];
+
+                $lawyer_classifications = [1, 2];
+                $expert_classifications = [3, 8];
+                $notary_classifications = [4];
+
+                if (in_array($specialist['classification_id'], $lawyer_classifications) && !$lawyers) {
+                    $specialist['bottom_text'] = 'В категории "юристы и адвокаты"';
+                    /* $specialist['link1'] .= '&filter=lawyers'; */
+                    $found_in_categories[] = $specialist;
+                    $lawyers = true;
+                } else if (in_array($specialist['classification_id'], $expert_classifications) && !$experts) {
+                    $specialist['bottom_text'] = 'В категории "эксперты"';
+                    /* $specialist['link1'] .= '&filter=expert'; */
+                    $found_in_categories[] = $specialist;
+                    $experts = true;
+                } else if (in_array($specialist['classification_id'], $notary_classifications) && !$notaries) {
+                    $specialist['bottom_text'] = 'В категории "нотариусы"';
+                    /* $specialist['link1'] .= '&filter=notaries'; */
+                    $found_in_categories[] = $specialist;
+                    $notaries = true;
+                }
             }
         }
     }
@@ -104,15 +105,15 @@ if (isset($_POST['search'])) {
         foreach ($companies as $company) {
             $company['text1'] = $company['title'];
             // ссылка на результаты поиска
-            $company['link1'] = '/poisk?zapros=' . $search_str;
+            $company['link1'] = '/specialist/id' . $company['id_link'];
             if (($company['classification'] == 5 || $company['classification'] == 6 || $company['classification'] == 7) && !$lawyers) {
                 $company['bottom_text'] = 'В категории "' . 'юристы и адвокаты"';
-                $company['link1'] .= '&filter=lawyers';
+                /* $company['link1'] .= '&filter=lawyers'; */
                 $found_in_categories[] = $company;
                 $lawyers = true;
             } else if ($company['classification'] == 8 && !$experts) {
                 $company['bottom_text'] = 'В категории "' . 'эксперты"';
-                $company['link1'] .= '&filter=experts';
+                /* $company['link1'] .= '&filter=experts'; */
                 $found_in_categories[] = $company;
                 $experts = true;
             }
@@ -126,11 +127,12 @@ if (isset($_POST['search'])) {
 
     // получаем все категории
     $categories = get_blog_filter_themes(); ?>
-    <div class="search-categories <?= (!empty($services) && empty($specialists) && empty($companies)) ? 'disable-btn' : ''; ?>">
+    <div
+        class="search-categories <?= (!empty($services) && empty($specialists) && empty($companies)) ? 'disable-btn' : ''; ?>">
         <?php if (!empty($services)) {
-        //выводим кругляши по рез-там поиска если что-то найдено
-        ?>
-        <?php
+            //выводим кругляши по рез-там поиска если что-то найдено
+            ?>
+            <?php
             // смотрим тип первого результата (категория или подкатегория) и выводим его по нужной логике в зависимости от типа
             if ($services[0]['p_id'] == 0) {
                 // если подкатегория
@@ -200,7 +202,7 @@ if (isset($_POST['search'])) {
                                     <?= $row['text1'] ?>
                                     <div class="under_text"><?= $row['bottom_text'] ?></div>
                                 </a>
-                        <?php }
+                            <?php }
                         } ?>
                     </div>
                 <?php } ?>

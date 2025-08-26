@@ -3,59 +3,58 @@
 return [
     ADMIN_HREF => [
         'module' => 'index',
-        'title' => 'Общие настройки'
+        'title'  => 'Общие настройки',
+        'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'index' => [
         'module' => 'index',
-        'title' => 'Общие настройки'
+        'title'  => 'Общие настройки',
+        'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'menu' => [
         'module' => 'menu',
-        'title' => 'Меню'
+        'title'  => 'Меню',
+        'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'services' => [
         'module' => 'services',
-        'title' => 'Полезные разделы'
+        'title'  => 'Полезные разделы',
+        'roles'  => ['superadmin'],
     ],
-    /* ADMIN_HREF . 'blocks' => [
-        'module' => 'blocks',
-        'title' => 'Блоки'
-    ], */
     ADMIN_HREF . 'faq' => [
         'module' => 'faq',
-        'title' => 'FAQ'
+        'title'  => 'FAQ',
+        'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'specialists' => [
         'module' => 'specialists',
-        'title' => 'Специалисты'
+        'title'  => 'Специалисты',
+        'roles'  => ['superadmin', 'admin'],
     ],
     ADMIN_HREF . 'journal' => [
         'module' => 'journal',
-        'title' => 'Журнал'
+        'title'  => 'Журнал',
+        'roles'  => ['superadmin', 'admin', 'editor'],
     ],
-    //    ADMIN_HREF . 'categories' => [
-    //        'module' => '',
-    //        'title' => 'Категории'
-    //    ],
     ADMIN_HREF . 'posts' => [
         'module' => 'posts',
-        'title' => 'Блоги',
-        'badge' => true,
+        'title'  => 'Блоги',
+        'badge'  => true,
+        'roles'  => ['superadmin', 'admin', 'editor'],
     ],
     ADMIN_HREF . 'photo' => [
         'module' => 'photo',
-        'title' => 'Фотосъемка'
+        'title'  => 'Фотосъемка',
+        'roles'  => ['superadmin', 'admin'],
     ],
     ADMIN_HREF . 'tariffs' => [
         'module' => 'tariffs',
-        'title' => 'Продвижение'
+        'title'  => 'Продвижение',
+        'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'banners' => [
         'module' => 'banners',
-        'title' => 'Баннеры'
-    ],
-    ADMIN_HREF . 'feedback' => [
-        'module' => 'feedback',
-        'title' => 'Отзывы'
+        'title'  => 'Баннеры',
+        'roles'  => ['superadmin'],
     ],
 ];

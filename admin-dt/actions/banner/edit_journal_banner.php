@@ -21,14 +21,6 @@ if (isset($_POST['id'])) {
         $response['error']['title'] = 'Укажите название';
     }
 
-    if (!isset($data['alias']) || !$data['alias']) {
-        $response['error']['alias'] = 'Укажите ссылку';
-    }
-
-    if (!isset($data['content']) || !$data['content']) {
-        $response['error']['content'] = 'Укажите контент';
-    }
-
     if (isset($data['id'])) {
         $banner = get_journal_banner($data['id']);
         $existingImage = $banner['image'];

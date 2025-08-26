@@ -11,12 +11,12 @@
                     <div class="col-12">
                         <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $faq_promo['id'] ?? '' ?>">
                         <div class="mb-3">
-                            <label for="input-title" class="form-label">Название</label>
+                            <label for="input-title" class="form-label">Заголовок</label>
                             <input type="text" name="title" class="form-control" id="input-name" value="<?= $faq_promo['title'] ?? '' ?>" require>
                         </div>
                         <div class="mb-3">
-                            <label for="input-content" class="form-label">Контент</label>
-                            <textarea name="description" class="form-control input-content" id="input-content" required><?= htmlspecialchars($faq_promo['description'] ?? '') ?></textarea>
+                            <label for="input-content" class="form-label">Описание</label>
+                            <textarea name="content" class="form-control input-content" id="input-content" required><?= htmlspecialchars($faq_promo['description'] ?? '') ?></textarea>
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,10 @@
 
 $data = [];
 
+$forbidden_words = getForbiddenWords();
+
+$escaped_forbidden_words = htmlspecialchars(json_encode($forbidden_words), ENT_QUOTES, "UTF-8");
+
 // Получаем специалиста
 $user = get_specialist($_SESSION['user']['id']);
 // Подставляем телефон
@@ -14,7 +18,7 @@ $data['cabinet_contacts'] = <<<EOF
 	<div class="item">
 		<p>Телефон для звонков</p>
 		<span class="phone-mask">+7</span>
-		<input type="text" name="phone" placeholder="926 000-00-00" value="{$input_phone}">
+		<input type="text" class="phone-input" name="phone" placeholder="(926) 000-00-00" value="{$input_phone}">
 	</div>
 EOF;
 
@@ -25,7 +29,7 @@ if (!is_null($user['other'])) {
 //попап с контактами
 $data['cabinet_contacts'] .= <<<EOF
 	<div class="item">
-		<p>Email</p>
+		<p>Публичный email</p>
 		<input type="text" name="email" placeholder="Рабочая электронная почта" value="{$other_contacts['email']}">
 	</div>
 	<div class="item">
@@ -46,16 +50,18 @@ $data['cabinet_contacts'] .= <<<EOF
 	</div>
 	<div class="item">
 		<p>Адрес</p>
-		<input type="hidden" name="city_id" value="{$user['city_id']}">
-		<input type="text" name="city" placeholder="Город" value="{$user['city']}">
+		<input type="hidden" name="city_id" value="{$user['city_id']}" readonly>
+		<input type="text" name="city" placeholder="Город" value="{$user['city']}" readonly>
 		<input type="hidden" name="metro_id" value="{$user['metro_id']}">
 		<input type="text" name="metro" placeholder="Метро" value="{$user['metro']}">
 		<input type="text" name="street" placeholder="Улица" value="{$user['street']}">
 		<input type="text" name="house" placeholder="Дом" value="{$user['house']}">
+		 <input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
 	</div>
 	<div class="item">
 		<p>Как добраться</p>
-		<textarea name="how_to_get" placeholder="Опишите наиболее удобный маршрут, особенности входа (например, необходимость предъявить документы на входе) или наличие парковки. Это поможет вашим клиентам быстрее сориентироваться на месте.">{$user['how_to_get']}</textarea>
+		<textarea name="how_to_get" placeholder="Опишите наиболее удобный маршрут, особенности входа (например, необходимость предъявить документы на входе) или наличие парковки. Это поможет вашим клиентам быстрее сориентироваться на месте (не более 280 символов)" maxlength="280">{$user['how_to_get']}</textarea>
+		<div class="invalid-feedback" style="display: none;">Превышено допустимое количество символов</div>
 	</div>
 EOF;
 
@@ -187,7 +193,7 @@ function select_schedule(string|null $schedule): string
 			EOF;
 		}
 	}
-	$code .= "<button class='add-break-button'>Добавить перерыв<img src='/assets/img/cabinet/food.svg' alt='img'></button>";
+	$code .= "<button class='add-break-button'>Добавить перерыв</button>";
 	$code .= "</div>";
 
 	return $code;
@@ -218,73 +224,66 @@ function select_break_schedule(string|null $schedule): string
     <div class="days">
     EOF;
 
-		foreach ($schedule as $key => $day) {
-			if (isset($day['b_start']) && isset($day['b_end'])) {
-			$b_start = isset($day['b_start']) ? $day['b_start'] : false;
-			$b_end = isset($day['b_end']) ? $day['b_end'] : false;
-			
-			$class = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '') ? 'holliday' : '';
-			$class_label = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '') ? '' : 'background-for-label';
-		
-			$code .= <<<EOF
-			<div class="day-item day-item-break">
-				<input type="checkbox" name="days[$key]" class="checkbox checkbox-break" id="day{$key}">
-				<label class="checkbox-break $class_label" for=""></label>
-				<div class="day day-break $class">
-					<span>{$days[$key]}</span>
-					<div id="day-time">
-		EOF;
-		
-			$code .= select_times("break_start[$key]", $b_start === false ? '12:00' : $b_start, $b_start === false);
-			$code .= "–";
-			$code .= select_times("break_end[$key]", $b_end === false ? '13:00' : $b_end, $b_end === false);
-			
-			$code .= <<<EOF
-					</div>
-				</div>
-			</div>
-		EOF;
-		}
-		else {
-			//если расписание не заполнено (пустое расписание)
-			
-				if (isset($day['b_start']) && isset($day['b_end'])) {
-					if ($day['b_start'] === false || $day['b_end'] === false || $day['b_start'] === '' || $day['b_end'] === '') {
-						$class = 'holliday';
-						$class_label = '';
-					} else {
-						$class = '';
-						$class_label = 'background-for-label';
-					}
-				} else {
-					$class = 'holliday';
-					$class_label = '';
-				}
-	
-				$code .= <<<EOF
-				<div class="day-item day-item-break">
-				<input type="checkbox" name="days[$key]" class="checkbox checkbox-break" id="day{$key}">
-				<label class="checkbox-break $class_label" for=""></label>
-				<div class="day day-break $class">
-						<span class="day-name">{$days[$key]}</span>
-						<div>
-				EOF;
-	
-				$code .= select_times("break_start[$key]", '12:00', true);
-				$code .= "–";
-				$code .= select_times("break_end[$key]", '13:00', true);
-	
-				$code .= <<<EOF
-							</div>
-						</div>
-					</div>
-				EOF;
-			
-		}		
-	} 
+	foreach ($schedule as $key => $day) {
+		// Получаем значения b_start и b_end (либо false, либо строка с временем)
+		$b_start = isset($day['b_start']) ? $day['b_start'] : false;
+		$b_end   = isset($day['b_end'])   ? $day['b_end']   : false;
+
+		// Определяем CSS-класс "holliday" и "background-for-label" для лейбла
+		$class = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '')
+			? 'holliday'
+			: '';
+		$class_label = ($b_start === false || $b_end === false || $b_start === '' || $b_end === '')
+			? ''
+			: 'background-for-label';
+
+		// Определяем, должна ли галочка «перерыв» быть изначально checked
+		$checked = ($b_start !== false && $b_start !== '' && $b_end !== false && $b_end !== '')
+			? 'checked'
+			: '';
+
+		$code .= <<<EOF
+        <div class="day-item day-item-break">
+            <!-- 1) Переименовали name чекбокса с "days[$key]" на "break_active[$key]" -->
+            <!-- 2) Добавили id="break_active_$key" -->
+            <input
+                type="checkbox"
+                name="break_active[{$key}]"
+                class="checkbox checkbox-break"
+                id="break_active_{$key}"
+                {$checked}
+            >
+            <!-- 3) У label прописали for="break_active_$key" и подставили класс $class_label -->
+            <label class="checkbox-break {$class_label}" for="break_active_{$key}"></label>
+
+            <div class="day day-break {$class}">
+                <span>{$days[$key]}</span>
+                <div id="day-time">
+EOF;
+
+		// 4) select_times(...) теперь получает в третьем параметре флаг disabled=true, если $b_start === false
+		$code .= select_times(
+			"break_start[{$key}]",
+			($b_start === false ? '12:00' : $b_start),
+			($b_start === false)
+		);
+
+		$code .= "–";
+
+		$code .= select_times(
+			"break_end[{$key}]",
+			($b_end === false ? '13:00' : $b_end),
+			($b_end === false)
+		);
+
+		$code .= <<<EOF
+                </div>
+            </div>
+        </div>
+EOF;
+	}
 
 	$code .= "</div>";
-
 	return $code;
 }
 

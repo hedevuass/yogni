@@ -16,9 +16,9 @@ if($selected_count > 0) {
 }
 
 // Подставляем специализации
+$data['cabinet_specialization_title'] = '<div class="link">Выбор направлений ('. ($selected_count) .') </div>';
 $data['cabinet_specialization'] = <<<EOF
 		<div class="select">
-			<div class="link">Выбор направлений ({$selected_count})</div>
 			<ul>
 EOF;
 
@@ -38,6 +38,19 @@ EOF;
 
 // Получаем все специализации по классификации пользователя
 $all_specializations = get_services_by_classification($user['classification_id']);
+
+$data['classification_text'] = '';
+$data['classification_text_mob'] = '';
+
+if (in_array($user['classification_id'], [3, 8])) {
+	$data['classification_text'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги специалистов.';
+	$data['classification_text_mob'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги специалистов.';
+} else {
+	$data['classification_text'] = 'Выбор подразделов права повлияет на добавление профиля в каталоги специалистов, но на личной странице будут
+			отображаться только выбранные разделы права.';
+	$data['classification_text_mob'] = 'Выбор подразделов права повлияет на добавление профиля в каталоги специалистов, но на личной странице будут
+			отображаться только выбранные разделы права.';
+}
 
 $data['cabinet_specialization'] .= list_specialization($all_specializations, $specializations);
 

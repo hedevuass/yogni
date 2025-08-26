@@ -19,7 +19,7 @@ $deny = array(
 $path = dirname(__DIR__, 2) . '/uploads/avatars/';
  
 if (!isset($_FILES['photo_file'])) {
-    $json['error'] = 'Файл не загружен.';
+    /* $json['error'] = 'Файл не загружен.'; */
 } else {
     $file = $_FILES['photo_file'];
 
@@ -72,7 +72,7 @@ if (!isset($_FILES['photo_file'])) {
 }
 
 if (!isset($_FILES['photo_file_obzor'])) {
-    $json['error'] = 'Файл не загружен.';
+    /* $json['error'] = 'Файл не загружен.'; */
 } else {
     $file = $_FILES['photo_file_obzor'];
 

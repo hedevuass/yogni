@@ -7,17 +7,34 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $promotion['id'] ?? '' ?>">
-                <input type="hidden" name="type" class="form-control" id="input-type" value="<?= $type ?? '' ?>">
-                <div class="mb-3">
-                    <label for="input-price" class="form-label">Цена промо-опции</label>
-                    <input type="number" name="price" class="form-control" id="input-price" value="<?= $promotion['price'] ?? '' ?>" require>
-                </div>
+            <?= $specialization_html ?>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" id="promotionEdit">Редактировать промо-опцию</button>
+                <button type="button" class="btn btn-primary" data-price-id="<?= $price_id ?>" id="promotionEdit">Сохранить</button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('script is working');
+    document.body.addEventListener('shown.bs.modal', (event) => {
+        console.log('modal is working');
+        const modal = event.target; // Модальное окно, которое открылось
+        if (modal.id === 'modalEditPromotion') {
+            console.log('ModalEditPromotion is shown!');
+            modal.querySelectorAll('.toggle-children').forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = modal.querySelector(button.dataset.target);
+                    if (target) {
+                        target.classList.toggle('d-none');
+                        button.textContent = target.classList.contains('d-none') ? '+' : '-';
+                    }
+                });
+            });
+        }
+    });
+});
+</script>

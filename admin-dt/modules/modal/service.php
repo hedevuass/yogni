@@ -18,7 +18,7 @@
                     <div class="col-9">
                         <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $service['id'] ?? '' ?>">
                         <div class="mb-3">
-                            <label for="input-title" class="form-label">Название</label>
+                            <label for="input-title" class="form-label">Заголовок</label>
                             <input type="text" name="title" class="form-control" id="input-title" value="<?= $service['title'] ?? '' ?>" require>
                         </div>
                         <div class="mb-3">

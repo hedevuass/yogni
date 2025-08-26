@@ -1,9 +1,36 @@
+<style>
+  .title-end-nowrap {
+    white-space: nowrap;
+    display: inline;
+  }
+
+  .arrow-icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-title.active .arrow-icon {
+    transform: rotate(180deg);
+  }
+
+  .arrow-icon {
+    transition: transform 0.3s ease;
+  }
+
+  @media (max-width: 575px) {
+    .index-catalog-block:last-of-type {
+      padding: 24px 20px 30px;
+    }
+  }
+</style>
 <div class="navi">
   <div class="wrap">
-    <a href="/">ЮРФАК</a><span>/</span
-    ><!--data:breadcrumbs--><!--data:breadcrumbs-->
+    <a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
   </div>
 </div>
+<!--data:specialist_top_line--><!--data:specialist_top_line-->
 <div class="wrap">
   <div class="company-page">
     <!--data:specialist--><!--data:specialist-->
@@ -24,7 +51,7 @@
   <div class="window middle ways-window">
     <a class="close"></a>
     <div class="main-popup-title">Направления работы</div>
-    <ul class="menu-links-mobile no-arrows">
+    <ul class="menu-links-mobile menu-links-mobile-specialist no-arrows">
       <!--data:specialization_popup--><!--data:specialization_popup-->
     </ul>
   </div>
@@ -50,17 +77,13 @@
         <div class="name">Написать отзыв</div>
         <div class="form6">
           <!--data:input_specialist_id--><!--data:input_specialist_id-->
+          <!--data:user_id--><!--data:user_id-->
           <div class="field small">
-            <input
-              class="inp"
-              name="contact"
-              type="text"
-              placeholder="Номер телефона или email"
-            />
+            <input class="inp" name="name" type="text" placeholder="Ваше имя (не более 30 символов)" maxlength="30" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="field small">
-            <input class="inp" name="name" type="text" placeholder="Имя" />
+            <input class="inp" name="contact" type="text" placeholder="Email" />
             <div class="invalid-feedback"></div>
           </div>
           <div class="rating">
@@ -80,11 +103,7 @@
             <div class="invalid-feedback"></div>
           </div>
           <div class="field">
-            <textarea
-              class="inp"
-              name="review"
-              placeholder="Текст отзыва"
-            ></textarea>
+            <textarea class="inp" name="review" placeholder="Текст отзыва (не более 850 символов)" maxlength="850"></textarea>
             <div class="invalid-feedback"></div>
           </div>
           <div class="button">
@@ -113,7 +132,7 @@
 <!--data:mail--><!--data:mail-->
 <div class="popup confirmation__popup">
   <div class="bg"></div>
-  <div class="window middle">
+  <div class="window">
     <div class="close"></div>
     <div class="reg">
       <div class="name">Подтверждение прав</div>
@@ -143,7 +162,7 @@
 </div>
 <div class="popup confirmation__popup2">
   <div class="bg"></div>
-  <div class="window middle">
+  <div class="window">
     <div class="close"></div>
     <div class="reg">
       <div class="name">Подтверждение прав</div>

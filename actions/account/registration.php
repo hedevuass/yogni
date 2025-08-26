@@ -13,22 +13,22 @@ foreach ($socials as $social) {
         $width = 30;
         
         switch ($social['alt']) {
-            case 'youtube':
+            case 'Youtube':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 30;
                 break;
-            case 'telegram':
+            case 'Telegram':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'vk':
+            case 'Vk':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'yandex':
+            case 'Yandex':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
@@ -62,6 +62,10 @@ if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['p
 
     if (!$data['name']) $json['error']['name'] = 'Укажите ваше имя';
     if (!$data['lastname']) $json['error']['lastname'] = 'Укажите вашу фамилию';
+
+    $data['city_id'] = isset($_POST['city_id']) && $_POST['city_id']
+    ? (int) clean_elem_form($_POST['city_id'])
+    : (int) $_SESSION['city']['id'];
 
     $pattern = '/^((\+?7|8)(?!95[4-7]|99[08]|907|94[^09]|336)([348]\d|9[0-6789]|7[0247])\d{8}|\+?(99[^4568]\d{7,11}|994\d{9}|9955\d{8}|996[57]\d{8}|9989\d{8}|380[34569]\d{8}|375[234]\d{8}|372\d{7,8}|37[0-4]\d{8}))$/';
 
@@ -259,7 +263,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772787368194737</p></td>
+                         <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
                          <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
@@ -459,7 +463,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772787368194737</p></td>
+                         <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
                          <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
@@ -494,34 +498,46 @@ EOF;
     }
     responseJson($json);
 } else if (isset($_POST['spec_name']) && isset($_POST['spec_type'])) {
-    foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
-    }
-    if ($data['spec_type'] == 'company') {
-        $specialists = check_сompany($data['spec_name']);
-    } else if ($data['spec_type'] == 'specialist') {
-        $name = explode(' ', $data['spec_name']);
-        if ($name[0] && $name[1]) {
-            $specialists = check_user_name($name[0], $name[1]);
-        } else die();
-    }
-    if (isset($specialists) && $specialists) {
-        $response =
-            '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b>
-            <div class="users-links">';
-        foreach ($specialists as $specialist) {
-            $response .= '<a href="/specialist/id' . $specialist['id'] . '">';
-            if ($data['spec_type'] == 'company') {
-                $response .= $specialist['title'] . ', ';
-                $classification_id = $specialist['classification'];
-            } else if ($data['spec_type'] == 'specialist') {
-                $response .= $specialist['name'] . ' ' . $specialist['lastname'] . ', ';
-                $classification_id = $specialist['classification_id'];
-            }
-            $classification = get_classification($classification_id);
-            $response .= mb_strtolower($classification['title']) . '</a>';
-        }
-        $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
-        echo $response;
-    }
+  foreach ($_POST as $key => $value) {
+      $data[$key] = clean_elem_form($value);
+  }
+
+  if ($data['spec_type'] == 'company') {
+      $companies = check_сompany($data['spec_name']);
+      if ($companies) {
+          $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
+          foreach ($companies as $company) {
+              // Получаем ОДНОГО специалиста с этой компанией
+              $spec = get_specialists_by_company($company['id']);
+              if ($spec) {
+                  $classification = get_classification($spec['classification_id']);
+                  $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+                  $response .= $company['title'] . ', ';
+                  $response .= mb_strtolower($classification['title']) . '</a>';
+              }
+          }
+          $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
+          echo $response;
+      }
+
+  } else if ($data['spec_type'] == 'specialist') {
+      $name = explode(' ', $data['spec_name']);
+      if (!empty($name[0]) && !empty($name[1])) {
+          $specialists = check_user_name($name[0], $name[1]);
+          if ($specialists) {
+              $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
+              foreach ($specialists as $spec) {
+                  $classification = get_classification($spec['classification_id']);
+                  $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+                  $response .= $spec['name'] . ' ' . $spec['lastname'] . ', ';
+                  $response .= mb_strtolower($classification['title']) . '</a>';
+              }
+              $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
+              echo $response;
+          }
+      } else {
+          die();
+      }
+  }
 }
+

@@ -22,12 +22,22 @@ if (isset($_POST['id'])) {
     }
 
     if (empty($data['alias']) && !empty($data['title'])) {
-        $data['alias'] = generateAlias($data['title']);
+        $cleanedTitle = strip_tags(htmlspecialchars_decode($data['title']));
+        $data['alias'] = generateAlias($cleanedTitle);
+    }
+
+    if (empty($data['meta-title']) && !empty($data['title'])) {
+        $data['meta-title'] = strip_tags(htmlspecialchars_decode($data['title']));
+    }
+
+    // Если meta-description пустой, берем значение из content
+    if (empty($data['meta-description']) && !empty($data['content'])) {
+        $data['meta-description'] = strip_tags(htmlspecialchars_decode($data['content']));
     }
 
     if ($data['id'] !== '') {
-        $service = get_menu_item($data['id']);
-        $service_img = $service['img'];
+        $service = get_post($data['id']);
+        $service_img = $service['photo'];
         $service_icon = $service['icon']; // Получаем текущее значение иконки
     }
 
@@ -56,10 +66,32 @@ if (isset($_POST['id'])) {
     try {
         if (isset($data['id']) && $data['id'] !== '') {
             update_journal($data);
+            $article_id = $data['id'];
             $response['success'] = 'Сервис обновлён';
         } else {
-            add_journal($data);
+            $article_id = add_journal($data);
+            $data['id'] = $article_id;
             $response['success'] = 'Сервис добавлен';
+        }
+
+        // Обработка тега, если поле tags_title передано
+        if (isset($data['tags_title']) && !empty($data['tags_title'])) {
+            $tags_title = $data['tags_title'];
+
+            // Проверяем наличие тега с таким title в таблице dt_tags
+            $tag = $data_base->selectRow("SELECT * FROM dt_tags WHERE title = ?", [$tags_title]);
+            if (!$tag) {
+                // Если тега нет, генерируем alias и добавляем новую запись
+                $tag_alias = generateAlias($tags_title);
+                $data_base->add("INSERT INTO dt_tags (title, alias) VALUES (?, ?)", [$tags_title, $tag_alias]);
+                // Получаем добавленный тег
+                $tag = $data_base->selectRow("SELECT * FROM dt_tags WHERE title = ?", [$tags_title]);
+            }
+            $tag_id = $tag['id'];
+
+            // Обновляем связи: удаляем старые записи для этой статьи, затем вставляем новую связь
+            $data_base->delete("DELETE FROM dt_post_tags WHERE article_id = ?", [$article_id]);
+            $data_base->add("INSERT INTO dt_post_tags (tag_id, article_id) VALUES (?, ?)", [$tag_id, $article_id]);
         }
     } catch (Exception $e) {
         $response['fatal'] = 'Редактирование временно недоступно. Ошибка: ' . $e->getMessage();

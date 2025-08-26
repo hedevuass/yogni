@@ -3,10 +3,16 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
 
+$forbidden_words = getForbiddenWords();
+
 if (isset($_POST['name'])) {
     foreach ($_POST as $key => $value) {
         $data[$key] = clean_elem_form($value);
     }
+
+    /* if ($found = containsForbiddenWords($data['description'], $forbidden_words)) {
+        $json['error']['description'] = "Текст записи содержит запрещённое слово: \"$found\".";
+    } */
 
     if (!$data['name']) $json['error']['name'] = 'Укажите ваше имя';
     if (!$data['lastname']) $json['error']['lastname'] = 'Укажите вашу фамилию';

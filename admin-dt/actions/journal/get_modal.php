@@ -6,7 +6,10 @@ include $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'actions/database/functions.php
 if (isset($_POST['id'])) {
     $id = clean_elem_form($_POST['id']);
     $journal = get_post((int)$id);
-    $journal['photo'] = $journal['photo'] ? '/uploads/articles/' . $journal['photo'] : '/assets/img/cabinet/gray-circle.svg';
+    $journal['photo'] = !empty($journal['photo']) && $journal['photo'] !== false
+    ? '/uploads/articles/' . $journal['photo']
+    : '/assets/img/cabinet/gray-circle.svg';
+
     $journal_id = $journal['id'];
     $journal_theme_id = $journal['theme_id'];
     $journal_theme_title = $journal['theme_title'];

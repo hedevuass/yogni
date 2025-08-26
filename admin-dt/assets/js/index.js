@@ -8,6 +8,10 @@ let MainPage = {
         'modalEditSelector': '#modalEditDocument',
         'togglePasswordButton': '.toggle-password',
         'contentSelector': '#input-content',
+        'formSelector': 'form[action="actions/settings/update_settings.php"]',
+        'formSelectorAdmin': 'form[action="actions/settings/update_main_user.php"]',
+        'alertContainerAdmin': '#alert-container-admin',
+        'alertContainer': '#alert-container'
     },
     start: function () {
         $('#mainTable').dataTable({
@@ -26,6 +30,9 @@ let MainPage = {
         $(this.selectors.pageSelector).on('click', '.modalAdd', this.modalEdit)
         $(this.selectors.pageSelector).on('click', '#documentEdit', this.edit)
         $(this.selectors.pageSelector).on('click', '.delete', this.delete)
+        $(this.selectors.pageSelector).on('click', '.saveForbiddentWords', this.saveForbiddentWords)
+        $(this.selectors.pageSelector).on('submit', this.selectors.formSelector, this.submitForm);
+        $(this.selectors.pageSelector).on('submit', this.selectors.formSelectorAdmin, this.submitAdminForm);
     },
     initTinyMCE: function () {
         if (typeof tinymce !== 'undefined') {
@@ -34,11 +41,19 @@ let MainPage = {
 
             tinymce.init({
                 selector: `${MainPage.selectors.contentSelector}`,
-                plugins: 'lists link',
-                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
-                
+                plugins: 'lists autolink', // удалили 'link'
+                toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic | alignleft aligncenter alignright | bullist numlist',
                 branding: false,
-                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                content_css: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap',
+                content_style: `
+                    body, p, h1, h2, h3, div, span {
+                        font-family: Roboto, sans-serif !important;
+                        font-size: 14px !important;
+                    }
+                `,
+            
+                font_family_formats: "Roboto=Roboto, sans-serif;Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;",
+                font_size_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 24pt 36pt 48pt',
                 block_formats: 'Header 1=h1; Header 2=h2; Header 3=h3; Paragraph=p',
                 style_formats: [
                     { title: 'Header 1', block: 'h1' },
@@ -46,16 +61,100 @@ let MainPage = {
                     { title: 'Header 3', block: 'h3' },
                     { title: 'Paragraph', block: 'p' }
                 ],
+                force_br_newlines: true,
+                force_p_newlines: false,
+                forced_root_block: 'div',
+                
+                // Отключаем настройки, связанные со ссылками
+                relative_urls: false,
+                remove_script_host: false,
+                convert_urls: false,
+                readonly: false,
                 setup: function (editor) {
+                    let modalEl = document.querySelector(MainPage.selectors.modalEditSelector);
+                    let modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                
+                    function disableFocusTrap() {
+                        if (modalInstance && modalInstance._focustrap) {
+                            modalInstance._focustrap.deactivate();
+                        }
+                    }
+                
+                    function enableFocusTrap() {
+                        if (modalInstance && modalInstance._focustrap) {
+                            modalInstance._focustrap.activate();
+                        }
+                    }
+                
+                    editor.on('OpenWindow', function () {
+                        disableFocusTrap();
+                        setTimeout(() => {
+                            const input = document.querySelector('.tox-dialog input');
+                            if (input) input.focus();
+                        }, 50);
+                    });
+                
+                    editor.on('CloseWindow', function () {
+                        enableFocusTrap();
+                    });
+                
                     editor.on('init', function () {
                         console.log('Editor initialized');
                     });
-                }
+                },
             });
             
         } else {
             console.error('TinyMCE не загружен.');
         }
+    },
+    submitForm: function (event) {
+        event.preventDefault();
+        let form = $(this);
+        let formData = form.serialize();
+        let alertContainer = $(MainPage.selectors.alertContainer);
+
+        $.ajax({
+            type: "POST",
+            url: form.attr("action"),
+            data: formData,
+            dataType: "json",
+            beforeSend: function () {
+                form.find("button[type='submit']").prop("disabled", true);
+            },
+            success: function (response) {
+                form.find("button[type='submit']").prop("disabled", false);
+                alertContainer.html(`<div class="alert alert-${response.status === 'success' ? 'success' : 'danger'}">${response.message}</div>`);
+            },
+            error: function () {
+                alertContainer.html(`<div class="alert alert-danger">Произошла ошибка запроса.</div>`);
+                form.find("button[type='submit']").prop("disabled", false);
+            }
+        });
+    },
+    submitAdminForm: function (event) {
+        event.preventDefault();
+        let form = $(this);
+        let formData = form.serialize();
+        let alertContainer = $(MainPage.selectors.alertContainerAdmin);
+
+        $.ajax({
+            type: "POST",
+            url: form.attr("action"),
+            data: formData,
+            dataType: "json",
+            beforeSend: function () {
+                form.find("button[type='submit']").prop("disabled", true);
+            },
+            success: function (response) {
+                form.find("button[type='submit']").prop("disabled", false);
+                alertContainer.html(`<div class="alert alert-${response.status === 'success' ? 'success' : 'danger'}">${response.message}</div>`);
+            },
+            error: function () {
+                alertContainer.html(`<div class="alert alert-danger">Произошла ошибка запроса.</div>`);
+                form.find("button[type='submit']").prop("disabled", false);
+            }
+        });
     },
     modalEdit: function () {
         let button = $(this),
@@ -115,6 +214,27 @@ let MainPage = {
             }
         });
     },    
+    saveForbiddentWords: function (e) {
+        e.preventDefault();
+        let words = $("#forbidden-words").val().trim();
+
+        $.ajax({
+            type: "POST",
+            url: "actions/settings/save_forbidden_words.php",
+            data: { forbidden_words: words },
+            dataType: "json",
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function () {
+                alert("Ошибка при сохранении запрещённых слов");
+            }
+        });
+    },
     delete: function () {
         let id = $(this).attr('data-id'),
             button = $(this)

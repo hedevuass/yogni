@@ -8,18 +8,26 @@
       width: 100%;
       height: auto;
     }
+
     .swiper-slide {
-      
+      display: flex !important;
+      justify-content: center !important;
     }
+
+    .swiper-container-order .swiper-slide {
+      justify-content: flex-start !important;
+    } 
 
     .swiper-pagination-bullet {
       background: #ffffff !important;
       border: 1px solid;
     }
+
     .swiper-pagination-bullet-active {
       background: #ff8139 !important;
       border: 1px solid #ff8139;
     }
+
     .swiper-container-order {
       order: 3;
       width: 100%;
@@ -56,12 +64,17 @@
     <div class="pro-photo__wrapper">
       <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card">
-          <div class="card__title">
+          <div class="card__title" data-id="1">
             <div class="title"><!--data:title1--><!--data:title1--></div>
           </div>
           <div class="card__price-block">
+            <div class="card__price old">
+              <span class="price crossed bold"><!--data:price_old1--><!--data:price_old1--></span>
+              <span class="currency"></span>
+            </div>
             <div class="card__price">
-              <span class="price"><!--data:price1--><!--data:price1--></span><span class="currency"></span>
+              <!-- Отображаем текущую цену -->
+              <span class="price"><!--data:price1--><!--data:price1--><span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span><span class="currency"></span>
             </div>
           </div>
           <div class="card__body">
@@ -83,25 +96,29 @@
         </div>
       </div>
       
+
       <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card action">
-          <div class="card__title">
+          <div class="card__title" data-id="2">
             <div class="title"><!--data:title2--><!--data:title2--></div>
-            <div class="action-less">-50%</div>
+            <!-- Блок скидки, который подставляется через замену -->
+            <!--data:discount_block2--><!--data:discount_block2-->
           </div>
           <div class="card__price-block">
             <div class="card__price old">
-              <span class="price crossed bold"><!--data:price_old2--><!--data:price_old2--></span><span class="currency"></span>
+              <span class="price crossed bold"><!--data:price_old2--><!--data:price_old2--></span>
+              <span class="currency"></span>
             </div>
             <div class="card__price">
-              <span class="price"><!--data:price2--><!--data:price2--></span><span class="currency"></span>
+              <span class="price"><!--data:price2--><!--data:price2--><span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span>
+              <span class="currency"></span>
             </div>
           </div>
           <div class="card__body">
             <ul class="card__descr">
               <li>
                 <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
-                 <!--data:time2--><!--data:time2-->
+                <!--data:time2--><!--data:time2-->
               </li>
               <li>
                 <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
@@ -110,7 +127,8 @@
             </ul>
             <a class="card__buy-btn">Заказать</a>
             <div class="card__postscr">
-              Скидка действует первые две недели после регистрации
+              <!-- Общий текст скидки -->
+              <!--data:discount_text2--><!--data:discount_text2-->
             </div>
           </div>
         </div>
@@ -119,25 +137,28 @@
         </div>
       </div>
       
+
       <div class="pro-photo__card-block hidden-comp">
         <div class="pro-photo__card">
-          <div class="card__title">
+          <div class="card__title" data-id="3">
             <div class="title"><!--data:title3--><!--data:title3--></div>
-            <div class="action-less">-50%</div>
+            <!-- Показываем блок с ценой со скидкой только если скидка активна -->
+            <!--data:discount_block3--><!--data:discount_block3-->
           </div>
           <div class="card__price-block">
             <div class="card__price old">
+              <!-- Если скидка активна, показываем старую цену -->
               <span class="price crossed bold"><!--data:price_old3--><!--data:price_old3--></span><span class="currency"></span>
             </div>
             <div class="card__price">
-              <span class="price"><!--data:price3--><!--data:price3--></span><span class="currency"></span>
+              <span class="price"><!--data:price3--><!--data:price3--><span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span><span class="currency"></span>
             </div>
           </div>
           <div class="card__body">
             <ul class="card__descr">
               <li>
                 <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
-                 <!--data:time3--><!--data:time3-->
+                <!--data:time3--><!--data:time3-->
               </li>
               <li>
                 <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
@@ -146,155 +167,137 @@
             </ul>
             <a class="card__buy-btn">Заказать</a>
             <div class="card__postscr">
-              Скидка действует первые две недели после регистрации
+              <!-- Показываем текст скидки только если скидка активна -->
+              <!--data:discount_text3--><!--data:discount_text3-->
             </div>
           </div>
         </div>
         <div class="card__text">
           <!--data:description3--><!--data:description3-->
         </div>
-      </div>
+      </div>      
 
-      
-      <div class="swiper-container mobile-only">
+      <div class="swiper-container swiper-container-tariff mobile-only">
         <div class="swiper-wrapper">
+          <!-- Слайд 1 -->
           <div class="swiper-slide">
             <div class="pro-photo__card-block">
               <div class="pro-photo__card">
-                <div class="card__title">
-                  <div class="title"><!--data:mob-title1--><!--data:mob-title1--></div>
+                <div class="card__title" data-id="1">
+                  <div class="title"><!--data:mob_title1--><!--data:mob_title1--></div>
                 </div>
                 <div class="card__price-block">
                   <div class="card__price">
-                    <span class="price"
-                      ><!--data:price1_2--><!--data:price1_2--></span
-                    ><span class="currency"></span>
+                    <span class="price"><!--data:mob_price1--><!--data:mob_price1-->
+                    <span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span>
+                    <span class="currency"></span>
                   </div>
                 </div>
                 <div class="card__body">
                   <ul class="card__descr">
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-watch.svg"
-                        alt="Watch Icon"
-                      />
-                      ~5 минут
+                      <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
+                      <!--data:mob_time1--><!--data:mob_time1-->
                     </li>
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-pic.svg"
-                        alt="Photo Icon"
-                      />
-                      1-2 фото в обработке
+                      <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
+                      <!--data:mob_number1--><!--data:mob_number1-->
                     </li>
-                  </ul>
+                  </ul>                  
                   <a class="card__buy-btn">Заказать</a>
                 </div>
               </div>
               <div class="card__text">
-                * Быстрая съёмка “на ходу” – фотограф делает несколько снимков в
-                наиболее выигрышном ракурсе. По окончанию фотосессии вы получите
-                до 3-х обработанных фото, максимально подходящих для профиля
+                <!-- Для мобильного описания, если требуется динамика, можно подставить: -->
+                <!--data:mob_description1--><!--data:mob_description1-->
               </div>
             </div>
           </div>
+          
+          <!-- Слайд 2 -->
           <div class="swiper-slide">
             <div class="pro-photo__card-block">
               <div class="pro-photo__card action">
-                <div class="card__title">
-                  <div class="title"><!--data:mob-title2--><!--data:mob-title2--></div>
-                  <div class="action-less">-50%</div>
+                <div class="card__title" data-id="2">
+                  <div class="title"><!--data:mob_title2--><!--data:mob_title2--></div>
+                  <!-- Динамическая подстановка discount блока -->
+                  <!--data:mob_discount_block2--><!--data:mob_discount_block2-->
                 </div>
                 <div class="card__price-block">
                   <div class="card__price old">
-                    <span class="price crossed bold"
-                      ><!--data:price_old2_2--><!--data:price_old2_2--></span
-                    ><span class="currency"></span>
+                    <span class="price crossed bold"><!--data:mob_price_old2--><!--data:mob_price_old2--></span>
+                    <span class="currency"></span>
                   </div>
                   <div class="card__price">
-                    <span class="price"
-                      ><!--data:price2_2--><!--data:price2_2-->*</span
-                    ><span class="currency"></span>
+                    <span class="price"><!--data:mob_price2--><!--data:mob_price2-->
+                    <span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span>
+                    <span class="currency"></span>
                   </div>
                 </div>
                 <div class="card__body">
                   <ul class="card__descr">
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-watch.svg"
-                        alt="Watch Icon"
-                      />
-                      ~10-15 минут
+                      <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
+                      <!--data:mob_time2--><!--data:mob_time2-->
                     </li>
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-pic.svg"
-                        alt="Photo Icon"
-                      />
-                      5 фото в обработке
+                      <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
+                      <!--data:mob_number2--><!--data:mob_number2-->
                     </li>
-                  </ul>
+                  </ul>                  
                   <a class="card__buy-btn">Заказать</a>
                   <div class="card__postscr">
-                    Скидка действует первые две недели после регистрации
+                    <!-- Динамический текст скидки -->
+                    <!--data:mob_discount_text2--><!--data:mob_discount_text2-->
                   </div>
                 </div>
               </div>
               <div class="card__text">
-                ** Полноценная фотосессия, упакованная в 15 минут. Больше
-                времени для выбора фона и ракурса, фотограф поможет подобрать
-                взгляд и позу для фото. Оптимальный вариант при подключении
-                услуг продвижения.
+                <!--data:mob_description2--><!--data:mob_description2-->
               </div>
             </div>
           </div>
+          
+          <!-- Слайд 3 -->
           <div class="swiper-slide">
             <div class="pro-photo__card-block">
               <div class="pro-photo__card">
-                <div class="card__title">
-                  <div class="title"><!--data:mob-title3--><!--data:mob-title3--></div>
-                  <div class="action-less">-50%</div>
+                <div class="card__title" data-id="3">
+                  <div class="title"><!--data:mob_title3--><!--data:mob_title3--></div>
+                  <!-- Динамический блок скидки -->
+                  <!--data:mob_discount_block3--><!--data:mob_discount_block3-->
                 </div>
                 <div class="card__price-block">
                   <div class="card__price old">
-                    <span class="price crossed bold"
-                      ><!--data:price_old3_2--><!--data:price_old3_2--></span
-                    ><span class="currency"></span>
+                    <span class="price crossed bold"><!--data:mob_price_old3--><!--data:mob_price_old3--></span>
+                    <span class="currency"></span>
                   </div>
                   <div class="card__price">
-                    <span class="price"
-                      ><!--data:price3_2--><!--data:price3_2--></span
-                    ><span class="currency"></span>
+                    <span class="price"><!--data:mob_price3--><!--data:mob_price3-->
+                    <span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span>
+                    <span class="currency"></span>
                   </div>
                 </div>
                 <div class="card__body">
                   <ul class="card__descr">
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-watch.svg"
-                        alt="Watch Icon"
-                      />
-                      ~ от 30 минут
+                      <img src="/assets/img/cabinet/pro-photo-watch.svg" alt="Watch Icon" />
+                      <!--data:mob_time3--><!--data:mob_time3-->
                     </li>
                     <li>
-                      <img
-                        src="/assets/img/cabinet/pro-photo-pic.svg"
-                        alt="Photo Icon"
-                      />
-                      от 10 фото в обработке
+                      <img src="/assets/img/cabinet/pro-photo-pic.svg" alt="Photo Icon" />
+                      <!--data:mob_number3--><!--data:mob_number3-->
                     </li>
+                  </ul>                  
                   </ul>
                   <a class="card__buy-btn">Заказать</a>
                   <div class="card__postscr">
-                    Скидка действует первые две недели после регистрации
+                    <!--data:mob_discount_text3--><!--data:mob_discount_text3-->
                   </div>
                 </div>
               </div>
               <div class="card__text">
-                *** Бескомпромиссный выбор для продвижения личного бренда.
-                Имиджевая фотосессия в деловом стиле. Консультация в выборе
-                образа и локации. Профессиональные фото для рекламной кампании и
-                продвижения профиля.
+                <!--data:mob_description3--><!--data:mob_description3-->
               </div>
             </div>
           </div>
@@ -302,9 +305,10 @@
         <div class="swiper-pagination"></div>
       </div>
       
+
     </div>
 
-    
+
   </div>
   <!--data:employee_photo--><!--data:employee_photo-->
   <!--data:employee_photo_mobile--><!--data:employee_photo_mobile-->
@@ -386,7 +390,7 @@
     </div>
     <div class="quarter-block">
       <div class="order-photo-images order-photo-images-pro">
-        <img
+        <!-- <img
           src="../assets/img/cabinet/ellipse1.png"
           alt="Image 1"
           class="circle-image"
@@ -400,13 +404,10 @@
           src="../assets/img/cabinet/ellipse3.png"
           alt="Image 3"
           class="circle-image"
-        />
+        /> -->
+        <img src="../assets/img/cabinet/order-photo-images.png" alt="Image 1">
       </div>
-      <a
-        href="/cabinet/faq/kak-vibrat-foto-dlya-profilya"
-        class="order-photo-btn"
-        >Правила выбора фото</a
-      >
+      <!--data:faq_page--><!--data:faq_page-->
     </div>
   </div>
   <div id="faq-block" class="faq-section pro-photo__questions hidden-comp">
@@ -417,7 +418,7 @@
     <h2 style="margin-top: 30px;">Ответы на частые вопросы</h2>
     <div id="faq-block" class="faq-section pro-photo__questions">
       <h2>Ответы на частые вопросы</h2>
-       <!--data:faq_pro_photo_data_mob--><!--data:faq_pro_photo_data_mob-->
+      <!--data:faq_pro_photo_data_mob--><!--data:faq_pro_photo_data_mob-->
     </div>
   </div>
 </div>
@@ -448,13 +449,7 @@
               <div class="quantity-name">Количество сотрудников</div>
               <div class="quantity_inner">
                 <span class="bt_minus">-</span>
-                <input
-                  type="text"
-                  name="emp_quantity"
-                  class="quantity"
-                  placeholder="1"
-                  data-max-count="40"
-                />
+                <input type="text" name="emp_quantity" class="quantity" placeholder="1" data-max-count="40" />
                 <span class="bt_plus">+</span>
               </div>
             </div>
@@ -471,6 +466,9 @@
             Дата и время съёмки согласуется с менеджером после подтверждения
             заявки
           </div>
+          <!--data:specialist_id_input--><!--data:specialist_id_input-->
+          <input type="hidden" id="photo-pro-photo-id" name="pro_photo_id" value="" />
+          <input type="hidden" id="photo-pro-photo-name" name="pro_photo_name" value="" />
           <input type="hidden" name="photo_type" id="photo-type" value="" />
           <div class="button">
             <button type="submit" id="btn-support-popup" class="popup-btn">
@@ -516,11 +514,24 @@
 <script>
   $(document).ready(function () {
     if (window.innerWidth <= 768) {
-      const swiper = new Swiper(".swiper-container", {
+      var swiper = new Swiper('.swiper-container-tariff', {
         slidesPerView: 1.1,
-        spaceBetween: 20,
+        spaceBetween: 5,
+        centeredSlides: false,
         pagination: {
-          el: ".swiper-pagination",
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+      });
+
+      var swiper = new Swiper('.swiper-container-order', {
+        slidesPerView: 1.1,
+        spaceBetween: 12,
+        centeredSlides: false,
+        centeredSlidesBounds: true,
+        slidesOffsetBefore: 0,
+        pagination: {
+          el: '.swiper-pagination',
           clickable: true,
         },
       });

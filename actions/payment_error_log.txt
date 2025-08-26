@@ -1,0 +1,10 @@
+2025-07-14 12:06:48 Недопустимый tableType: tariff или отсутствует orderId
+2025-07-14 12:08:34 POST request вернул false для URL: https://enter.tochka.com/uapi/invoice/v1.0/bills
+2025-07-14 12:08:34 Нет documentId в ответе. API сказал: {"error":"POST request \u0432\u0435\u0440\u043d\u0443\u043b false"}
+2025-07-14 12:08:41 Недопустимый tableType: tariff или отсутствует orderId
+2025-07-14 12:11:56 Недопустимый tableType: tariff или отсутствует orderId
+2025-07-14 12:12:48 GET request вернул false для URL: https://enter.tochka.com/uapi/open-banking/v1.0/accounts
+2025-07-14 12:12:48 Не найден accountId: {"error":"GET request \u0432\u0435\u0440\u043d\u0443\u043b false"}
+2025-07-14 12:15:23 Ошибка сохранения documentId 596e81fe-de3b-4fdb-a018-e082289f6891: SQLSTATE[HY000]: General error: 1364 Field 'qrcId' doesn't have a default value
+2025-07-14 12:16:50 GET request вернул false для URL: https://enter.tochka.com/uapi/open-banking/v1.0/customers
+2025-07-14 12:16:50 Не удалось получить список customers: {"error":"GET request \u0432\u0435\u0440\u043d\u0443\u043b false"}

@@ -5,7 +5,7 @@ namespace Actions\Database;
 use Exception;
 use PDO;
 
-include_once $_SERVER['DOCUMENT_ROOT'] . '/settings.php';
+include_once DOCUMENT_ROOT . '/settings.php';
 
 class DataBase
 {

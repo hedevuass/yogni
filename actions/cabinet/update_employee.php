@@ -30,15 +30,20 @@ if (isset($_POST['company_id'])) {
         if (!isset($_FILES[$key]) && !isset($employees[$key])) {
             $json['error'][$key] = 'Загрузите изображение';
             continue;
-        } else if (!isset($_FILES[$key]) && isset($employees[$key])){
+        } else if (!isset($_FILES[$key]) && isset($employees[$key])) {
             $img_name = $employees[$key]['photo'];
         } else {
-            if($data['is_mobile'] == "true" && isset($data['mobile_loaded'])){
+            if ($data['is_mobile'] == "true" && isset($data['mobile_loaded'])) {
                 if (isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
                     $img_name = $data['mobile_loaded'][$key];
                 }
             } else {
-                $image = load_image($_FILES[$key], 'employee', 'employee_' . $_SESSION['user']['id'] . '_'. date('d-m-y_H-i-s'));
+                $uniq = uniqid();
+                $image = load_image(
+                    $_FILES[$key],
+                    'employee',
+                    "employee_{$_SESSION['user']['id']}_{$uniq}"
+                );
                 if (isset($image['error'])) {
                     $json['error'][$key] = $image['error'];
                     continue;

@@ -1,30 +1,34 @@
 <div class="contacts-block">
 	<form method="POST" class="block" id="cabinet-contacts">
-		<!--data:cabinet_contacts--><!--data:cabinet_contacts-->
-		<div class="popup break__popup">
-			<div class="bg"></div>
-			<div class="window window-break middle">
-			  <div class="close"></div>
-			  <div class="reg red-break">
-				<img src="/assets/img/cabinet/break-svg-popup.svg">
-				<div class="name-break">
-				  Добавить <br>обеденный перерыв
+		<div class="cabinet-contacts-div">
+			<!--data:cabinet_contacts--><!--data:cabinet_contacts-->
+			<div class="popup break__popup">
+				<div class="bg"></div>
+				<div class="window window-break middle">
+					<div class="close"></div>
+					<div class="reg red-break">
+						<img src="/assets/img/cabinet/break-svg-popup.svg">
+						<div class="name-break">
+							Добавить <br>обеденный перерыв
+						</div>
+						<div class="contacts-block contacts-block-break">
+							<!--data:cabinet_contacts_break--><!--data:cabinet_contacts_break-->
+						</div>
+						<button id="break_submit" disabled>Подтвердить</button>
+					</div>
 				</div>
-				<div class="contacts-block contacts-block-break">
-				<!--data:cabinet_contacts_break--><!--data:cabinet_contacts_break-->
-				</div>
-				<button id="break_submit" disabled>Подтвердить</button>
 			</div>
-	  		</div>
 		</div>
 		<button type="submit" id="shedule_submit" disabled>Сохранить информацию</button>
 	</form>
 	<div class="block">
-		<div class="contacts">
-			<div class="name">
-				Вид карточки с контактами
+		<div class="cabinet-contacts-div">
+			<div class="contacts">
+				<div class="name">
+					Вид карточки с контактами
+				</div>
+				<!--data:cabinet_cart--><!--data:cabinet_cart-->
 			</div>
-			<!--data:cabinet_cart--><!--data:cabinet_cart-->
 		</div>
 	</div>
 	<div class="clear"></div>
@@ -42,5 +46,28 @@
 		</div>
 	</div>
 </div>
-  </div>
- 
+</div>
+
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

@@ -5,11 +5,15 @@ $data = [];
 $main_cat = 'Вид экспертизы';
 
 if ($_SERVER['REQUEST_URI'] != '/') {
-    $requestion_str = (explode('/', $_SERVER['REQUEST_URI']))[2];
-    if($requestion_str) {
-        $requestion = strtok($requestion_str, '?');
-        $category = get_service_by_slug($requestion);
+    $uri_arr = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+    $filter = in_array(end($uri_arr), ['private', 'company']) ? array_pop($uri_arr) : null;
+    $requestion_str = $uri_arr[1] ?? null;
+    if ($requestion_str) {
+        $category = get_service_by_slug($requestion_str);
+    } else {
+        $category = false;
     }
+
     $main_cat = 'Все виды экспертиз';
 }
 
@@ -32,16 +36,17 @@ if (isset($last_cat) && $last_cat != '') {
 }
 
 // Чекбоксы
-$specialist = $company = '';
+$specialist = $company = $specialist_mob = $company_mob = '';
 $all_mob = 'active';
 
-if (isset($_GET['company']) && !isset($_GET['specialist'])) {
+$current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+
+// Проверяем, содержится ли в пути "private" или "company"
+if (str_contains($current_path, 'company') && !str_contains($current_path, 'private')) {
     $company = 'checked';
     $company_mob = 'active';
     $all_mob = '';
-}
-
-if (isset($_GET['specialist']) && !isset($_GET['company'])) {
+} elseif (str_contains($current_path, 'private') && !str_contains($current_path, 'company')) {
     $specialist = 'checked';
     $specialist_mob = 'active';
     $all_mob = '';
@@ -54,7 +59,7 @@ EOF;
 
 $data['filter_checkbox_mobile'] = <<<EOF
     <div class="catalog-checkbox-mobile" data-class-slug="experty">
-        <div class="checkbox $all_mob">Все</div>
+        <div class="checkbox all_ch $all_mob">Все</div>
         <div class="checkbox specialist_ch $specialist_mob">Частные</div>
         <div class="checkbox company_ch $company_mob">Компании</div>
     </div>

@@ -2,6 +2,18 @@
 
 $specialist = get_specialist($_SESSION['user']['id']);
 $specialist_classification = $specialist['classification_id'];
+$specialist_id = $specialist['id'];
+// Получаем ID специалиста из сессии
+$payment_type = null;
+
+if ($specialist_id) {
+  $payment = get_last_payment($specialist_id);
+  if ($payment) {
+    $payment_type = $payment['tableType'];
+  }
+}
+
+$forbidden_words = getForbiddenWords();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Вывод отладочной информации
@@ -14,68 +26,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   if (isset($_POST['tariff_id'])) {
     $tariff_id = $_POST['tariff_id'];
-    add_tariff_to_specialist($specialist_id, $tariff_id, $end_date, $duration_int);
+    $orderId = $_POST['orderId'] ?? null;
+    add_tariff_to_specialist($specialist_id, $tariff_id, $end_date, $duration_int, $orderId);
     echo json_encode(['status' => 'success', 'message' => 'Тариф успешно подключен']);
   } elseif (isset($_POST['option_id'])) {
     $option_id = $_POST['option_id'];
-    add_options_to_specialist($specialist_id, $option_id, $end_date);
+    $orderId = $_POST['orderId'] ?? null;
+    add_options_to_specialist($specialist_id, $option_id, $end_date, $orderId);
     echo json_encode(['status' => 'success', 'message' => 'Опция успешно подключена']);
   } elseif (isset($_POST['banner_id'])) {
     $banner_id = $_POST['banner_id'];
+    $banner_name = $_POST['banner_name'];
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
     $description = $_POST['description'];
+
     add_banners_to_specialist($specialist_id, $banner_id, $start_date, $end_date, $description);
     echo json_encode(['status' => 'success', 'message' => 'Баннер успешно размещен']);
+
+    $notify_data = [
+      'type' => 'banner',
+      'date' => date('d.m.Y'),
+      'name'  => !empty($specialist['company']) ? $specialist['company'] : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? '')),
+      'text' => $description,
+      'period' => date('d.m.Y', strtotime($start_date)) . ' - ' . date('d.m.Y', strtotime($end_date)),
+      'title' => $banner_name
+    ];
+
+    $opts = [
+      'http' => [
+        'method' => 'POST',
+        'header' => 'Content-type: application/x-www-form-urlencoded',
+        'content' => http_build_query($notify_data),
+        'timeout' => 5
+      ]
+    ];
+
+    $context = stream_context_create($opts);
+    $response = file_get_contents($_SERVER['HTTP_ORIGIN'] . '/actions/mail/note_notification.php', false, $context);
+
+    echo json_encode([
+      'status' => 'success',
+      'message' => 'Баннер успешно размещен, уведомление отправлено'
+    ]);
   } elseif (isset($_POST['journal_id'])) {
     $journal_id = $_POST['journal_id'];
+    $journal_name = $_POST['journal_name'];
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
     $description = $_POST['description'];
+
     add_journal_to_specialist($specialist_id, $journal_id, $start_date, $end_date, $description);
     echo json_encode(['status' => 'success', 'message' => 'Баннер успешно размещен']);
+
+    $notify_data = [
+      'type' => 'banner',
+      'date' => date('d.m.Y'),
+      'name'  => !empty($specialist['company']) ? $specialist['company'] : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? '')),
+      'text' => $description,
+      'period' => date('d.m.Y', strtotime($start_date)) . ' - ' . date('d.m.Y', strtotime($end_date)),
+      'title' => $journal_name
+    ];
+
+    $opts = [
+      'http' => [
+        'method' => 'POST',
+        'header' => 'Content-type: application/x-www-form-urlencoded',
+        'content' => http_build_query($notify_data),
+        'timeout' => 5
+      ]
+    ];
+
+    $context = stream_context_create($opts);
+    $response = file_get_contents($_SERVER['HTTP_ORIGIN'] . '/actions/mail/note_notification.php', false, $context);
+
+    echo json_encode([
+      'status' => 'success',
+      'message' => 'Баннер успешно размещен, уведомление отправлено'
+    ]);
   } elseif (isset($_POST['promos'])) {
     foreach ($_POST['promos'] as $promo) {
       $promo_id = $promo['promo_id'];
       $service_ids = $promo['service_ids'];
+      $service_slug = $promo['service_slug'];
+      $service_name = $promo['service_name'];
       $start_date = $promo['start_date'];
       $end_date = $promo['end_date'];
+      $orderId = $promo['orderId'];
       $price = $promo['price'];
       $specialist_id = $promo['specialist_id'];
 
-      $sort = ($promo_id == 1) ? 2 : (($promo_id == 2) ? 1 : null);
+      $sort = $promo_id;
 
       foreach ($service_ids as $service_id) {
         // Определяем block_id
-        if (in_array($service_id, ['block_top_specialists', 'block_specialist_positions'])) {
-          $block_id = 4;
-          $service_id = null;
-        } else {
-          $service_id = generateAlias($service_id);
-
-          switch ($specialist_classification) {
-            case 1:
-            case 2:
-            case 5:
-            case 6:
-            case 7:
-              $block_id = 1;
-              break;
-            case 3:
-            case 8:
-              $block_id = 2;
-              break;
-            case 4:
-              $block_id = 3;
-              break;
-            default:
-              $block_id = null; // Обработка случая, если классификация не совпадает
-              break;
-          }
+        switch ($specialist_classification) {
+          case 1:
+          case 2:
+          case 5:
+          case 6:
+          case 7:
+            $block_id = 1;
+            break;
+          case 3:
+          case 8:
+            $block_id = 2;
+            break;
+          case 4:
+            $block_id = 3;
+            break;
+          default:
+            $block_id = null; // Обработка случая, если классификация не совпадает
+            break;
         }
-
         // Передаем block_id в add_promo_placement
-        add_promo_list($specialist_id, $block_id, $service_id, $end_date, $sort);
+        add_promo_list($specialist_id, $block_id, $service_id, $service_name, $sort, $start_date, $end_date, $orderId);
       }
     }
 
@@ -93,21 +158,136 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
     echo json_encode(['status' => 'success', 'message' => 'Промо размещение успешно добавлено']);
+  } elseif (isset($_POST['sort'])) {
+    $sort = $_POST['sort'];
+    $occupied_entries = [];
+
+    if (!empty($_POST['service_slug'])) {
+      $service_slug = $_POST['service_slug'];
+
+      // Обработка для специальных service_slug, когда нужно использовать block_id
+      if ($service_slug == 'block_specialist_positions') {
+        /* switch ($specialist_classification) {
+          case 1:
+          case 2:
+          case 5:
+          case 6:
+          case 7:
+            $block_id = 1;
+            break;
+          case 3:
+          case 8:
+            $block_id = 2;
+            break;
+          case 4:
+            $block_id = 3;
+            break;
+          default:
+            $block_id = 1;
+            break;
+        } */
+        $block_id = 2;
+
+        // Получаем все активные записи для этого блока и sort
+        $conflicting_entries = get_occupied_entries_by_block_and_service($block_id, $service_slug, $sort, $specialist['id']);
+
+        // Блокируем даты только если записей >= 8 для sort = 2
+        if ($sort == 2 && count($conflicting_entries) >= 7) {
+          foreach ($conflicting_entries as $entry) {
+            $entry['date_start'] = strtotime($entry['date_start']);
+            $entry['date_expires'] = strtotime($entry['date_expires']);
+            $occupied_entries[] = $entry;
+          }
+        } elseif ($sort != 2) {
+          // Для остальных sort блокируем даты всегда
+          foreach ($conflicting_entries as $entry) {
+            $entry['date_start'] = strtotime($entry['date_start']);
+            $entry['date_expires'] = strtotime($entry['date_expires']);
+            $occupied_entries[] = $entry;
+          }
+        }
+      } else {
+
+        $conflicting_entries = get_conflicting_entries($specialist['id'], $service_slug);
+
+
+        // Далее обрабатываем только для обычных service_slug
+        foreach ($conflicting_entries as $entry) {
+          $entry['date_start'] = strtotime($entry['date_start']);
+          $entry['date_expires'] = strtotime($entry['date_expires']);
+          $occupied_entries[] = $entry;
+        }
+
+        // Логика по sort = 2 применяется только для обычных записей
+        if ($sort == 2) {
+          $entry_count = get_entry_count_by_service_slug($service_slug);
+          if ($entry_count >= 8) {
+            $additional_entries = get_occupied_entries($service_slug, $sort);
+            foreach ($additional_entries as $entry) {
+              $entry['date_start'] = strtotime($entry['date_start']);
+              $entry['date_expires'] = strtotime($entry['date_expires']);
+              $occupied_entries[] = $entry;
+            }
+          }
+        } else {
+          $additional_entries = get_occupied_entries($service_slug, $sort);
+          foreach ($additional_entries as $entry) {
+            $entry['date_start'] = strtotime($entry['date_start']);
+            $entry['date_expires'] = strtotime($entry['date_expires']);
+            $occupied_entries[] = $entry;
+          }
+        }
+      }
+    } elseif (!empty($_POST['block_id'])) {
+      $block_id = $_POST['block_id'];
+
+      $conflicting_entries = get_conflicting_entries_by_block($specialist['id'], $block_id);
+
+      foreach ($conflicting_entries as $entry) {
+        $entry['date_start'] = strtotime($entry['date_start']);
+        $entry['date_expires'] = strtotime($entry['date_expires']);
+        $occupied_entries[] = $entry;
+      }
+
+      if ($sort == 2) {
+        $entry_count = get_entry_count_by_block($block_id);
+        if ($entry_count >= 8) {
+          $additional_entries = get_occupied_entries_by_block($block_id, $sort);
+          foreach ($additional_entries as $entry) {
+            $entry['date_start'] = strtotime($entry['date_start']);
+            $entry['date_expires'] = strtotime($entry['date_expires']);
+            $occupied_entries[] = $entry;
+          }
+        }
+      } else {
+        $additional_entries = get_occupied_entries_by_block($block_id, $sort);
+        foreach ($additional_entries as $entry) {
+          $entry['date_start'] = strtotime($entry['date_start']);
+          $entry['date_expires'] = strtotime($entry['date_expires']);
+          $occupied_entries[] = $entry;
+        }
+      }
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode($occupied_entries);
+    error_log('Occupied entries: ' . print_r($occupied_entries, true));
+    exit();
   } else {
     echo json_encode(['status' => 'error', 'message' => 'Неверный запрос']);
   }
   exit();
 }
 
-$connectedJournals = get_all_connected_journals(); // Это ваша функция
+$connectedJournals = get_all_connected_journals();
 
 // Формируем массив занятых диапазонов
-$disabledRanges = [];
+$disabledJournalRanges = [];
 foreach ($connectedJournals as $journal) {
-    $disabledRanges[] = [
-        'from' => date('d.m.Y', strtotime($journal['start_date'])),
-        'to' => date('d.m.Y', strtotime($journal['end_date'])),
-    ];
+  $disabledJournalRanges[] = [
+    'from' => date('d.m.Y', strtotime($journal['start_date'])),
+    'to' => date('d.m.Y', strtotime($journal['end_date'])),
+  ];
 }
 
 $connectedBanners = get_all_connected_banners();
@@ -115,16 +295,54 @@ $connectedBanners = get_all_connected_banners();
 // Формируем массив занятых диапазонов для баннеров
 $disabledBannerRanges = [];
 foreach ($connectedBanners as $banner) {
-    $disabledBannerRanges[] = [
-        'from' => date('d.m.Y', strtotime($banner['start_date'])),
-        'to' => date('d.m.Y', strtotime($banner['end_date'])),
-    ];
+  $disabledBannerRanges[] = [
+    'from' => date('d.m.Y', strtotime($banner['start_date'])),
+    'to' => date('d.m.Y', strtotime($banner['end_date'])),
+  ];
 }
 
 // Передаем массив в JavaScript
 $script = '<script>
-const disabledRanges = ' . json_encode($disabledRanges) . ';
+const disabledJournalRanges = ' . json_encode($disabledJournalRanges) . ';
 const disabledBannerRanges = ' . json_encode($disabledBannerRanges) . ';
+
+(function(){
+    const urlParams = new URLSearchParams(window.location.search);
+    const status    = urlParams.get("status");
+    const paymentType = ' . json_encode($payment_type, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) . ';
+
+    if (status == "success" && paymentType) {
+      let boldText = "", middleText = "";
+
+      switch (paymentType) {
+        case "tariff":
+          boldText   = "Отлично!<br>Вы подключили тариф.";
+          middleText = \'Информация появится в разделе "Продвижение" в течение 60 минут.\';
+          break;
+        case "option":
+          boldText   = "Отлично!<br>Вы подключили опции.";
+          middleText = \'Информация появится в разделе "Продвижение" в течение 60 минут.\';
+          break;
+        case "promo":
+          boldText   = "Отлично!<br>Вы подключили промо-блоки.";
+          middleText = \'Информация появится в разделе "Продвижение" в течение 60 минут.\';
+          break;
+        default:
+          boldText   = "Оплата прошла успешно!";
+          middleText = "";
+      }
+
+       setTimeout(() => {
+        $("#successful-popup-tariff .bold").html(boldText);
+        $("#successful-popup-tariff .middle-text").text(middleText);
+        $("#successful-popup-tariff").fadeIn();
+        urlParams.delete("status");
+      const cleanedUrl = window.location.pathname +
+        (urlParams.toString() ? "?" + urlParams.toString() : "");
+      window.history.replaceState({}, document.title, cleanedUrl);
+      }, 500); // задержка 500 мс
+    }
+})();
 </script>';
 
 $faqs = faq_promo();
@@ -192,12 +410,15 @@ function generate_tariff_html($tariff, $class, $specialist_id, $connected_tariff
   $options = json_decode($tariff['options'], true);
   $options_html = '';
   foreach ($options as $option) {
-    $font_weight = '';
-    if ($option['text'] == "Всё, что в 'БАЗОВОМ'" || $option['text'] == "Всё, что в 'ПРО'") {
-      $font_weight = ' style="font-weight: 500;"';
+    $text = $option['text'];
+
+    if ($text == "Всё, что в БАЗОВОМ") {
+      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
+    } elseif ($text == "Всё, что в ПРО") {
+      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'ПРО\'</span></span>';
     }
 
-    $options_html .= '<li' . $font_weight . '><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . $option['text'] . '">' . $option['text'] . '</li>';
+    $options_html .= '<li><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . strip_tags($text) . '">' . $text . '</li>';
   }
 
   $button_html = '';
@@ -230,12 +451,15 @@ function generate_mobile_tariff_html($tariff, $class, $specialist_id, $connected
   $options = json_decode($tariff['options'], true);
   $options_html = '';
   foreach ($options as $option) {
-    $font_weight = '';
-    if ($option['text'] == "Всё, что в 'БАЗОВОМ'" || $option['text'] == "Всё, что в 'ПРО'") {
-      $font_weight = ' style="font-weight: 500;"';
+    $text = $option['text'];
+
+    if ($text == "Всё, что в БАЗОВОМ") {
+      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
+    } elseif ($text == "Всё, что в ПРО") {
+      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'ПРО\'</span></span>';
     }
 
-    $options_html .= '<li' . $font_weight . '><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . $option['text'] . '">' . $option['text'] . '</li>';
+    $options_html .= '<li><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . strip_tags($text) . '">' . $text . '</li>';
   }
 
   $button_html = '';
@@ -346,8 +570,6 @@ function generate_option_html($option, $connected_options_map, $specialist_id, $
   return $option_html;
 }
 
-
-
 foreach ($options as $option) {
   $options_html .= generate_option_html($option, $connected_options_map, $specialist['id'], $connected_tariffs_map);
 }
@@ -360,7 +582,7 @@ $banner_items_html = '';
 
 function generate_connected_banner_html($banner, $dates)
 {
-    return '
+  return '
     <div class="connected-detail">
         <img src="../assets/img/cabinet/connected-banner.svg" alt="Icon" class="connected-icon" />
         <div class="connected-info">
@@ -372,15 +594,15 @@ function generate_connected_banner_html($banner, $dates)
 }
 
 foreach ($connected_banners as $connected_banner) {
-    foreach ($banners as $banner) {
-        if ($banner['id'] == $connected_banner['banner_id']) {
-            // Генерируем HTML для каждого совпадения
-            $banner_items_html .= generate_connected_banner_html($banner, [
-                'start_date' => $connected_banner['start_date'],
-                'end_date' => $connected_banner['end_date']
-            ]);
-        }
+  foreach ($banners as $banner) {
+    if ($banner['id'] == $connected_banner['banner_id']) {
+      // Генерируем HTML для каждого совпадения
+      $banner_items_html .= generate_connected_banner_html($banner, [
+        'start_date' => $connected_banner['start_date'],
+        'end_date' => $connected_banner['end_date']
+      ]);
     }
+  }
 }
 
 
@@ -404,7 +626,8 @@ foreach ($banners as $banner) {
   $hidden_input = '<input type="hidden" class="popup-banner-price" id="popup-banner-price-' . htmlspecialchars($banner['id']) . '" value="' . htmlspecialchars($banner['price']) . '">';
 
   // Юрист (classification_id = 1, 2, 5, 6, 7)
-  if ((in_array($specialist_classification, ['1', '2', '5', '6', '7']) ||
+  if (
+    (in_array($specialist_classification, ['1', '2', '5', '6', '7']) ||
       in_array($specialist_classification, [1, 2, 5, 6, 7])) &&
     (in_array($banner['id'], ['1', '2']) ||
       in_array($banner['id'], [1, 2]))
@@ -416,7 +639,8 @@ foreach ($banners as $banner) {
           </label>' . $hidden_input;
   }
   // Эксперт (classification_id = 3)
-  elseif (($specialist_classification == '3' || $specialist_classification == 3) &&
+  elseif (
+    ($specialist_classification == '3' || $specialist_classification == 3) &&
     ($banner['id'] == '1' || $banner['id'] == '3' || $banner['id'] == 1 || $banner['id'] == 3)
   ) {
     $banner_options_html .= '
@@ -426,7 +650,8 @@ foreach ($banners as $banner) {
           </label>' . $hidden_input;
   }
   // Нотариус (classification_id = 4)
-  elseif (($specialist_classification == '4' || $specialist_classification == 4) &&
+  elseif (
+    ($specialist_classification == '4' || $specialist_classification == 4) &&
     ($banner['id'] == '1' || $banner['id'] == '4' || $banner['id'] == 1 || $banner['id'] == 4)
   ) {
     $banner_options_html .= '
@@ -450,31 +675,41 @@ $popup_banner_html = '
     <div class="close"></div>
     <div class="reg">
       <div class="popup-body">
-        <form method="POST" id="banner-popup-form">
-          <div class="name">
-            Размещение баннера
-          </div>
-          <div class="popup-content">
-                ' . $banner_options_html . '
-            <input type="text" id="date-select" name="date" placeholder="Даты (кратно 1 неделе)" readonly>
-    
-            <label for="ad-text">Введите рекламный текст:</label>
+       <form method="POST" id="banner-popup-form">
+        <div class="name">Размещение баннера</div>
+        <div class="popup-content">
+          ' . $banner_options_html . '
+          <div class="error error-banner_id"></div>
+
+          <input type="text" id="date-select" name="date" placeholder="Даты (кратно 1 неделе)" readonly>
+          <div class="error error-date"></div>
+
+          <label for="ad-text">Введите рекламный текст:</label>
+          <div class="paragraph-block">
             <p class="paragraph">В рекламных строках рекомендуется указать ваши преимущества и выгодные предложения.</p>
             <p class="paragraph">Ваше имя или название компании будут отображены на баннере по умолчанию.</p>
+            </div>
 
-            <input type="text" name="ad_line1" placeholder="Строка баннера № 1 - не более 30 символов">
-            <input type="text" name="ad_line2" placeholder="Строка баннера № 2 - не более 30 символов">
-            <input type="text" name="ad_line3" placeholder="Строка баннера № 3 - не более 30 символов">
-            <input type="hidden" id="popup-specialist-id" value="' . htmlspecialchars($specialist['id']) . '">
-    
-          </div>
-          <div class="button">
+          <input type="text" name="ad_line1" placeholder="Строка баннера № 1 - не более 30 символов">
+          <div class="error error-ad_line1"></div>
+
+          <input type="text" name="ad_line2" placeholder="Строка баннера № 2 - не более 30 символов">
+          <div class="error error-ad_line2"></div>
+
+          <input type="text" name="ad_line3" placeholder="Строка баннера № 3 - не более 30 символов">
+          <div class="error error-ad_line3"></div>
+
+          <input type="hidden" id="popup-specialist-id" value="' . htmlspecialchars($specialist['id']) . '">
+          <input type="hidden" id="popup-forbidden-words" value="' . htmlspecialchars(json_encode($forbidden_words), ENT_QUOTES, "UTF-8") . '">
+        </div>
+
+        <div class="button">
           <button class="reklama-continue-btn">Далее</button>
-          </div>
-          <div class="popup-footer hidden">
-            <p class="red">Выберите место и период размещения</p>
-          </div>
-        </form>
+        </div>
+        <div class="popup-footer hidden">
+          <p class="red">Выберите место и период размещения</p>
+        </div>
+      </form>
       </div>
     </div>
   </div>
@@ -509,10 +744,36 @@ $popup_banner_html2 = '
             </div>
             </p>
             <input type="hidden" name="banner_id" id="popup-banner-id-2">
+            <input type="hidden" name="banner_name" id="popup-banner-name-2">
             <input type="hidden" value="' . $specialist['id'] . '" name="specialist_id" id="popup-specialist-id-2">
             <input type="hidden" name="start_date" id="popup-start-date">
             <input type="hidden" name="end_date" id="popup-end-date">
             <input type="hidden" name="description" id="popup-description">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>';
+
+$forbidden_popup = '
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+          <div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/o-proekte' . '">«О проекте»</a>
+          </div>
           </div>
         </form>
       </div>
@@ -538,7 +799,7 @@ $journal_items_html = '';
 // Функция для генерации HTML для подключенных записей в журнале
 function generate_connected_journal_html($journal, $dates)
 {
-    return '
+  return '
         <div class="connected-detail">
             <img src="../assets/img/cabinet/connected-journal.svg" alt="Icon" class="connected-icon" />
             <div class="connected-info">
@@ -551,9 +812,9 @@ function generate_connected_journal_html($journal, $dates)
 
 foreach ($connected_journals as $connected_journal) {
   foreach ($journals as $journal) {
-      if ($connected_journal['journal_id'] == $journal['id']) {
-          $journal_items_html .= generate_connected_journal_html($journal, $connected_journal);
-      }
+    if ($connected_journal['journal_id'] == $journal['id']) {
+      $journal_items_html .= generate_connected_journal_html($journal, $connected_journal);
+    }
   }
 }
 
@@ -566,20 +827,32 @@ if (!empty($journal_items_html)) {
 }
 
 $journal_options_html = '
-<div class="select-toggle input selected-text-journal">Выберите место для размещения</div>
-<div class="select-dropdown">';
-
+  <div class="select-toggle input selected-text-journal">Выберите место для размещения</div>
+  <div class="select-dropdown">';
 foreach ($journals as $journal) {
   $journal_options_html .= '
     <label class="select-option select-option-journal">
-      <input type="radio" name="journal_id" value="' . htmlspecialchars($journal['id']) . '" data-name="' . htmlspecialchars($journal['name']) . '">
+      <input 
+        type="radio" 
+        name="journal_id" 
+        value="' . htmlspecialchars($journal['id']) . '" 
+        data-name="' . htmlspecialchars($journal['name']) . '"
+      >
       ' . htmlspecialchars($journal['name']) . '
     </label>
-    <input type="hidden" class="popup-journal-price" id="popup-journal-price-' . htmlspecialchars($journal['id']) . '" value="' . htmlspecialchars($journal['price']) . '">';
+    <input 
+      type="hidden" 
+      class="popup-journal-price" 
+      id="popup-journal-price-' . htmlspecialchars($journal['id']) . '" 
+      value="' . htmlspecialchars($journal['price']) . '"
+    >';
 }
-
 $journal_options_html .= '
-</div>';
+  </div>
+  <!-- Контейнер для ошибки выбора места размещения -->
+  <div class="error error-journal_id"></div>
+';
+
 
 $popup_journal_html = '
 <div class="popup journal-popup" id="journal-popup">
@@ -592,17 +865,24 @@ $popup_journal_html = '
           <div class="name">
             Продвижение в журнале
           </div>
-          <div class="popup-content">
+          <div class="popup-content popup-content-journal">
             ' . $journal_options_html . '
             <input type="text" id="date-select-journal" name="date" placeholder="Даты (кратно 1 неделе)" readonly>
+            <div class="error error-date"></div>
     
             <label for="ad-text">Введите рекламный текст:</label>
+            <div class="paragraph-block">
             <p class="paragraph">В рекламных строках рекомендуется указать ваши преимущества и выгодные предложения.</p>
             <p class="paragraph">Ваше имя или название компании будут отображены на баннере по умолчанию.</p>
+            </div>
 
-            <input type="text" name="ad_line1" placeholder="Заголовок - не более 30 символов">
-            <input type="text" name="ad_line2" placeholder="Описание - не более 30 символов">
+            <input type="text" name="ad_line1_j" placeholder="Заголовок - не более 50 символов">
+            <div class="error error-ad_line1_j"></div>
+
+            <input type="text" name="ad_line2_j" placeholder="Описание - не более 80 символов">
+            <div class="error error-ad_line2_j"></div>
             <input type="hidden" id="popup-specialist-id" value="' . htmlspecialchars($specialist['id']) . '">
+            <input type="hidden" id="popup-forbidden-words-journal" value="' . htmlspecialchars(json_encode($forbidden_words), ENT_QUOTES, "UTF-8") . '">
     
           </div>
           <div class="button">
@@ -646,6 +926,7 @@ $popup_journal_html2 = '
             </p>
             </div>
             <input type="hidden" name="journal_id" id="popup-journal-id-2">
+            <input type="hidden" name="journal_name" id="popup-journal-name-2">
             <input type="hidden" value="' . $specialist['id'] . '" name="specialist_id" id="popup-specialist-id-2">
             <input type="hidden" name="start_date" id="popup-start-date-journal">
             <input type="hidden" name="end_date" id="popup-end-date-journal">
@@ -659,6 +940,31 @@ $popup_journal_html2 = '
 
 $services = get_services_for_menu_with_prochie_last();
 $promo_options = get_all_promo();
+$promo_blocks = get_all_promo_blocks();
+
+// Преобразуем массив в ассоциативный по ID для удобного доступа
+$promo_data = [];
+foreach ($promo_blocks as $block) {
+  $promo_data[$block['id']] = $block;
+}
+
+$id_to_slug = [
+  3 => 'yuristy-i-advokaty',
+  4 => 'experty',
+  5 => 'notariusy',
+];
+
+foreach ($id_to_slug as $id => $slug) {
+  if (isset($promo_data[$id])) {
+    $service = get_service_parent_catalog($slug);
+    if ($service && isset($service['title'])) {
+      $cat_title = mb_strtolower($service['title']);
+      $title = 'Страница "Все ' . $cat_title . '"';
+      $promo_data[$id]['title'] = $title;
+      $promo_data[$id]['title_escaped'] = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+    }
+  }
+}
 
 $popup_promo_html = '
 <div class="popup promo-popup" id="promo-popup">
@@ -671,68 +977,65 @@ $popup_promo_html = '
           <div class="name">Промо-размещение</div>
           <div class="popup-content">
             <div class="custom-select" id="promo-select">
-              <div class="select-toggle input selected-text-promo">Выберите место для размещения</div>
+              <div id="select-toggle-promo" class="select-toggle input selected-text-promo">Выберите место для размещения</div>
               <div class="select-dropdown">
              
               <label class="option-label">Страницы</label>';
 // Главная страница с двумя выборами
 $popup_promo_html .= <<<EOF
-              <div class="select-toggle-parrent select-option service-icon m1_home">Главная страница</div>
-              <ul class="select-dropdown-childrens">
-                  <li>
-                      <label class="select-option">
-                          <input type="radio" name="service_ids[]" value="block_top_specialists" data-name="Главная страница">
-                          <span>Блок № 1 “Топ-специалисты”</span>
-                      </label>
-                  </li>
-                  <li>
-                      <label class="select-option">
-                          <input type="radio" name="service_ids[]" value="block_specialist_positions" data-name="Главная страница">
-                          <span>Места в блоках специалистов</span>
-                      </label>
-                  </li>
-              </ul>
-              EOF;
-if (
-  in_array($specialist_classification, ['1', '2', '5', '6', '7']) ||
-  in_array($specialist_classification, [1, 2, 5, 6, 7])
-) {
+<div class="select-toggle-parrent select-option service-icon m1_home">Главная страница</div>
+<ul class="select-dropdown-childrens">
+    <li>
+        <label class="select-option">
+            <input type="radio" name="service_ids[]" value="block_top_specialists" data-name="{$promo_data[1]['title']}" data-price-block1="{$promo_data[1]['price_block1']}" data-price-block2="{$promo_data[1]['price_block2']}">
+            <span>{$promo_data[1]['title']}</span>
+        </label>
+    </li>
+    <li>
+        <label class="select-option">
+            <input type="radio" name="service_ids[]" value="block_specialist_positions" data-name="{$promo_data[2]['title']}" data-price-block1="{$promo_data[2]['price_block1']}" data-price-block2="{$promo_data[2]['price_block2']}">
+            <span>{$promo_data[2]['title']}</span>
+        </label>
+    </li>
+</ul>
+EOF;
+
+if (in_array($specialist_classification, ['1', '2', '5', '6', '7']) || in_array($specialist_classification, [1, 2, 5, 6, 7])) {
+  $escaped_title = htmlspecialchars($promo_data[3]['title'], ENT_QUOTES, 'UTF-8');
   $popup_promo_html .= <<<EOF
-                            <label class="select-option service-icon m1_vse_uristy">
-                              <input type="radio" name="service_ids[]" value="" data-name="Страница “Все юристы и адвокаты”">
-                              <span>Страница “Все юристы и адвокаты”</span>
-                            </label>
-                            <label style="padding-top: 24px;" class="option-label">Разделы/подразделы каталога</label>
-                          EOF;
+        <label class="select-option service-icon m1_vse_uristy">
+            <input type="radio" name="service_ids[]" value="" data-block="1" data-name="{$promo_data[3]['title_escaped']}" data-price-block1="{$promo_data[3]['price_block1']}" data-price-block2="{$promo_data[3]['price_block2']}">
+            <span>{$promo_data[3]['title']}</span>
+        </label>
+        <label style="padding-top: 24px;" class="option-label">Разделы/подразделы каталога</label>
+    EOF;
 }
 
 if ($specialist_classification == "3" || $specialist_classification == 3) {
   $popup_promo_html .= <<<EOF
-                            <label class="select-option service-icon m1_vse_uristy">
-                              <input type="radio" name="service_ids[]" value="" data-name="Страница “Все эксперты”">
-                              <span>Страница “Все эксперты”</span>
-                            </label>
-                            <label style="padding-top: 24px;" class="option-label">Разделы/подразделы каталога</label>
-                          EOF;
+        <label class="select-option service-icon m1_vse_uristy">
+            <input type="radio" name="service_ids[]" value="" data-block="2" data-name="{$promo_data[4]['title_escaped']}" data-price-block1="{$promo_data[4]['price_block1']}" data-price-block2="{$promo_data[4]['price_block2']}">
+            <span>{$promo_data[4]['title']}</span>
+        </label>
+        <label style="padding-top: 24px;" class="option-label">Разделы/подразделы каталога</label>
+    EOF;
 }
 
 if ($specialist_classification == "4" || $specialist_classification == 4) {
   $popup_promo_html .= <<<EOF
-                                <label class="select-option service-icon m1_vse_uristy">
-                                    <input type="radio" name="service_ids[]" value="" data-name="Страница “Все нотариусы”">
-                                    <span>Страница “Все нотариусы”</span>
-                                </label>
-                            EOF;
+        <label class="select-option service-icon m1_vse_uristy">
+            <input type="radio" name="service_ids[]" value="" data-block="3" data-name="{$promo_data[5]['title_escaped']}" data-price-block1="{$promo_data[5]['price_block1']}" data-price-block2="{$promo_data[5]['price_block2']}">
+            <span>{$promo_data[5]['title']}</span>
+        </label>
+    EOF;
 }
 
 foreach ($services as $key => $service) {
-  // Если категория юристы или адвокаты (ключи 1 и 2)
-
+  // Если категория юристы или адвокаты (ключи 1, 2, 5, 6, 7)
   if (
     in_array($specialist_classification, ['1', '2', '5', '6', '7']) ||
     in_array($specialist_classification, [1, 2, 5, 6, 7])
   ) {
-
     if ($key == 1 || $key == 2 || $key == 5 || $key == 6 || $key == 7) {
       foreach ($service[0] as $index => $parrent) {
         $has_children = isset($service[$parrent['id']]);
@@ -740,13 +1043,23 @@ foreach ($services as $key => $service) {
         // Если у родительской категории есть дочерние элементы, делаем её выпадающим списком
         if ($has_children) {
           $popup_promo_html .= <<<EOF
-                                              <div class="select-toggle-parrent select-option {$parrent['slug']} service-icon">{$parrent['title']}</div>
-                                              <ul class="select-dropdown-childrens">
-                                              <li><label class="select-option">
-                                                  <input type="radio" name="service_ids[]" value="{$parrent['title']}" data-name='Подраздел "{$parrent['title']}"'>
-                                                  <span>Страница раздела "{$parrent['title']}"</span>
-                                              </label></li>
-                                          EOF;
+<div class="select-toggle-parrent select-option {$parrent['slug']} service-icon"
+EOF;
+
+          $popup_promo_html .= !empty($parrent['icon'])
+            ? ' style="background-image: url(../assets/img/' . $parrent['icon'] . ');"'
+            : '';
+
+          $popup_promo_html .= <<<EOF
+>{$parrent['title']}</div>
+<ul class="select-dropdown-childrens">
+  <li>
+    <label class="select-option">
+      <input type="radio" name="service_ids[]" value="{$parrent['slug']}" data-name='Раздел "{$parrent['title']}"' data-price-block1="{$parrent['price_block1']}" data-price-block2="{$parrent['price_block2']}">
+      <span>Страница раздела "{$parrent['title']}"</span>
+    </label>
+  </li>
+EOF;
 
           $last_sub = '';
           foreach ($service[$parrent['id']] as $child) {
@@ -755,39 +1068,50 @@ foreach ($services as $key => $service) {
             } else {
               $child_title = htmlspecialchars($child['title']);
               $popup_promo_html .= <<<EOF
-                                                      <li><label class="select-option">
-                                                          <input type="radio" name="service_ids[]" value="{$child['title']}" data-name='Раздел "{$child_title}"'>
-                                                          <span>{$child['title']}</span>
-                                                      </label></li>
-                                                  EOF;
+  <li>
+    <label class="select-option">
+      <input type="radio" name="service_ids[]" value="{$child['slug']}" data-name='Подраздел "{$child_title}"' data-price-block1="{$child['price_block1']}" data-price-block2="{$child['price_block2']}">
+      <span>{$child['title']}</span>
+    </label>
+  </li>
+EOF;
             }
           }
 
           if ($last_sub) {
             $child_title = htmlspecialchars($last_sub['title']);
             $popup_promo_html .= <<<EOF
-                                                  <li><label class="select-option">
-                                                      <input type="radio" name="service_ids[]" value="{$last_sub['title']}" data-name='Раздел "{$child_title}"'>
-                                                      <span>{$last_sub['title']}</span>
-                                                  </label></li>
-                                              EOF;
+  <li>
+    <label class="select-option">
+      <input type="radio" name="service_ids[]" value="{$last_sub['slug']}" data-name='Подраздел "{$child_title}"' data-price-block1="{$last_sub['price_block1']}" data-price-block2="{$last_sub['price_block2']}">
+      <span>{$last_sub['title']}</span>
+    </label>
+  </li>
+EOF;
           }
 
           $popup_promo_html .= "</ul>";
         } else {
           $child_title = htmlspecialchars($parrent['title']);
           $popup_promo_html .= <<<EOF
-                                              <label class="select-option service-icon {$parrent['slug']}">
-                                              <input type="radio" name="service_ids[]" value="{$parrent['title']}" data-name='Раздел "{$child_title}"'>
-                                              {$parrent['title']}
-                                              </label>
-                                          EOF;
+<label class="select-option service-icon {$parrent['slug']}"
+EOF;
+
+          $popup_promo_html .= !empty($parrent['icon'])
+            ? ' style="background-image: url(../assets/img/' . $parrent['icon'] . ');"'
+            : '';
+
+          $popup_promo_html .= <<<EOF
+>
+  <input type="radio" name="service_ids[]" value="{$parrent['slug']}" data-name='Раздел "{$child_title}"' data-price-block1="{$parrent['price_block1']}" data-price-block2="{$parrent['price_block2']}">
+  {$parrent['title']}
+</label>
+EOF;
         }
       }
     }
   }
   if ($specialist_classification == '3' || $specialist_classification == 3) {
-
     // Если категория экспертизы (ключ 3)
     if ($key == 3) {
       $last_cat = '';
@@ -797,11 +1121,19 @@ foreach ($services as $key => $service) {
         } else {
           $child_title = htmlspecialchars($child['title']);
           $popup_promo_html .= <<<EOF
-                                              <label class="select-option service-icon {$child['slug']}">
-                                              <input type="radio" name="service_ids[]" value="{$child['title']}" data-name='Подраздел "{$child_title}"'>
-                                              {$child['title']}
-                                              </label>
-                                          EOF;
+          <label class="select-option service-icon {$child['slug']}"
+          EOF;
+
+          $popup_promo_html .= !empty($child['icon'])
+            ? ' style="background-image: url(../assets/img/' . $child['icon'] . ');"'
+            : '';
+
+          $popup_promo_html .= <<<EOF
+          >
+            <input type="radio" name="service_ids[]" value="{$child['slug']}" data-name='Раздел "{$child_title}"' data-price-block1="{$child['price_block1']}" data-price-block2="{$child['price_block2']}">
+            {$child['title']}
+          </label>
+          EOF;
         }
       }
 
@@ -809,37 +1141,48 @@ foreach ($services as $key => $service) {
       if ($last_cat) {
         $child_title = htmlspecialchars($last_cat['title']);
         $popup_promo_html .= <<<EOF
-                                          <label class="select-option service-icon {$last_cat['slug']}">
-                                          <input type="radio" name="service_ids[]" value="{$last_cat['title']}" data-name='Раздел "{$child_title}"'>
-                                          {$last_cat['title']}
-                                          </label>
-                                      EOF;
+        <label class="select-option service-icon {$last_cat['slug']}"
+        EOF;
+
+        $popup_promo_html .= !empty($last_cat['icon'])
+          ? ' style="background-image: url(../assets/img/' . $last_cat['icon'] . ');"'
+          : '';
+
+        $popup_promo_html .= <<<EOF
+        >
+          <input type="radio" name="service_ids[]" value="{$last_cat['slug']}" data-name='Раздел "{$child_title}"' data-price-block1="{$last_cat['price_block1']}" data-price-block2="{$last_cat['price_block2']}">
+          {$last_cat['title']}
+        </label>
+        EOF;
       }
     }
   }
 }
 
 $popup_promo_html .= '
-              </div>
-            </div>
-            <input type="text" class="input" id="promo-date-select" name="date" placeholder="Даты (кратно 1 неделе)" readonly>
-            <input type="hidden" value="' . $specialist['id'] . '" name="specialist_id" id="popup-specialist-id-promo">';
+</div>
+</div>
+<input type="hidden" value="' . $specialist['id'] . '" name="specialist_id" id="popup-specialist-id-promo">';
+
+$index = 1;
 foreach ($promo_options as $promo) {
+  $id = $index === 1 ? "select-option-promo" : "";
   $class = $index === 2 ? "promo-icon" : "promo-icon"; // Добавляем класс только ко второму элементу
   $popup_promo_html .= '
-                  <label class="select-option select-option-promo">
-                      <input type="radio" name="promo_id" value="' . $promo['id'] . '">
-                      <img src="' . htmlspecialchars($promo['url']) . '" alt="Icon" class="' . $class . '">
-                      <div>
-                          <div class="promo-title">' . htmlspecialchars($promo['title']) . '</div>
-                          <div class="promo-description">' . htmlspecialchars($promo['description']) . '</div>
-                          <div class="promo-price hidden">' . htmlspecialchars($promo['price']) . '</div>
-                      </div>
-                  </label>';
+<label id="' . $id . '" class="select-option select-option-promo">
+  <input type="radio" name="promo_id" value="' . $promo['id'] . '">
+  <img src="' . htmlspecialchars($promo['url']) . '" alt="Icon" class="' . $class . '">
+  <div>
+    <div class="promo-title">' . htmlspecialchars($promo['title']) . '</div>
+    <div class="promo-description">' . htmlspecialchars($promo['description']) . '</div>
+  </div>
+</label>';
   $index++;
 }
 
+
 $popup_promo_html .= '
+            <input type="text" class="input" id="promo-date-select" name="date" placeholder="Даты (кратно 1 неделе)" readonly>
             <div class="button">
               <button type="submit" class="promo-continue-btn">Далее</button>
             </div>
@@ -861,12 +1204,12 @@ $connected_promo_map = [];
 foreach ($connected_promo as $promo) {
   if (is_array($promo)) {
     $promo_details = get_promo_details($promo['promo_id']);
-      $connected_promo_map[] = [
-        'title' => $promo['service_name'],
-        'url' => $promo_details['url'],
-        'start_date' => $promo['start_date'],
-        'end_date' => $promo['end_date']
-      ];
+    $connected_promo_map[] = [
+      'title' => $promo['service_name'],
+      'url' => $promo_details['url'],
+      'start_date' => $promo['start_date'],
+      'end_date' => $promo['end_date']
+    ];
   }
 }
 
@@ -895,7 +1238,7 @@ if (!empty($promo_items_html)) {
   $promo_html = '
     <div class="connected-banners">
     <div class="connected-item">
-        <h3>Промо размещения:</h3>
+        <h3>Подключенные промо-размещения:</h3>
         ' . $promo_items_html . '
     </div>
       </div>';
@@ -922,6 +1265,9 @@ foreach ($connected_promo as $promo) {
 $tariff_status = generate_tariff_status($tariffs, $connected_tariffs_map);
 $option_status_data = generate_option_status($connected_options_map, $connected_tariffs_map);
 $promo_status_data = generate_promo_status($connected_promo_map);
+$pro_photo_records = get_pro_photo_records($specialist['id']);
+// Генерируем статус фотосъемки
+$pro_photo_status = generate_pro_photo_status($pro_photo_records, $specialist['registered_at']);
 
 $discount = 0;
 if (isset($connected_tariffs_map[1])) {
@@ -973,33 +1319,242 @@ $top_cards = '
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
     </div>
 </a>
-    <a href="/cabinet/pro-photo" class="card">
-      <div class="card-topline"><h4>PRO-фото <span class="status-dot"></span></h4><img src="../assets/img/cabinet/card-photo.svg" alt=""></div><div class="circle-pro-photo">-50%</div>
-        <p>Скидка 50% до 17.04.24</p>
+<a href="/cabinet/pro-photo" class="card">
+    <div class="card-topline">
+        <h4>PRO-фото <span class="status-dot ' . $pro_photo_status['class'] . '"></span></h4>
+        <img src="../assets/img/cabinet/card-photo.svg" alt="">
+    </div>
+    ' . ($pro_photo_status['status'] !== 'Проведена' ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% до 17.04.24</p>' : '') . '
+    <div class="card-status">
+        <span>' . $pro_photo_status['status'] . '</span>
+        <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
+    </div>
+</a>';
+
+
+$top_cards_mobile = '
+<a href="/cabinet/page_promo?target=tariff-href" class="card">
+    <div class="card-topline">
+        <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
+        <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
+    </div>
+    <p>Стартовый набор <br>для продвижения</p>
+    <div class="card-status">
+        <span>' . $tariff_status['status'] . '</span>
+        <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
+    </div>
+</a>
+<a href="/cabinet/page_promo?target=promo-section" class="card">
+      <div class="card-topline"><h4>Промо <span class="status-dot ' . $promo_status_data['class'] . '"></span></h4>
+       ' . $discount_html . '
+       <img src="../assets/img/cabinet/card-promo.svg" alt=""></div>
+        <p>Продвижение карточки</p>
         <div class="card-status">
-            <span>Не проведена</span>
+            <span>' . $promo_status_data['status'] . '</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
         </div>
-    </a>';
+    </a>
+<a href="/cabinet/page_promo?target=option-href" class="card">
+    <div class="card-topline">
+        <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
+        ' . $discount_html . '
+        <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
+    </div>
+    <p>Базовые настройки</p>
+    <div class="card-status">
+        <span>' . $option_status_data['status'] . '</span>
+        <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
+    </div>
+</a>
+<a href="/cabinet/pro-photo" class="card">
+    <div class="card-topline">
+        <h4>PRO-фото <span class="status-dot ' . $pro_photo_status['class'] . '"></span></h4>
+        <img src="../assets/img/cabinet/card-photo.svg" alt="">
+    </div>
+    ' . ($pro_photo_status['status'] !== 'Проведена' ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% до 17.04.24</p>' : '') . '
+    <div class="card-status">
+        <span>' . $pro_photo_status['status'] . '</span>
+        <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
+    </div>
+</a>';
 
 
+$swiper_tariff = '';
+$swiper_banner = '';
+
+// Определение массивов конфигураций для разных классификаций
+$tariff_slides = [
+  'group_1' => [
+    'tariff' => [
+      '../assets/img/cabinet/tariff-slide1.png',
+      /* '../assets/img/cabinet/tariff-slide2.png',
+      '../assets/img/cabinet/tariff-slide3.png',
+      '../assets/img/cabinet/tariff-slide4.png',
+      '../assets/img/cabinet/tariff-slide5.png', */
+    ],
+    'banner' => [
+      '../assets/img/cabinet/banner-slide1.png',
+      '../assets/img/cabinet/banner-slide2.png',
+      '../assets/img/cabinet/banner-slide3.png',
+    ],
+  ],
+  'group_2' => [
+    'tariff' => [
+      '../assets/img/cabinet/tariff-slide1.png',
+      /* '../assets/img/cabinet/tariff-slide2.png',
+      '../assets/img/cabinet/tariff-slide3-expert.png',
+      '../assets/img/cabinet/tariff-slide4-expert.png',
+      '../assets/img/cabinet/tariff-slide5-expert.png', */
+    ],
+    'banner' => [
+      '../assets/img/cabinet/banner-slide1.png',
+      '../assets/img/cabinet/banner-slide2.png',
+      '../assets/img/cabinet/banner-slide3-expert.png',
+    ],
+  ],
+  'notarius' => [
+    'tariff' => [
+      '../assets/img/cabinet/tariff-slide1.png',
+      /*  '../assets/img/cabinet/tariff-slide2.png',
+      '../assets/img/cabinet/tariff-slide3-notarius.png',
+      '../assets/img/cabinet/tariff-slide4-notarius.png', */
+    ],
+    'banner' => [
+      '../assets/img/cabinet/banner-slide1.png',
+      '../assets/img/cabinet/banner-slide2.png',
+      '../assets/img/cabinet/banner-slide3-notarius.png',
+    ],
+  ],
+];
+
+$group_1 = [1, 2, 5, 6, 7];
+$group_2 = [3, 8];
+$group_notarius = [4];
+
+if (in_array($specialist_classification, $group_1)) {
+  $selected_group = 'group_1';
+} elseif (in_array($specialist_classification, $group_2)) {
+  $selected_group = 'group_2';
+} elseif (in_array($specialist_classification, $group_notarius)) {
+  $selected_group = 'notarius';
+} else {
+  $selected_group = 'group_1';
+}
+
+// Формирование HTML слайдов
+$swiper_tariff = implode('', array_map(function ($src) {
+  return "<div class=\"swiper-slide slider-img\"><img class=\"tariff-image\" src=\"$src\" alt=\"Tariff Image\" /></div>";
+}, $tariff_slides[$selected_group]['tariff']));
+
+$swiper_banner = implode('', array_map(function ($src) {
+  return "<div class=\"swiper-slide slider-img\"><img class=\"banner-image\" src=\"$src\" alt=\"Banner Image\" /></div>";
+}, $tariff_slides[$selected_group]['banner']));
+
+$data['payment_form'] = '
+<!-- Форма для физ. лиц -->
+          <div class="tab-content payer-form" id="physical">
+            <form id="physical-payment-form">
+              <label for="client_email">Email для отправки платежных документов</label>
+              <input type="email" name="client_email" placeholder="Укажите адрес электронной почты" value="' . $specialist['email'] . '" readonly>
+              <input type="hidden" name="reg_email" value="' . $specialist['email'] . '">
+              <input type="hidden" name="service_name" id="js-service-name">
+              <input type="hidden" name="pay_amount" id="js-pay-amount">
+              <input type="hidden" name="orderId" id="js-order-id">
+              <input type="hidden" name="specilaistId" id="js-specialist-id" value="' . $specialist_id . '">
+
+              <!-- Новые скрытые поля -->
+              <input type="hidden" name="service_id" id="js-service-id">
+              <input type="hidden" name="date_start" id="js-date-start">
+              <input type="hidden" name="date_end" id="js-date-end">
+
+              <div style="margin-top: 40px;" class="popup_after_text"></div>
+
+              <div class="button">
+                <button type="button" data-type="sbp_default" class="confirm-btn-option physical-form-button">Оплатить по СБП</button>
+                <button type="submit" data-type="tochka" class="confirm-btn-option connect-button physical-form-button">Оплатить банковской
+                  картой</button>
+                <p>Нажимая на кнопку, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+              </div>
+              <div id="qr-container" style="margin-top:20px;"></div>
+            </form>
+          </div>
+
+          <!-- Форма для ИП -->
+          <div class="tab-content payer-form" id="ip_form" style="display: none;">
+            <form id="ip-form-payment-form">
+              <input type="text" name="inn" placeholder="ИНН" required>
+              <label for="client_email">Email для отправки платежных документов</label>
+              <input type="email" name="client_email" placeholder="Укажите адрес электронной почты" required>
+
+              <input type="hidden" name="service_name" id="js-service-name-ip">
+              <input type="hidden" name="pay_amount" id="js-pay-amount-ip">
+              <input type="hidden" name="orderId" id="js-order-id-ip">
+              <input type="hidden" name="specilaistId" id="js-specialist-id-ip" value="' . $specialist_id . '">
+
+              <!-- Новые скрытые поля -->
+              <input type="hidden" name="service_id" id="js-service-id-ip">
+              <input type="hidden" name="date_start" id="js-date-start-ip">
+              <input type="hidden" name="date_end" id="js-date-end-ip">
+
+              <div style="margin-top: 40px;" class="popup_after_text"></div>
+
+              <div class="button">
+                <button type="button" class="confirm-btn-option legal-form-button" data-action="invoice">Сформировать
+                  счёт</button>
+                <button type="button" class="confirm-btn-option connect-button sbp-redirect-button">Оплатить по
+                  СБП</button>
+                <button type="button" class="confirm-btn-option connect-button physical-form-button">Оплатить банковской
+                  картой</button>
+                <p>Нажимая на кнопку, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+              </div>
+            </form>
+          </div>
+
+          <!-- Форма для юр. лиц -->
+          <div class="tab-content payer-form" id="legal" style="display: none;">
+            <form id="legal-payment-form">
+              <input type="text" name="inn" placeholder="ИНН" required>
+              <label for="client_email">Email для отправки платежных документов</label>
+              <input type="email" name="client_email" placeholder="Укажите адрес электронной почты" required>
+
+              <input type="hidden" name="service_name" id="js-service-name-legal">
+              <input type="hidden" name="pay_amount" id="js-pay-amount-legal">
+              <input type="hidden" name="orderId" id="js-order-id-legal">
+              <input type="hidden" name="specilaistId" id="js-specialist-legal" value="' . $specialist_id . '">
+
+              <!-- Новые скрытые поля -->
+              <input type="hidden" name="service_id" id="js-service-id-legal">
+              <input type="hidden" name="date_start" id="js-date-start-legal">
+              <input type="hidden" name="date_end" id="js-date-end-legal">
+
+              <div style="margin-top: 40px;" class="popup_after_text"></div>
+
+              <div class="button">
+                <button type="submit" class="confirm-btn-option legal-form-button" data-action="invoice">Сформировать
+                  счёт</button>
+                <p>Нажимая на кнопку, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>
+              </div>
+            </form>
+          </div>';
 
 $data['script'] = $script;
 $data['faqs'] = $faq_html;
 $data['tariff_cards'] = $tariff_html;
 $data['connected_tariff'] = $connected_popup;
 $data['top_cards'] = $top_cards;
+$data['top_cards_mobile'] = $top_cards_mobile;
 $data['mobile_tariff_cards'] = $mobile_tariff_html;
 $data['options'] = $options_html;
-$data['banners'] = $banner_html;
+/* $data['banners'] = $banner_html; */
 $data['promo_connected'] = $promo_html;
-$data['journal'] = $journal_html;
+/* $data['journal'] = $journal_html; */
 $data['banner-popup'] = $popup_banner_html;
 $data['banner-popup2'] = $popup_banner_html2;
 $data['journal-popup'] = $popup_journal_html;
 $data['journal-popup2'] = $popup_journal_html2;
 $data['promo-popup'] = $popup_promo_html;
+$data['forbidden-popup'] = $forbidden_popup;
 $data['second-promo-popup'] = $second_popup_promo_html;
+$data['swiper-tarrif'] = $swiper_tariff;
+/* $data['swiper-banner'] = $swiper_banner; */
 $HTML = html_explode($data, $HTML);
-
-?>

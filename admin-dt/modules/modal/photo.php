@@ -11,16 +11,16 @@
                     <div class="col-12">
                         <input type="hidden" name="id" class="form-control" id="input-id" value="<?= $pro_photo['id'] ?? '' ?>">
                         <div class="mb-3">
-                            <label for="input-title" class="form-label">Название</label>
+                            <label for="input-title" class="form-label">Заголовок</label>
                             <input type="text" name="title" class="form-control" id="input-name" value="<?= $pro_photo['title'] ?? '' ?>" require>
                         </div>
                         <div class="mb-3">
                             <label for="input-description" class="form-label">Цена</label>
-                            <input type="text" name="price" class="form-control" id="input-price" value="<?= $pro_photo['price'] ?>" require>
+                            <input type="text" name="price_old" class="form-control" id="input-old-price" value="<?= $pro_photo['price_old'] ?>" require>
                         </div>
                         <div class="mb-3">
-                            <label for="input-description" class="form-label">Старая цена</label>
-                            <input type="text" name="price_old" class="form-control" id="input-old-price" value="<?= $pro_photo['price_old'] ?>" require>
+                            <label for="input-description" class="form-label">Цена со скидкой</label>
+                            <input type="text" name="price" class="form-control" id="input-price" value="<?= $pro_photo['price'] ?>" require>
                         </div>
                         <div class="mb-3">
                             <label for="input-description" class="form-label">Длительность</label>
@@ -39,7 +39,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" id="photoEdit">Редактировать тариф</button>
+                <button type="button" class="btn btn-primary" id="photoEdit">Сохранить</button>
             </div>
         </div>
     </div>

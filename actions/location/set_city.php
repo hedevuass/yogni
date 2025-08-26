@@ -20,5 +20,7 @@ if (isset($_POST['id'])) {
 
     unset($_SESSION['metro']);
 
+    session_write_close();
+
     responseJson(true);
 }

@@ -1,54 +1,82 @@
-<form style="padding-top: 30px;" class="employee flex" id="cabinet-employee">
-	<table>
-		<thead>
-			<tr>
-				<td>Имя</td>
-				<td>Фамилия</td>
-				<td>Должность</td>
-				<td>Фото</td>
-				<td></td>
-			</tr>
-		</thead>
-		<tbody>
-			<!--data:employees--><!--data:employees-->
-		</tbody>
-	</table>
-	<div class="requirements">
+<form class="employee flex" id="cabinet-employee">
+	<div style="padding-top: 30px;" class="employee-div">
+		<table>
+			<thead>
+				<tr>
+					<td>Имя</td>
+					<td>Фамилия</td>
+					<td>Должность</td>
+					<td>Фото</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+				<!--data:employees--><!--data:employees-->
+			</tbody>
+		</table>
+		<!-- <div class="requirements">
+	</div> -->
+		<span class="add">Добавить сотрудника</span>
+		<span class="mob-add">Добавить сотрудника</span>
+		<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+
+		<div class="cabinet-popup" id="cabinet-employee-popup">
+			<div class="popup__close"></div>
+			<div class="popup__title">Карточка сотрудника</div>
+			<div class="popup__body">
+				<div class="popup__field">
+					<div class="popup-employee-photo">
+					</div>
+					<a class="employee-photo-btn"></a>
+				</div>
+				<div class="popup__field">
+					<div class="popup__mob-subtitle small-margin">Имя</div>
+					<input type="text" class="popup__input" id="popup-employee-name" placeholder="Имя сотрудника (не более 12 символов)" maxlength="12">
+					<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
+				</div>
+				<div class="popup__field">
+					<div class="popup__mob-subtitle small-margin">Фамилия</div>
+					<input type="text" class="popup__input" id="popup-employee-lastname"
+						placeholder="Фамилия сотрудника (не более 15 символов)" maxlength="15">
+						<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
+				</div>
+				<div class="popup__field">
+					<div class="popup__mob-subtitle small-margin">Должность</div>
+					<input type="text" class="popup__input" id="popup-employee-post" placeholder="Должность сотрудника (не более 20 символов)" maxlength="20">
+					<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
+				</div>
+				<input type="hidden" id="popup-emp-key">
+				<input type="hidden" id="popup-emp-file">
+				<input type="hidden" id="popup-emp-filename">
+				<div class="mob-employee-btn">Подтвердить</div>
+			</div>
+		</div>
 	</div>
-	<span class="add">Добавить сотрудника</span>
-	<span class="mob-add">Добавить сотрудника</span>
 	<div class="refresh">
 		<button type="submit" disabled>Сохранить информацию</button>
 	</div>
-	<input type="hidden" id="is_mobile" name="is_mobile" value="false">
+</form>
 
-	<div class="cabinet-popup" id="cabinet-employee-popup">
-		<div class="popup__close"></div>
-		<div class="popup__title">Карточка сотрудника</div>
-		<div class="popup__body">
-			<div class="popup__field">
-				<div class="popup__mob-subtitle">Фото</div>
-				
-				<div class="popup-employee-photo">
-				</div>
-				<a class="employee-photo-btn"></a>
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
+						</div>
+					</div>
+				</form>
 			</div>
-			<div class="popup__field">
-				<div class="popup__mob-subtitle small-margin">Имя</div>
-				<input type="text" class="popup__input" id="popup-employee-name" placeholder="Имя сотрудника">
-			</div>
-			<div class="popup__field">
-				<div class="popup__mob-subtitle small-margin">Фамилия</div>
-				<input type="text" class="popup__input" id="popup-employee-lastname" placeholder="Фамилия сотрудника">
-			</div>
-			<div class="popup__field">
-				<div class="popup__mob-subtitle small-margin">Должность</div>
-				<input type="text" class="popup__input" id="popup-employee-post" placeholder="Должность сотрудника">
-			</div>
-			<input type="hidden" id="popup-emp-key">
-			<input type="hidden" id="popup-emp-file">
-			<input type="hidden" id="popup-emp-filename">
-			<div class="mob-employee-btn">Подтвердить</div>
 		</div>
 	</div>
-</form>
+</div>

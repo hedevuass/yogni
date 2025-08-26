@@ -12,6 +12,7 @@ if (isset($_POST['specializations'])) {
     }
     $json['success'] = true;
 } else {
-    $json['error'] = 'Выберите хотя бы одно направление.';
+    /* $json['error'] = 'Выберите хотя бы одно направление.'; */
+    unset_specialist_specializations();
 }
 responseJson($json);

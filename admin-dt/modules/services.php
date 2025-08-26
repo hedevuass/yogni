@@ -11,8 +11,9 @@ $blocks = get_blocks();
             <table id="servicesActive" class="table table-striped" style="width:100%">
                 <thead>
                 <tr>
-                    <td class="col-2 text-nowrap">Изображение</td>
-                    <td>Заголовок</td>
+                    <td class="">id</td>
+                    <td class="col-1 text-nowrap">Изображение</td>
+                    <td class="col-11">Заголовок</td>
                     <td>Действие</td>
                 </tr>
                 </thead>
@@ -32,7 +33,8 @@ $blocks = get_blocks();
                     if ($service_in_block):
                     ?>
                         <tr>
-                            <td><img alt="Нет изображения" class="table-avatar" src="/assets/img/<?= htmlspecialchars($service['img']) ?>"></td>
+                            <td><?= $service['id'] ?></td>
+                            <td><img alt="Нет изображения" class="td-photo" src="/assets/img/<?= htmlspecialchars($service['img']) ?>"></td>
                             <td><?= htmlspecialchars($service['title']) ?></td>
                             <td>
                                 <div class="btn-group" role="group" aria-label="Basic mixed styles example">
@@ -56,8 +58,9 @@ $blocks = get_blocks();
             <table id="servicesUseful" class="table table-striped" style="width:100%">
                 <thead>
                 <tr>
-                    <td class="col-2 text-nowrap">Изображение</td>
-                    <td>Заголовок</td>
+                    <td>id</td>
+                    <td class="col-1 text-nowrap">Изображение</td>
+                    <td class="col-9">Заголовок</td>
                     <td>Действие</td>
                 </tr>
                 </thead>
@@ -77,8 +80,9 @@ $blocks = get_blocks();
                     if ($service_in_block):
                     ?>
                         <tr>
-                            <td><img alt="Нет изображения" class="table-avatar" src="/assets/img/<?= htmlspecialchars($service['img']) ?>"></td>
-                            <td><?= htmlspecialchars($service['title']) ?></td>
+                            <td><?= $service['id'] ?></td>
+                            <td class="col-1"><img alt="Нет изображения" class="td-photo" src="/assets/img/<?= htmlspecialchars($service['img']) ?>"></td>
+                            <td class="col-11"><?= htmlspecialchars($service['title']) ?></td>
                             <td>
                                 <div class="btn-group" role="group" aria-label="Basic mixed styles example">
                                     <button type="submit" class="btn btn-info modalEdit" data-id="<?= $service['id'] ?>">

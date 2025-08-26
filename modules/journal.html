@@ -1,9 +1,13 @@
+<!--data:h1_hidden_title--><!--data:h1_hidden_title-->
 <div class="navi">
 	<div class="wrap">
 		<a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
 	</div>
 </div>
-<button class="journal-filter-button">Выбрать тему</button>
+<button class="journal-filter-button">
+    <img src="../assets/img/filter2.svg" alt="">
+    <span>Выбрать тему</span>
+</button>
 <div class="blog-page">
 	<div class="wrap flex">
 		<div class="left-sidebar">
@@ -16,7 +20,7 @@
 				</ul>
 				<select class="sel themes-sel" id="theme">
 					<option value="0" class="hidden">Все темы</option>
-					<option value=".s0">Все темы</option>
+					<option value="">Все темы</option>
 					<!--data:filter_journal_theme--><!--data:filter_journal_theme-->
 				</select>
 				<!-- <select class="sel tags-sel" id="tag">
@@ -35,16 +39,8 @@
 			<!--data:blog_info--><!--data:blog_info-->
 			<!--data:news_list--><!--data:news_list-->
 			<!--data:posts--><!--data:posts-->
-			<div class="item4">
-				<div class="image">
-					<img src="/assets/img/blog10.png">
-				</div>
-				<span class="name">Юристы и адвокаты по семейному праву</span>
-				<p>А так же специалисты и компании из <span>более</span> чем <span class="or">88 областей права и
-						экспертизы</span></p>
-				<a href="/yuristy-i-advokaty" class="button">Найти специалиста</a>
-			</div>
-			<div class="loading"></div>
+			<!--data:item4--><!--data:item4-->
+			<!-- <span class="loading"></span> -->
 		</div>
 		<div class="right-sidebar">
 			<!--data:sticky--><!--data:sticky-->
@@ -61,52 +57,80 @@
 	<!--data:mobile_filter_journal--><!--data:mobile_filter_journal-->
 	<div class="more-article-themes-btn">Смотреть все темы</div>
 </div>
+<div id="load-trigger" style="height: 1px;"></div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-	$(document).ready(function () {
-    let limit = 3;
-    let start = 5;
-	let post_type = window.location.pathname;
-	post_type = post_type.split('/')[2] || '';
-    let loading = false;
+	document.addEventListener("DOMContentLoaded", function () {
+		let limit = 3;
+		let start = 5; // первые 5 постов уже показаны
+		let loading = false;
+		let hadError = false; // Флаг «ошибка уже была»
+		const path = window.location.pathname.split('/');
+		let post_type = path[2] || '';
 
-    $(window).on('scroll', function () {
-        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 1600) {
-            if (!loading) {
-                loading = true;
-                /* $('.loading').css('display', 'block'); */
+		// если это idNN *и* есть ещё сегмент path[3], то post_type берём из него
+		if (/^id\d+$/.test(post_type) && path[3]) {
+			post_type = path[3];
+		}
 
-                $.ajax({
-                    url: '/modules/load_more_posts.php',
-                    type: 'POST',
-                    data: {
+		// Функция, проверяющая, находится ли #load-trigger в зоне [низа экрана – 800px, низа экрана + 200px]
+		function checkAndLoadPosts() {
+			// Если уже загружаем или произошла ошибка — не пытаемся снова
+			if (loading || hadError) return;
+
+			const triggerEl = document.getElementById('load-trigger');
+			if (!triggerEl) return;
+
+			const rect = triggerEl.getBoundingClientRect();
+			const triggerTop = rect.top;          // px от верхнего края viewport
+			const viewportHeight = window.innerHeight;
+
+			// Условие: trigger в зоне [viewportHeight - 800, viewportHeight + 200]
+			if (triggerTop <= viewportHeight + 800 && triggerTop >= viewportHeight - 800) {
+				loading = true;
+
+				$.ajax({
+					url: '/actions/infinitload/load_more_posts.php',
+					type: 'POST',
+					data: {
 						post_type: post_type,
-                        limit: limit,
-                        start: start
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        setTimeout(function () {
-                            /* $('.loading').css('display', 'none'); */
-                            if (response.posts) {
-                                $('.main-content').append(response.posts);
-                                start += limit;
-								loading = false;
-                            } else {
-                                $(window).off('scroll');
-                            }
-                        }, 100);
-                    },
-                    error: function () {
-                        alert('Произошла ошибка при загрузке постов.');
-                        $('.loading').css('display', 'none'); 
-                        loading = false; 
-                    }
-                });
-            }
-        }
-    });
-});
+						limit: limit,
+						start: start
+					},
+					dataType: 'json',
+					success: function (response) {
+						if (response.posts && response.posts.trim() !== '') {
+							$('.main-content').append(response.posts);
+							start += response.loaded_count; // Увеличиваем start на фактическое количество постов
+							hasMorePosts = response.has_more_posts; // Обновляем флаг
+							loading = false;
+						} else {
+							hasMorePosts = false;
+							$(window).off('scroll', onScrollHandler);
+						}
+					},
+					error: function () {
+						hadError = true;
+						$(window).off('scroll', onScrollHandler);
+						alert('Ошибка загрузки, проверьте подключение к интернету.');
+						loading = false;
+					}
+				});
+			}
+		}
 
+		// Обёртка, чтобы можно было снять слушатель
+		function onScrollHandler() {
+			checkAndLoadPosts();
+		}
+
+		// Навешиваем на scroll
+		$(window).on('scroll', onScrollHandler);
+
+		// Проверяем один раз после загрузки, если пользователь уже «внизу»
+		setTimeout(function () {
+			checkAndLoadPosts();
+		}, 100);
+	});
 </script>

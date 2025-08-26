@@ -1,18 +1,27 @@
+<style>
+  @media (max-width: 768px) {
+    .cabinet-page {
+      padding: 58px 0 110px 0;
+    }
+  }
+</style>
 <div class="index-catalog-page">
   <div class="index-top-part-row">
     <div class="index-top-part">
-      <div class="user-info-block index-block">
-        <a href="/redaktirovat-informatsiyu" class="corner-icon user__corner"></a>
+      <a href="/redaktirovat-informatsiyu" class="user-info-block index-block">
+        <span class="corner-icon user__corner"></span>
         <!--data:index_user_info--><!--data:index_user_info-->
-      </div>
-      <a href="/cabinet/sozdat-zapis" class="write-post">
-        <div class="write-post__title">Написать пост в блоге</div>
+        <span class="arrow-right-abs"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
+      </a>
+      <a href="/podderzhka" class="write-post">
+        <span href="/redaktirovat-informatsiyu" class="corner-icon user__corner"></span>
+        <div class="write-post__title">Поддержка проекта</div>
         <div class="write-post__descr">
-          Для действенного продвижения страницы, мы рекомендуем публиковать не
-          менее двух постов в неделю.
+          Если у вас возникли сложности с работой сервиса, появились вопросы или вы заметили ошибку на сайте, напишите нам - мы во всем разберемся и обязательно поможем!
         </div>
         <div class="write-post__arrow"></div>
         <div class="write-post__bg"></div>
+        <span class="arrow-right-abs"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
       </a>
     </div>
     <div id="cards-block" class="cards-container-cabinet">
@@ -30,73 +39,49 @@
     <div class="pro-photo__img-block">
       <div class="img-container-cabinet">
         <div class="card-img">
-          <img src="/assets/img/cabinet/promo-tariffs.svg" alt="" /><span
-            >Тарифы</span
-          >
+          <img src="/assets/img/cabinet/promo-tariffs.svg" alt="" /><span>Тарифы</span>
         </div>
         <div class="card-img">
-          <img src="/assets/img/cabinet/promo-blocks.svg" alt="" /><span
-            >Промо-блоки</span
-          >
+          <img src="/assets/img/cabinet/promo-blocks.svg" alt="" /><span>Промо-блоки</span>
         </div>
+        <!-- <div class="card-img">
+          <img src="/assets/img/cabinet/promo-banners.svg" alt="" /><span>Баннеры</span>
+        </div> -->
         <div class="card-img">
-          <img src="/assets/img/cabinet/promo-banners.svg" alt="" /><span
-            >Баннеры</span
-          >
-        </div>
-        <div class="card-img">
-          <img src="/assets/img/cabinet/promo-options.svg" alt="" /><span
-            >Опции</span
-          >
+          <img src="/assets/img/cabinet/promo-options.svg" alt="" /><span>Опции</span>
         </div>
       </div>
     </div>
   </div>
   <div class="index-photo-part index-block">
-    <div class="uload_photo">
-      <div class="photo-part__body">
-        <!--data:index_photo_edit--><!--data:index_photo_edit-->
-        <!--data:upload_user_photo--><!--data:upload_user_photo-->
-      </div>
-    </div>
-    <div class="pro-photo_block">
-      <div class="pro-photo_images">
-          <img src="../assets/img/cabinet/ellipse1.png" alt="Image 1" class="pro-photo-image">
-          <img src="../assets/img/cabinet/ellipse2.png" alt="Image 2" class="pro-photo-image">
-          <img src="../assets/img/cabinet/ellipse3.png" alt="Image 3" class="pro-photo-image">      
-      </div>
-      <div class="pro-photo_text">
-        <div class="pro-photo_title">PRO-фото <span class="highlight">&nbsp;со скидкой</span><div class="circle-pro-photo-text">-50%</div></div>
-        <div class="pro-photo_descr">Фотография - важнейший механизм продвижения профиля, формирующий первое впечатление.  
-          <br>Фото от профессионалов <span class="highlight">для профессионалов.</span></div>
-          <a href="/cabinet/pro-photo" class="promo-button">Успейте заказать</a>
-          <div class="pro-photo_postscr">*Скидка действует первые 2 недели после регистрации</div>
-      </div>
-    </div>
-  </div>
-  <div class="index-journal-part index-block-journal">
-    <div class="uload_photo">
+    <a  href="/journal" class="uload_photo">
       <div class="photo-part__body">
         <div class="photo-part__body-title"> ЮРФАК: <span class="orange-block">ЖУРНАЛ</span></div>
-        <div class="photo-part__body-descr">Онлайн-издание: полезные статьи, новости, разборы законов и блоги специалистов</div>
-        <a href="/journal" class="pro-photo__btn read-journal">Читать журнал</a>
+        <div class="photo-part__body-descr">Онлайн-издание: полезные статьи, новости, разборы законов и блоги
+          специалистов</div>
+        <div class="read-journal"><img src="../assets/img/cabinet/card-arrow-orange.svg" alt="Стрелка"></div>
+      </div>
+    </a>
+    <div class="pro-photo_block">
+      <div class="pro-photo_images">
+        <!-- <img src="../assets/img/cabinet/ellipse1.png" alt="Image 1" class="pro-photo-image">
+          <img src="../assets/img/cabinet/ellipse2.png" alt="Image 2" class="pro-photo-image">
+          <img src="../assets/img/cabinet/ellipse3.png" alt="Image 3" class="pro-photo-image">    -->
+        <img src="../assets/img/cabinet/order-photo-images-obzor.png" alt="Image 1">
+      </div>
+      <div class="pro-photo_text">
+        <div class="pro-photo_title">PRO-фотосъемка <!--data:highlight_discount--><!--data:highlight_discount--></div>
+        <!--data:postdescr_discount--><!--data:postdescr_discount-->
+        <div class="padding-line"></div>
+        <div class="pro-photo_descr">Фотография - важнейший механизм продвижения профиля, формирующий первое
+          впечатление.
+          <br>Фото от профессионалов <span class="highlight">для профессионалов.</span>
+        </div>
+        <a href="/cabinet/pro-photo" class="promo-button">Подробнее</a>
       </div>
     </div>
-    <a href="/cabinet/faq/kak-vibrat-foto-dlya-profilya" class="pro-photo_block-background">
-      <div class="dark-overlay"></div>
-      <div class="light-overlay"><img src="/assets/img/cabinet/pro-photo_journal-arrow.svg" alt=""></div>
-      <div class="pro-photo_journal-text">
-        <div class="pro-photo_title">Как выбрать фото для профиля?</div>
-        <div class="pro-photo_descr-journal"><span class="highlight">Ключевой частью страницы</span>, влияющей на ее восприятие в целом, конечно, <span class="highlight">является аватарка.</span></div>
-        <div class="pro-photo_descr-journal">Почитайте полезные рекомендации о том, как повысить визуальную привлекательность вашей страницы и увеличить количество конверсий.</div>
-      </div>
-    </a>
   </div>
   <div class="index-mob">
-    <a href="/cabinet/sozdat-zapis" class="orange-btn index-mob__write-post">
-      <i><img src="/assets/img/cabinet/write-post-index.svg" /></i>
-      Написать пост
-    </a>
     <!--data:index_mob_info--><!--data:index_mob_info-->
     <div id="cards-block" class="cards-container">
       <!--data:top_cards_mobile--><!--data:top_cards_mobile-->
@@ -109,76 +94,49 @@
         </div>
       </div>
 
-      <div
-        class="menu-item profile-photo-mmenu"
-        style="
+      <div class="menu-item profile-photo-mmenu" style="
           background-image: url('/assets/img/cabinet/mmenu-profile-photo.svg');
-        "
-      >
+        ">
         Фото профиля
       </div>
     </div>
     <div class="mob__menu-block">
-      <div class="mob__menu-block inactive">
-        <div
-          class="menu-item"
-          style="background-image: url('/assets/img/cabinet/mob_stats.svg')"
-        >
-          Статистика
-          <span class="orange">Собирается</span>
-        </div>
-      </div>
-      <div>
-        <a
-          href="/cabinet/page_promo"
-          class="menu-item"
-          style="background-image: url('/assets/img/cabinet/promotion-mob.svg')"
-        >
+      <div class="sliding-item">
+        <a href="/cabinet/page_promo" class="menu-item"
+          style="background-image: url('/assets/img/cabinet/promotion-mob.svg')">
           Продвижение страницы
           <span class="orange"></span>
         </a>
       </div>
+      <div>
+        <a href="/cabinet/pro-photo" class="menu-item"
+          style="background-image: url('/assets/img/cabinet/mob_pro-photo.svg')">
+          PRO-фотосъемка
+        </a>
+      </div>
     </div>
     <div class="mob__menu-block">
-      <a
-        href="/cabinet/moy-blog"
-        class="menu-item"
-        style="background-image: url('/assets/img/cabinet/mob_my_blog.svg')"
-      >
+      <a href="/cabinet/moy-blog" class="menu-item"
+        style="background-position: left 8px center; background-image: url('/assets/img/cabinet/mob_my_blog.svg')">
         Мой блог
       </a>
-      <a
-        href="/cabinet/sozdat-zapis"
-        class="menu-item"
-        style="background-image: url('/assets/img/cabinet/mob_note_create.svg')"
-      >
+      <a href="/cabinet/sozdat-zapis" class="menu-item"
+        style="background-image: url('/assets/img/cabinet/mob_note_create.svg')">
         Написать пост
       </a>
     </div>
     <div class="mob__menu-block">
-      <a
-        href="/cabinet/login-i-parol"
-        class="menu-item"
-        style="
+      <a href="/cabinet/login-i-parol" class="menu-item" style="
           background-image: url('/assets/img/cabinet/mob_login-i-password.svg');
-        "
-      >
+        ">
         Логин и пароль
       </a>
-      <a
-        href="/cabinet/faq"
-        class="menu-item"
-        style="background-image: url('/assets/img/cabinet/mob_faq_page.svg')"
-      >
+      <a href="/cabinet/faq" class="menu-item" style="background-image: url('/assets/img/cabinet/mob_faq_page.svg')">
         Частые вопросы
       </a>
-      <a
-        href="/cabinet/podderzhka"
-        class="menu-item"
-        style="
+      <a href="/cabinet/podderzhka" class="menu-item" style="
           background-image: url('/assets/img/cabinet/mob_support_page.svg');
-        "
-      >
+        ">
         Поддержка
       </a>
     </div>
@@ -187,33 +145,29 @@
     </a>
   </div>
 </div>
-<form method="POST" class="main-info-block flex" id="main-info">
+<form method="POST" class="main-info-block main-info-block-change-photo flex" id="main-info">
   <div class="cabinet-popup" id="change-photo-mobile">
     <div class="popup__close"></div>
     <div class="popup__title">Фото профиля</div>
     <div class="popup__body">
       <!--data:cabinet_photo_mob--><!--data:cabinet_photo_mob-->
-      <a
-        href="/cabinet/faq/kak-vibrat-foto-dlya-profilya"
-        class="photo__faq-link"
-      >
-        <div class="choose__title">КАК ВЫБРАТЬ ФОТО ДЛЯ ПРОФИЛЯ?</div>
-        <div class="choose__descr">
-          Рекомендации о том, как повысить визуальную привлекательность страницы
-        </div>
-        <div class="choose__arrow"></div>
-      </a>
       <button type="submit" disabled>Сохранить информацию</button>
+      <!--data:faq_page2--><!--data:faq_page2-->
+      <div class="choose__title">КАК ВЫБРАТЬ ФОТО ДЛЯ ПРОФИЛЯ?</div>
+      <div class="choose__descr">
+        Рекомендации о том, как повысить визуальную привлекательность страницы
+      </div>
+      <div class="choose__arrow"></div>
+      </a>
     </div>
   </div>
 </form>
 
 <script>
-document.querySelectorAll('a[data-scroll-target]').forEach(link => {
-    link.addEventListener('click', function(event) {
-        const scrollTarget = this.getAttribute('data-scroll-target');
-        localStorage.setItem('scrollTarget', scrollTarget);  // Сохраняем цель скролла
+  document.querySelectorAll('a[data-scroll-target]').forEach(link => {
+    link.addEventListener('click', function (event) {
+      const scrollTarget = this.getAttribute('data-scroll-target');
+      localStorage.setItem('scrollTarget', scrollTarget);  // Сохраняем цель скролла
     });
-});
-  </script>
-  
+  });
+</script>

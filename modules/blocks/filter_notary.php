@@ -8,8 +8,6 @@ if (isset($_SESSION['metro']) && $_SESSION['metro']) {
 
 	if ($count == 1) $string = $metro[0]['name'];
     if ($count > 1) $string = "Выбрано ($count)";
-} else {
-	$metro = get_metro_in_city($_SESSION['city']['id']);
 }
 
 

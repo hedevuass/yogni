@@ -2,15 +2,15 @@
 
 $data = [];
 $main_cat = 'Раздел права';
+
 if ($_SERVER['REQUEST_URI'] != '/') {
-    $uri_arr = explode('/', $_SERVER['REQUEST_URI']);
+    $uri_arr = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+    $filter = in_array(end($uri_arr), ['private', 'company']) ? array_pop($uri_arr) : null;
     $requestion_str = end($uri_arr);
-    if ($requestion_str) {
-        $requestion = strtok($requestion_str, '?');
-        $category = get_service_by_slug($requestion);
-    } else {
-        $category = false;
-    }
+    $category = $requestion_str ? get_service_by_slug($requestion_str) : false;
+
+    $original_id   = $category['original']['id']   ?? $category['id'];
+$original_p_id = $category['original']['p_id'] ?? $category['p_id'];
 
     if ($category) {
         $parrent_category = get_service($category['p_id']);
@@ -36,94 +36,133 @@ EOF;
 foreach ($services as $key => $service) {
     if ($key !== 1 && $key !== 2) continue;
 
+    // проход по основным разделам
     foreach ($service[0] as $parrent) {
-
+        // пропускаем "прочие" до конца
         if (mb_stripos($parrent['title'], 'прочие') !== false) {
-            //раздел "прочие" в конец
             $last_cat = $parrent;
-        } else {
-
-            $selected = ($parrent['id'] == $category['id'] || $parrent['id'] == $parrent_category['id']) ? 'selected' : '';
-
-            $data['filter_lawyer_category'] .= "<option value='.s{$parrent['id']}' data-slug='{$parrent['slug']}' $selected>{$parrent['title']}</option>";
-
-            $pen = isset($service[$parrent['id']]) ? '' : 'pen';
-
-            $sub = $selected ? 'active' : '';
-            $data['filter_lawyer_subcategory'] .= "<select class='sel subcat s{$parrent['id']} $pen $sub'>";
-
-            if ($pen) {
-                $data['filter_lawyer_subcategory'] .= "<option value='0'>Подраздел права</option>";
-            }
-
-            if (!$pen) {
-                $data['filter_lawyer_subcategory'] .= "<option value='0'>Все подразделы</option>";
-                $last_child = '';
-                foreach ($service[$parrent['id']] as $child) {
-                    if (mb_stripos($child['title'], 'прочие') !== false) {
-                        //подраздел "прочие" в конец
-                        $last_child = $child;
-                    } else {
-                    $selected = ($child['id'] == $category['id']) ? 'selected' : '';
-                    $data['filter_lawyer_subcategory'] .= "<option value='{$child['slug']}' $selected>{$child['title']}</option>";
-                    }
-                }
-                //подраздел "прочие" в конец
-                if (isset($last_child) && $last_child != '') {
-                    $selected = ($last_child['id'] == $category['id']) ? 'selected' : '';
-                    $data['filter_lawyer_subcategory'] .= "<option value='{$last_child['slug']}' $selected>{$last_child['title']}</option>";
-                }
-            }
-            $data['filter_lawyer_subcategory'] .= "</select>";
+            continue;
         }
-    }
-    //раздел "прочие" в конец
-    if (isset($last_cat) && $last_cat != '') {
 
-        $selected = ($last_cat['id'] == $category['id'] || $last_cat['id'] == $parrent_category['id']) ? 'selected' : '';
+        // определяем, выбран ли этот пункт
+        $isSelected = ($parrent['id'] == $original_id || $parrent['id'] == $original_p_id);
 
-        $data['filter_lawyer_category'] .= "<option value='.s{$last_cat['id']}' data-slug='{$last_cat['slug']}' $selected>{$last_cat['title']}</option>";
+        // для выбранного — используем ALT-slug, иначе — обычный
+        $slugForParrent = $isSelected ? $category['slug'] : $parrent['slug'];
 
-        $pen = isset($service[$last_cat['id']]) ? '' : 'pen';
+        // строим option родительского раздела
+        $data['filter_lawyer_category'] .=
+            "<option value='.s{$parrent['id']}' data-slug='{$slugForParrent}'"
+            . ($isSelected ? ' selected' : '')
+            . ">{$parrent['title']}</option>";
 
-        $sub = $selected ? 'active' : '';
-        $data['filter_lawyer_subcategory'] .= "<select class='sel subcat s{$last_cat['id']} $pen $sub'>";
+        // подменю подразделов для этого раздела
+        $pen = isset($service[$parrent['id']]) ? '' : 'pen';
+        $subActive = $isSelected ? 'active' : '';
+        $data['filter_lawyer_subcategory'] .=
+            "<select class='sel subcat s{$parrent['id']} $pen $subActive'>";
 
         if ($pen) {
-            $data['filter_lawyer_subcategory'] .= "<option value='0'>Подраздел права</option>";
+            $data['filter_lawyer_subcategory'] .=
+                "<option value='0'>Подраздел права</option>";
+        } else {
+            $data['filter_lawyer_subcategory'] .=
+                "<option value='0'>Все подразделы</option>";
+
+            $last_child = null;
+            foreach ($service[$parrent['id']] as $child) {
+                if (mb_stripos($child['title'], 'прочие') !== false) {
+                    $last_child = $child;
+                    continue;
+                }
+                $isChildSelected = ($child['id'] == $original_id);
+                $slugForChild = $isChildSelected ? $category['slug'] : $child['slug'];
+
+                $data['filter_lawyer_subcategory'] .=
+                    "<option value='{$slugForChild}'"
+                    . ($isChildSelected ? ' selected' : '')
+                    . ">{$child['title']}</option>";
+            }
+
+            // "прочие" в конец
+            if ($last_child) {
+                $isLastChildSelected = ($last_child['id'] == $original_id);
+                $slugForLastChild = $isLastChildSelected ? $category['slug'] : $last_child['slug'];
+
+                $data['filter_lawyer_subcategory'] .=
+                    "<option value='{$slugForLastChild}'"
+                    . ($isLastChildSelected ? ' selected' : '')
+                    . ">{$last_child['title']}</option>";
+            }
         }
 
-        if (!$pen) {
-            $data['filter_lawyer_subcategory'] .= "<option value='0'>Все подразделы</option>";
+        $data['filter_lawyer_subcategory'] .= "</select>";
+    }
 
+    // теперь раздел "прочие" в конец
+    if (isset($last_cat)) {
+        $isLastCatSelected = ($last_cat['id'] == $original_id || $last_cat['id'] == $original_p_id);
+        $slugForLastCat = $isLastCatSelected ? $category['slug'] : $last_cat['slug'];
+
+        $data['filter_lawyer_category'] .=
+            "<option value='.s{$last_cat['id']}' data-slug='{$slugForLastCat}'"
+            . ($isLastCatSelected ? ' selected' : '')
+            . ">{$last_cat['title']}</option>";
+
+        $pen = isset($service[$last_cat['id']]) ? '' : 'pen';
+        $subActive = $isLastCatSelected ? 'active' : '';
+        $data['filter_lawyer_subcategory'] .=
+            "<select class='sel subcat s{$last_cat['id']} $pen $subActive'>";
+
+        if ($pen) {
+            $data['filter_lawyer_subcategory'] .=
+                "<option value='0'>Подраздел права</option>";
+        } else {
+            $data['filter_lawyer_subcategory'] .=
+                "<option value='0'>Все подразделы</option>";
+
+            $last_child = null;
             foreach ($service[$last_cat['id']] as $child) {
                 if (mb_stripos($child['title'], 'прочие') !== false) {
                     $last_child = $child;
-                } else {
-                $selected = ($child['id'] == $category['id']) ? 'selected' : '';
-                $data['filter_lawyer_subcategory'] .= "<option value='{$child['slug']}' $selected>{$child['title']}</option>";
+                    continue;
                 }
+                $isChildSelected = ($child['id'] == $original_id);
+                $slugForChild = $isChildSelected ? $category['slug'] : $child['slug'];
+
+                $data['filter_lawyer_subcategory'] .=
+                    "<option value='{$slugForChild}'"
+                    . ($isChildSelected ? ' selected' : '')
+                    . ">{$child['title']}</option>";
             }
-            if (isset($last_child) && $last_child != '') {
-                $selected = ($last_child['id'] == $category['id']) ? 'selected' : '';
-                $data['filter_lawyer_subcategory'] .= "<option value='{$last_child['slug']}' $selected>{$last_child['title']}</option>";
+
+            if ($last_child) {
+                $isLastChildSelected = ($last_child['id'] == $original_id);
+                $slugForLastChild = $isLastChildSelected ? $category['slug'] : $last_child['slug'];
+
+                $data['filter_lawyer_subcategory'] .=
+                    "<option value='{$slugForLastChild}'"
+                    . ($isLastChildSelected ? ' selected' : '')
+                    . ">{$last_child['title']}</option>";
             }
         }
+
         $data['filter_lawyer_subcategory'] .= "</select>";
     }
 }
 
 // Чекбоксы
-$specialist = $company = '';
+$specialist = $company = $specialist_mob = $company_mob = '';
 $all_mob = 'active';
 
-if (isset($_GET['company']) && !isset($_GET['specialist'])) {
+$current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+
+// Проверяем, содержится ли в пути "private" или "company"
+if (str_contains($current_path, 'company') && !str_contains($current_path, 'private')) {
     $company = 'checked';
     $company_mob = 'active';
     $all_mob = '';
-}
-
-if (isset($_GET['specialist']) && !isset($_GET['company'])) {
+} elseif (str_contains($current_path, 'private') && !str_contains($current_path, 'company')) {
     $specialist = 'checked';
     $specialist_mob = 'active';
     $all_mob = '';

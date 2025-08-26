@@ -239,7 +239,7 @@ function generateAlias($title) {
  * @param array $max_sizes wh
  * @return string|array|bool
  */
-function load_image(array $file, string $directory, string $img_name = '', int|float $max_weight = 1.1, array $min_sizes = ['width'=> 250, 'height' => 250], array $max_sizes = []): string|array|bool
+function load_image(array $file, string $directory, string $img_name = '', int|float $max_weight = 1.1, array $min_sizes = ['width'=> 15, 'height' => 15], array $max_sizes = []): string|array|bool
 {
 	if (!$file) return false;
 	$is_heic = false;
@@ -354,17 +354,123 @@ function get_view(string $path, array $content): bool|string
  * @param int $characters
  * @return string
  */
-function cut_text(string $text, int $characters): string
-{
-    if (strlen($text) <= $characters) return $text;
-
-    $text = mb_strimwidth($text, 0, $characters, encoding: 'UTF-8');
-    $text = rtrim($text, "!,.-");
-
-    if ($strpos = strrpos($text, ' ')) {
-        $text = substr($text, 0, $strpos);
+function cut_text(string $text, int $limit): string {
+    // Убираем все теги и проверяем длину чистого текста
+    if (mb_strlen(strip_tags($text)) <= $limit) {
+        return $text;
     }
-	$text = preg_replace('/<br\s*\/?>/i', '<br>', nl2br($text));
-	$text = implode('<br>', array_slice(explode('<br>', $text), 0, 5));
-    return $text . '...';
+
+    $result = '';
+    $current_length = 0;
+    $open_tags = [];
+    
+    // Разбираем HTML на теги и текст
+    preg_match_all('/(<[^>]+>|[^<]+)/u', $text, $matches);
+
+    foreach ($matches[0] as $part) {
+        if (preg_match('/<([a-zA-Z0-9]+)[^>]*>/u', $part, $tag_match)) {
+            // Если это открывающий тег, добавляем в стек
+            $open_tags[] = $tag_match[1];
+            $result .= $part;
+        } elseif (preg_match('/<\/([a-zA-Z0-9]+)>/u', $part, $tag_match)) {
+            // Если это закрывающий тег, удаляем его из стека
+            $tag = array_pop($open_tags);
+            $result .= $part;
+        } else {
+            // Обычный текст
+            $remaining = $limit - $current_length;
+            if ($remaining <= 0) break;
+
+            $cut_text = mb_substr($part, 0, $remaining);
+            $current_length += mb_strlen($cut_text);
+            $result .= $cut_text;
+
+            if ($current_length >= $limit) {
+                $result .= '...';
+                break;
+            }
+        }
+    }
+
+    while (!empty($open_tags)) {
+        $tag = array_pop($open_tags);
+        $result .= "</$tag>";
+    }
+
+    return $result;
+}
+
+function cut_text_by_lines($text, $max_lines = 4, $line_length = 50) {
+    // Декодируем HTML-сущности, убираем теги
+    $text = strip_tags(html_entity_decode($text));
+    
+    // Разбиваем текст на строки (примерная ширина строки = $line_length символов)
+    $wrapped_text = wordwrap($text, $line_length, "\n", true);
+    
+    // Превращаем в массив строк
+    $lines = explode("\n", $wrapped_text);
+    
+    // Берём первые $max_lines строк
+    $trimmed_text = implode(" ", array_slice($lines, 0, $max_lines));
+    
+    // Добавляем троеточие, если текст был обрезан
+    if (count($lines) > $max_lines) {
+        $trimmed_text .= "...";
+    }
+    
+    return $trimmed_text;
+}
+
+if ($post['post_type'] == 'blogs') {
+    $data['posts'] .= '<a class="content" href="'.$post_alias.'">'.cut_text_by_lines($post['content'], 4, 50).'</a>';
+} else {
+    $data['posts'] .= '<a class="content" href="'.$post_alias.'">'.cut_text_by_lines($post['content'], 4, 50).'</a>';
+}
+
+
+/** 
+ * Проверка на запрещенные слова
+*/
+function containsForbiddenWords(?string $text, array $forbidden_words)
+{
+    if (!$text) {
+        return false;
+    }
+
+    $text = mb_strtolower($text);
+    $results = [];
+
+    // Проверка на HTML-теги
+    if (preg_match('/<[^>]+>/i', $text)) {
+        $results[] = ['type' => 'element', 'value' => 'HTML-вставка'];
+    }
+
+    // Проверка на ссылки http/https
+    if (preg_match('/https?:\/\/[^\s]+/i', $text)) {
+        $results[] = ['type' => 'element', 'value' => 'ссылка'];
+    }
+
+    // Проверка на запрещённые слова
+    foreach ($forbidden_words as $word) {
+        if (!is_string($word)) continue;
+        if (mb_stripos($text, mb_strtolower($word)) !== false) {
+            $results[] = ['type' => 'word', 'value' => $word];
+        }
+    }
+
+    return empty($results) ? false : $results;
+}
+
+
+function fix_html($html) {
+    if (class_exists('tidy')) {
+        $tidy = tidy_parse_string($html, [
+            'show-body-only' => true, // Оставить только содержимое <body>
+            'wrap' => 0, // Не разбивать строки
+            'output-xhtml' => true // Генерировать валидный XHTML
+        ], 'utf8');
+        $tidy->cleanRepair(); // Исправить ошибки
+        return (string) $tidy;
+    }
+    return $html; // Если что-то не сработает, вернуть оригинальный HTML
 }

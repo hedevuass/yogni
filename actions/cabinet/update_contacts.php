@@ -31,7 +31,7 @@ if (isset($_POST['phone'])) {
         }
         // Отправляем запрос к сервису геокодирования (пример для Яндекс.Карт)
         $geocode_response = file_get_contents('https://geocode-maps.yandex.ru/1.x/?format=json&apikey=b0c770d0-eb80-4f0e-bb33-f3d1bb289c95&geocode=' . urlencode($main_adress));
-		$geocode_data = json_decode($geocode_response, true);
+        $geocode_data = json_decode($geocode_response, true);
 
         // Получаем координаты из ответа
         $data['coordinates'] = $geocode_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos'] ?? '';
@@ -65,24 +65,48 @@ if (isset($_POST['phone'])) {
     $data['schedule'] = [];
 
     foreach ($data['schedule_start'] as $key => $value) {
-        $data['schedule'][$key] = [
-            'start' => $value,
-            'end'   => $data['schedule_end'][$key],
-            'b_start' => isset($data['break_start'][$key]) && !empty($data['break_start'][$key]) ? $data['break_start'][$key] : false,
-            'b_end' => isset($data['break_end'][$key]) && !empty($data['break_end'][$key]) ? $data['break_end'][$key] : false
-        ];
+        $hasSchedule = !(
+            $data['schedule_start'][$key] === '0' &&
+            $data['schedule_end'][$key]   === '0'
+        );
 
-        if (($data['schedule_end'][$key] == '0' && $data['schedule_start'][$key] == '0')) {
-            $data['schedule'][$key] = ['start' => false, 'end' => false, 'b_start' => false, 'b_end' => false];
+        // 2) Проверяем, установлен ли чекбокс "перерыв"
+        $breakChecked = isset($data['break_active'][$key]);
+
+        if (!$hasSchedule) {
+            $data['schedule'][$key] = [
+                'start'   => false,
+                'end'     => false,
+                'b_start' => false,
+                'b_end'   => false
+            ];
+        } else {
+            $b_start = false;
+            $b_end   = false;
+
+            if (
+                $breakChecked &&
+                isset($data['break_start'][$key]) && $data['break_start'][$key] !== '' &&
+                isset($data['break_end'][$key])   && $data['break_end'][$key]   !== ''
+            ) {
+                $b_start = $data['break_start'][$key];
+                $b_end   = $data['break_end'][$key];
+            }
+
+            $data['schedule'][$key] = [
+                'start'   => $data['schedule_start'][$key],
+                'end'     => $data['schedule_end'][$key],
+                'b_start' => $b_start,
+                'b_end'   => $b_end
+            ];
         }
+
         if (!isset($data['days'][$key])) {
             $data['schedule'][$key]['vac'] = true;
         }
     }
 
     $data['schedule'] = json_encode($data['schedule']);
-
-
 
     if (isset($json['error'])) responseJson($json);
 
