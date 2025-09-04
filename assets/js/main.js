@@ -24,7 +24,6 @@ function clampLines($el, lines) {
     el.removeChild(temp);
 
     if (!lineHeight || lineHeight <= 0) {
-        console.warn('Не удалось определить высоту строки:', $el);
         return;
     }
 
@@ -369,24 +368,24 @@ $("#select-metro, #mobile-select-metro").on("keydown", function (event) {
         }
     })
 
-    function updateMetroLinkText() {
-        let checked = $('#popup-metro input:checkbox:checked');
-        let count = checked.length;
-        let text = 'Метро';
-    
-        if (count === 1) {
-            text = checked.first().next('label').text().trim();
-        } else if (count > 1) {
-            text = `Выбрано (${count})`;
-        } 
+function updateMetroLinkText() {
+    let checked = $('#popup-metro input:checkbox:checked');
+    let count = checked.length;
+    let text = 'Метро';
 
-        if (count > 0) {
-            mob_text = `Выбрано (${count})`;
-        }
-    
-        $('.metro-link').text(text);
-        $('.btn.btn__mobile-filters.metro .metro-text').text(mob_text);
+    if (count === 1) {
+        text = checked.first().next('label').text().trim();
+    } else if (count > 1) {
+        text = `Выбрано (${count})`;
     }
+
+    if (count > 0) {
+        mob_text = `Выбрано (${count})`;
+    }
+
+    $('.metro-link').text(text);
+    $('.btn.btn__mobile-filters.metro .metro-text').text(mob_text);
+}
 
 const isDesktop = window.innerWidth > 768
 
@@ -479,61 +478,110 @@ $("#registration-popup .form4 input[name='lastname'], #registration-popup .form5
     });
 });
 
-// Registration
-$('#registration-popup').on('click', 'button', function () {
-    $('input').removeClass('error')
-    $('.invalid-feedback').html('')
+// Registration + Captcha refresh
+$(function () {
+    const $formWrap = $('#registration-popup');
 
-    let type = $('#registration-popup input[name=classification]:checked').val(),
-        popup
+    $formWrap.on('click', 'button[type=submit]', function (e) {
+        e.preventDefault();
 
-    if (type <= 4) popup = '#registration-specialist'
-    if (type >= 5) popup = '#registration-company'
+        $formWrap.find('input').removeClass('error');
+        $formWrap.find('.invalid-feedback').html('');
+        $formWrap.find('.captcha-error').hide().text('');
 
-    $.ajax({
-        type: "POST",
-        url: "/actions/account/registration.php",
-        dataType: 'json',
-        data: $(`${popup} input[type=text], ${popup} input[type=password], ${popup} input[type=hidden], #registration-popup input[type=\'radio\']:checked`),
-        success: function (json) {
-            if (json['error']) {
-                $.each(json['error'], function (key, value) {
-                    if (key == 'email_resend') {
-                        $(`${popup} input[name=email]`).addClass('error');
-                        $(`${popup} input[name=email]`).siblings('.invalid-feedback').addClass('black').html('Пожалуйста, подтвердите регистрационные данные. Проверьте папку "Cпам" или <span class="resend-confirmation">получите письмо повторно</span>.');
+        const type = $formWrap.find('input[name=classification]:checked').val();
+        const popupSelector = (type <= 4) ? '#registration-specialist' : '#registration-company';
+        const $popup = $(popupSelector);
+
+        const $captchaField = $popup.find('.captcha-field');
+        const $captchaInput = $captchaField.find('input[name="captcha_code"]');
+        const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
+        const $captchaError = $captchaField.find('.captcha-error');
+
+        const formData = $popup.find('input[type=text], input[type=password], input[type=hidden]').serializeArray().reduce((obj, item) => {
+            obj[item.name] = item.value;
+            return obj;
+        }, {});
+        $formWrap.find('input[type=radio]:checked').each(function () {
+            formData[this.name] = this.value;
+        });
+        formData.captcha_code = $captchaInput.val();
+        formData.captcha_id = $captchaIdHidden.val();
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).text('Отправка...');
+
+        $.ajax({
+            type: 'POST',
+            url: '/actions/account/registration.php',
+            dataType: 'json',
+            data: formData,
+            success: function (res) {
+                if (res.success) {
+                    $('.popup.reg').fadeOut();
+                    $('.popup.reg2').fadeIn();
+                } else {
+                    // Сначала очищаем все предыдущие ошибки
+                    $popup.find('input').removeClass('error');
+                    $popup.find('.invalid-feedback').html('');
+                    $captchaError.hide().text('');
+
+                    // Перебираем все ошибки
+                    if (res.error) {
+                        $.each(res.error, function (key, value) {
+                            if (key === 'captcha_error') {
+                                $captchaError.text(value).show();
+                                // обновляем капчу с новым ID
+                                const newId = Date.now();
+                                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                                $captchaIdHidden.val(newId);
+                                $captchaInput.focus();
+                            } else {
+                                const $input = $popup.find(`input[name=${key}]`);
+                                $input.addClass('error');
+                                $input.siblings('.invalid-feedback').html(value);
+                            }
+                        });
                     }
-                    $(`${popup} input[name=${key}]`).addClass('error');
-                    $(`${popup} input[name=${key}]`).siblings('.invalid-feedback').html(value)
-                });
+
+                    // Показываем фатальные ошибки
+                    if (res.fatal_error) {
+                        $('.popup.error.activate').html(res.fatal_error);
+                        $('.popup.error').fadeIn();
+                    }
+
+                    $btn.prop('disabled', false).text('Отправить');
+                }
+            },
+            error: function () {
+                $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
+
+                const newId = Date.now();
+                $('#captcha2').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                $captchaIdHidden.val(newId);
+
+                $btn.prop('disabled', false).text('Отправить');
+                $captchaInput.focus();
             }
 
-            if (json['fatal_error']) {
-                $('.popup.error activate').html(json['fatal_error'])
-                $('.popup.error').fadeIn();
-            }
-
-            if (json['success']) {
-                $('.popup.reg').fadeOut();
-                $('.popup.reg2').fadeIn();
-                // var nameValue = $('input[name="name"]').val();
-                // var greeting = nameValue + ", ваша страница подтверждена!";
-                // $('#new_name').text(greeting);
-            }
-        }
+        });
     });
-    // $.ajax({
-    //     type: "POST",
-    //     url: "/actions/mail/registration.php",
-    //     dataType: 'json',
-    //     data: { email: $(`${popup} input[name=email]`).val() },
-    //     success: function (json) {
-    //         if (json['success']) {
-    //             $('#registration-popup').fadeOut();
-    //             $('.reg2').fadeIn();
-    //         }
-    //     }
-    // });
-})
+
+    // Обновление капчи кнопкой
+    $formWrap.on('click', '#captcha_refresh2', function (e) {
+        e.preventDefault();
+        const $captchaField = $(this).closest('.captcha-field');
+        const $captchaInput = $captchaField.find('input[name="captcha_code2"]');
+        const $captchaIdHidden2 = $captchaField.find('input[name="captcha_id2"]');
+        const $captchaImg = $captchaField.find('img#captcha2');
+
+        const newId = Date.now(); // новый ID для капчи
+        $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+        $captchaIdHidden2.val(newId);
+        $captchaInput.val('').focus();
+        $captchaField.find('.captcha-error').hide().text('');
+    });
+});
 $('#login-popup-resend').on('submit', function (e) {
     e.preventDefault();
 
@@ -690,48 +738,104 @@ $('.send-confirmation').click(function (e) {
         }
     });
 });
-//Send mail to specialist
-$('.popup.write .popup-btn').on('click', function (e) {
-    e.preventDefault();
 
-    // Собираем данные формы
-    const email = $('#specialist_mail').val();
-    const name = $('.popup.write input[name="name"]').val();
-    const contactInfo = $('.popup.write input.phone-input-reg').val();
-    const message = $('.popup.write textarea').val();
+$(function () {
+    const $formWrap = $('.popup.write');
 
-    // Проверяем, заполнены ли поля
-    if (name.trim() === '' || contactInfo.trim() === '' || message.trim() === '') {
-        alert('Заполните все поля.');
-        return;
-    }
+    $formWrap.on('click', '#send_message_to_specialist', function (e) {
+        e.preventDefault();
 
-    // Отправляем данные на сервер
-    $.ajax({
-        type: 'POST',
-        url: '/actions/mail/send_message.php',
-        data: {
-            email: email,
-            name: name,
-            contactInfo: contactInfo,
-            message: message
-        },
-        success: function (response) {
-            // Очищаем форму и вставляем сообщение об успешной отправке
-            $('.popup.write .form').html(`
-                <div style="text-align: center;" class="middle-text">
-                    Сообщение успешно отправлено!<br>
-Специалист свяжется с вами по оставленному в форме записи номеру телефона.
-                </div>
-            `);
-        },
-        error: function (xhr, status, error) {
-            $('.popup.write .form').html(`
-                <div style="text-align: center;" class="middle-text">
-                    Произошла ошибка при отправке сообщения.
-                </div>
-            `);
+        const email = $('#specialist_mail').val();
+        const name = $formWrap.find('input[name="name"]').val();
+        const contactInfo = $formWrap.find('input.phone-input-reg').val();
+        const message = $formWrap.find('textarea').val();
+        const $captchaField = $formWrap.find('.captcha-field');
+        const $captchaInput = $captchaField.find('input[name="captcha_code"]');
+        const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
+        const $captchaError = $captchaField.find('.captcha-error');
+
+        // Очищаем все предыдущие ошибки
+        $formWrap.find('input').removeClass('error');
+        $formWrap.find('.invalid-feedback').html('');
+        $captchaError.hide().text('');
+
+        if (name.trim() === '' || contactInfo.trim() === '' || message.trim() === '') {
+            alert('Заполните все поля.');
+            return;
         }
+
+        const $btn = $(this);
+        $btn.prop('disabled', true).text('Отправка...');
+
+        $.ajax({
+            type: 'POST',
+            url: '/actions/mail/send_message.php',
+            dataType: 'json',
+            data: {
+                email: email,
+                name: name,
+                contactInfo: contactInfo,
+                message: message,
+                captcha_code: $captchaInput.val(),
+                captcha_id: $captchaIdHidden.val()
+            },
+            success: function (res) {
+                if (res && res.success) {
+                    $formWrap.find('.form').html(`
+                        <div style="text-align: center;" class="middle-text">
+                            Сообщение успешно отправлено!<br>
+                            Специалист свяжется с вами по оставленному в форме записи номеру телефона.
+                        </div>
+                    `);
+                } else {
+                    // Показываем ошибки капчи и полей одновременно
+                    if (res.error) {
+                        $.each(res.error, function (key, value) {
+                            if (key === 'captcha_error') {
+                                $captchaError.text(value).show();
+                                // обновляем капчу
+                                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?rand=' + Date.now());
+                                $captchaIdHidden.val(Date.now());
+                            } else {
+                                const $input = $formWrap.find(`input[name=${key}]`);
+                                $input.addClass('error');
+                                $input.siblings('.invalid-feedback').html(value);
+                            }
+                        });
+                    }
+
+                    // Фатальные ошибки
+                    if (res.fatal_error) {
+                        $('.popup.error.activate').html(res.fatal_error);
+                        $('.popup.error').fadeIn();
+                    }
+
+                    $btn.prop('disabled', false).text('Отправить');
+                    $captchaInput.focus();
+                }
+            },
+            error: function () {
+                $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
+                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?rand=' + Date.now());
+                $captchaIdHidden.val(Date.now());
+                $btn.prop('disabled', false).text('Отправить');
+                $captchaInput.focus();
+            }
+        });
+    });
+
+    $formWrap.on('click', '#captcha_refresh2', function (e) {
+        e.preventDefault();
+        const $captchaField = $(this).closest('.captcha-field');
+        const $captchaInput = $captchaField.find('input[name="captcha_code"]');
+        const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
+        const $captchaImg = $captchaField.find('img#captcha');
+
+        const newId = Date.now(); // новый ID для капчи
+        $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+        $captchaIdHidden.val(newId);
+        $captchaInput.val('').focus();
+        $captchaField.find('.captcha-error').hide().text('');
     });
 });
 
@@ -755,16 +859,16 @@ $('#recovery-password-popup').on('click', 'button', function (e) {
                 });
             }
             if (json['success']) {
-                
+
                 // Сначала скрываем .popup.pass, затем показываем recovery-password__popup2
-                $('.popup.pass').fadeOut(function() {
+                $('.popup.pass').fadeOut(function () {
                     $(".recovery-password__popup2").fadeIn();
                 });
             }
         },
         error: function (xhr, status, error) {
             // Аналогично в блоке error
-            $('.popup.pass').fadeOut(function() {
+            $('.popup.pass').fadeOut(function () {
                 $(".recovery-password__popup2").fadeIn();
             });
             $("#recovery-password-popup").fadeOut();
@@ -852,7 +956,6 @@ $('#support-popup, #support-popup-header').on('click', 'button[type="submit"]', 
     $(`#${form} .invalid-feedback`).remove();
     if ($(`#${form} textarea[name="content"]`).val() == '') {
         $(`#${form} textarea[name="content"]`).addClass('error');
-        $(`#${form} textarea[name="content"]`).after(`<div class="invalid-feedback">Введите сообщение.</div>`);
         return;
     }
     let message_type = $(`#${form} .support-type`).text();
@@ -988,7 +1091,7 @@ $('.index-catalog-block').on('click', '#get-favorite button', function () {
     let data = $(`${form} input[type=hidden]`).serializeArray();
 
     // Добавляем фавориты из localStorage
-    data.push({name: 'favorite', value: JSON.stringify(favorite)});
+    data.push({ name: 'favorite', value: JSON.stringify(favorite) });
 
     $.ajax({
         type: "GET",

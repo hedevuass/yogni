@@ -4,15 +4,17 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
+require_once __DIR__ . '/../../libs/securimage/securimage.php';
+
 //Социальные сети
 $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
     if (!empty($social['link'])) {
         $image_src = 'https://urfaq.ru/assets/img/login-parol/';
-        $height = 24; 
+        $height = 24;
         $width = 30;
-        
+
         switch ($social['alt']) {
             case 'Youtube':
                 $image_src .= $social['image'];
@@ -38,7 +40,7 @@ foreach ($socials as $social) {
                 $image_src .= $social['image'];
                 break;
         }
-        
+
         $social_html .= '
             <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
                 <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
@@ -57,14 +59,46 @@ foreach ($socials as $social) {
 $social_html .= '</tr>';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-    $name = htmlspecialchars($_POST['name'] ?? '');
-    $contactInfo = htmlspecialchars($_POST['contactInfo']);
-    $message = htmlspecialchars($_POST['message']);
+    $securimage = new Securimage();
 
-    if (empty($contactInfo) || empty($message)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Заполните все поля.']);
+    $captchaCode = $_POST['captcha_code'] ?? '';
+    $captchaId   = $_POST['captcha_id'] ?? null;
+
+    // Инициализируем массив ошибок
+    $errors = [];
+
+    // Проверка капчи
+    if (!$captchaCode) {
+        $errors['captcha_error'] = 'Введите код с картинки.';
+    } elseif (!$securimage->check($captchaCode, $captchaId)) {
+        $errors['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
+    }
+
+    // Проверка остальных полей
+    $email       = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
+    $name        = htmlspecialchars($_POST['name'] ?? '');
+    $contactInfo = htmlspecialchars($_POST['contactInfo'] ?? '');
+    $message     = htmlspecialchars($_POST['message'] ?? '');
+
+    if (empty($name)) {
+        $errors['name'] = 'Укажите ваше имя';
+    }
+
+    if (empty($email)) {
+        $errors['email'] = 'Укажите email';
+    }
+
+    if (empty($contactInfo)) {
+        $errors['contactInfo'] = 'Укажите контактные данные';
+    }
+
+    if (empty($message)) {
+        $errors['message'] = 'Введите сообщение';
+    }
+
+    // Если есть ошибки, возвращаем их все сразу
+    if (!empty($errors)) {
+        echo json_encode(['success' => false, 'error' => $errors]);
         exit;
     }
 

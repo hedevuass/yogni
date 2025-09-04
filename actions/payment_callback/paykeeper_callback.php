@@ -57,22 +57,40 @@ function update_tariff_moderation(string $orderId): int {
  * Обновляет промо и логирует оплату
  */
 function update_promo_moderation(string $orderId): int {
-    global $data_base, $logPath;
-    $time = date('Y-m-d H:i:s');
-    file_put_contents($logPath, "[$time] update_promo_moderation for orderId=$orderId\n", FILE_APPEND|LOCK_EX);
+    global $data_base;
 
-    $row = $data_base->selectRow("SELECT id, specialist_id FROM dt_promo_list WHERE orderId = ?", [$orderId]);
-    if (!$row) return 0;
+    if (strlen($orderId) < 2) return 0;
+    $orderIdPrefix = substr($orderId, 0, -1);
 
-    $res = $data_base->update(
-        "UPDATE dt_promo_list SET moderation = 0 WHERE orderId = ?",
-        [$orderId]
+    // Находим все промо с тем же префиксом
+    $rows = $data_base->selectAll(
+        "SELECT orderId FROM dt_promo_list WHERE LEFT(orderId, LENGTH(orderId)-1) = ?",
+        [$orderIdPrefix]
     );
 
-    if ($res) {
-        log_payment($orderId);
+    if (!$rows) return 0;
+
+    $updated = 0;
+    foreach ($rows as $row) {
+        $promoOrderId = $row['orderId'];
+
+        // 1) Обновляем moderation
+        $res = $data_base->update(
+            "UPDATE dt_promo_list SET moderation = 0 WHERE orderId = ?",
+            [$promoOrderId]
+        );
+
+        // 2) Если успешно, обновляем платеж
+        if ($res) {
+            $data_base->update(
+                "UPDATE dt_payments SET status = ?, paymentDate = NOW() WHERE orderId = ?",
+                ['payment_paid', $promoOrderId]
+            );
+            $updated++;
+        }
     }
-    return $res;
+
+    return $updated;
 }
 
 /**

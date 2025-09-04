@@ -335,6 +335,33 @@ $data['footer_registration'] = '<div class="footer__reg-wrapper">
 </div>
 </div>';
 
+$randId = 'id' . bin2hex(random_bytes(6));
+$data['captcha'] = '
+<div class="field captcha-field">
+    <div class="captcha-row">
+        <div class="captcha-left">
+        <img id="captcha2" src="/libs/securimage/securimage_show.php?id=' . $randId . '" alt="CAPTCHA" aria-hidden="false" />
+        <button type="button" id="captcha_refresh2" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        </div>
+
+        <div class="captcha-right">
+        <label class="captcha-label" for="captcha_code">Подтвердите, что вы не робот</label>
+        <input class="captcha-input" id="captcha_code2" name="captcha_code" type="text" placeholder="Введите код" autocomplete="off" />
+        <input type="hidden" id="captcha_captcha_id2" name="captcha_id2" value="' . $randId . '" />
+        </div>
+    </div>
+    <div class="captcha-error"></div>
+</div>
+';
+
+$HTML_ = explode('<!--data:captcha-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:captcha-->{$data['captcha']}<!--data:captcha-->" . $HTML_[2];
+
 
 // Обрабатывает мобильный фильтр
 $data['city'] = $_SESSION['city']['name'];

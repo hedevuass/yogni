@@ -2009,48 +2009,69 @@ function count_full_search_companies(string $search): int
         }
     }
 
+    // Учитываем город — как в full_search_companies: компании считаются только если у них есть специалисты в нужном городе
     $count = $data_base->count("
-        SELECT COUNT(DISTINCT co.id) 
+        SELECT COUNT(DISTINCT co.id)
         FROM dt_company co
-        WHERE co.title $condition ? $and
-    ", [$search]);
+        LEFT JOIN dt_specialist s ON s.company_id = co.id
+        WHERE co.title $condition ? AND s.city_id = ? $and
+    ", [$search, $_SESSION['city']['id']]);
 
     return intval($count);
 }
+
 
 function count_full_search_specialists(string $search): int
 {
     global $data_base;
 
-    if (mb_strlen($search) < 4) {
-        $condition = '=';
-        $search_pattern = $search;
-    } else {
-        $condition = 'LIKE';
-        $search_pattern = '%' . $search . '%';
-    }
-
     $and = '';
     if (isset($_GET['filter'])) {
         $filter_req = htmlentities(strip_tags($_GET['filter']));
+        // Используем те же id классификаций, что и в full_search_specialists
         if ($filter_req == 'lawyers') {
-            $and = 'AND s.classification_id IN (5, 6)';
+            $and = 'AND s.classification_id IN (1, 2)';
         } else if ($filter_req == 'experts') {
-            $and = 'AND s.classification_id = 7';
+            $and = 'AND s.classification_id = 3';
         } else if ($filter_req == 'notaries') {
-            $and = 'AND s.classification_id = 8';
+            $and = 'AND s.classification_id = 4';
         }
     }
 
-    $count = $data_base->count("
-        SELECT COUNT(DISTINCT s.id)
-        FROM dt_specialist s
-        WHERE (s.name $condition ? OR s.lastname $condition ?)
-        AND s.city_id = ? $and
-    ", [$search_pattern, $search_pattern, $_SESSION['city']['id']]);
+    // Повторяем ту же логику разбиения запроса, что и в full_search_specialists
+    $parts = explode(' ', $search, 2);
+
+    if (!empty($parts[0]) && !empty($parts[1])) {
+        $condition = (mb_strlen($parts[0]) < 4 && mb_strlen($parts[1]) < 4) ? '=' : 'LIKE';
+        $search_name = ($condition === '=') ? $parts[0] : '%' . $parts[0] . '%';
+        $search_lastname = ($condition === '=') ? $parts[1] : '%' . $parts[1] . '%';
+
+        $count = $data_base->count("
+            SELECT COUNT(DISTINCT s.id)
+            FROM dt_specialist s
+            WHERE (
+                (s.name $condition ? AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and)
+                OR
+                (s.name $condition ? AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and)
+            )
+        ", [$search_name, $search_lastname, $_SESSION['city']['id'], $search_lastname, $search_name, $_SESSION['city']['id']]);
+    } else {
+        $condition = (mb_strlen($parts[0]) < 4) ? '=' : 'LIKE';
+        $search_pattern = ($condition === '=') ? $parts[0] : '%' . $parts[0] . '%';
+
+        $count = $data_base->count("
+            SELECT COUNT(DISTINCT s.id)
+            FROM dt_specialist s
+            WHERE (s.name $condition ? OR s.lastname $condition ?)
+              AND s.city_id = ?
+              AND s.company_id IS NULL
+              $and
+        ", [$search_pattern, $search_pattern, $_SESSION['city']['id']]);
+    }
 
     return intval($count);
 }
+
 
 // Возвращает кол-во результатов поиска
 function count_full_search(string $search)
@@ -2642,9 +2663,9 @@ function filter_valid_entry(array $entry): bool
     $hasDocument = !empty($entry['documentId']);
 
     if ($hasDocument) {
-        return (time() < $connected + 3600); // 1 час
+        return true;
     } else {
-        return (time() < $connected + 900); // 10 минут
+        return (time() < $connected + 900); // 15 минут
     }
 }
 
@@ -2655,7 +2676,7 @@ function get_occupied_entries($service_slug, $sort)
     $rows = $data_base->selectAll(
         "SELECT date_start, date_expires, moderation, connected_at, qrcId, documentId
          FROM dt_promo_list
-         WHERE service_slug = ? AND sort = ? AND moderation = 0
+         WHERE service_slug = ? AND sort = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$service_slug, $sort]
     );
@@ -2678,7 +2699,7 @@ function get_occupied_entries_by_block($block_id, $sort)
          WHERE block_id = ? 
            AND sort = ? 
            AND (service_slug IS NULL OR service_slug = '')
-           AND moderation = 0
+           AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$block_id, $sort]
     );
@@ -2711,24 +2732,25 @@ function get_occupied_entries_by_block_and_service($block_id, $service_slug, $so
     } elseif ($classification === 4) {
         $group = 3;
     } else {
-        $group = 1; // дефолт
+        $group = 1;
     }
 
-    // Берем все активные записи по block_id, service_slug и sort
+    // Берем все активные записи по block_id и service_slug (включая moderation = 4)
     $rows = $data_base->selectAll(
-        "SELECT p.date_start, p.date_expires, s.classification_id
+        "SELECT p.date_start, p.date_expires, p.moderation, p.connected_at, p.qrcId, p.documentId,
+                s.classification_id, p.specialist_id, p.sort
          FROM dt_promo_list p
          JOIN dt_specialist s ON s.id = p.specialist_id
-         WHERE p.block_id = ? AND p.service_slug = ? AND p.sort = ? AND p.moderation = 0
+         WHERE p.block_id = ? AND p.service_slug = ?
+           AND p.moderation IN (0,4)
            AND p.date_expires >= CURRENT_DATE",
-        [$block_id, $service_slug, $sort]
+        [$block_id, $service_slug]
     );
 
-    $valid = array_filter($rows, function ($e) use ($group) {
-        // проверяем валидность по датам
+    // Фильтруем по группе специалистов и логике sort
+    $valid = array_filter($rows, function ($e) use ($group, $sort, $specialist_id) {
         if (!filter_valid_entry($e)) return false;
 
-        // определяем группу специалиста из promo записи
         $c = (int)$e['classification_id'];
         if (in_array($c, [1, 2, 5, 6, 7])) {
             $entry_group = 1;
@@ -2740,13 +2762,21 @@ function get_occupied_entries_by_block_and_service($block_id, $service_slug, $so
             $entry_group = 1;
         }
 
-        // только если группы совпадают, считаем запись занятой
-        return $entry_group === $group;
+        // группы должны совпадать
+        if ($entry_group !== $group) return false;
+
+        // Если запись того же специалиста → блокируем всегда
+        if ($e['specialist_id'] == $specialist_id) return true;
+
+        // Иначе проверяем sort
+        return $e['sort'] == $sort;
     });
 
     return array_map(fn($e) => [
         'date_start'   => $e['date_start'],
         'date_expires' => $e['date_expires'],
+        'specialist_id'=> $e['specialist_id'],
+        'sort'         => $e['sort'],
     ], $valid);
 }
 
@@ -2755,7 +2785,7 @@ function get_entry_count_by_service_slug($service_slug)
 {
     global $data_base;
     $count = $data_base->count(
-        "SELECT COUNT(*) FROM dt_promo_list WHERE service_slug = ?",
+        "SELECT COUNT(*) FROM dt_promo_list WHERE service_slug = ? AND moderation IN (0,4)",
         [$service_slug]
     );
     return (int)$count;
@@ -2769,7 +2799,7 @@ function get_entry_count_by_block($block_id)
         "SELECT COUNT(*) 
          FROM dt_promo_list 
          WHERE block_id = ? 
-           AND (service_slug IS NULL OR service_slug = '')",
+           AND (service_slug IS NULL OR service_slug = '') AND moderation IN (0,4)",
         [$block_id]
     );
     return (int)$count;
@@ -2780,9 +2810,9 @@ function check_conflict_by_service_slug($service_slug, $specialist_id, $sort)
 {
     global $data_base;
     $rows = $data_base->selectAll(
-        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId
+        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId, qrcId
          FROM dt_promo_list
-         WHERE service_slug = ? AND specialist_id = ? AND moderation = 0
+         WHERE service_slug = ? AND specialist_id = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$service_slug, $specialist_id]
     );
@@ -2800,9 +2830,9 @@ function check_conflict_by_block($block_id, $specialist_id, $sort)
 {
     global $data_base;
     $rows = $data_base->selectAll(
-        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId
+        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId, qrcId
          FROM dt_promo_list
-         WHERE block_id = ? AND specialist_id = ? AND moderation = 0
+         WHERE block_id = ? AND specialist_id = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$block_id, $specialist_id]
     );
@@ -2823,7 +2853,7 @@ function get_conflicting_entries($specialist_id, $service_slug, $sort = null)
     $sql = "SELECT date_start, date_expires, moderation, connected_at, qrcId, documentId
             FROM dt_promo_list
             WHERE specialist_id = ?
-              AND service_slug = ? AND moderation = 0
+              AND service_slug = ? AND moderation IN (0,4)
               AND date_expires >= CURRENT_DATE";
     if ($sort !== null) {
         $sql .= " AND sort = ?";
@@ -2847,7 +2877,7 @@ function get_conflicting_entries_by_block($specialist_id, $block_id)
          WHERE specialist_id = ? 
            AND block_id = ? 
            AND (service_slug IS NULL OR service_slug = '')
-           AND moderation = 0
+           AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$specialist_id, $block_id]
     );
@@ -2892,7 +2922,7 @@ function get_all_promo_blocks()
 }
 
 // Функция для добавления записи в таблицу dt_promo_list
-function add_promo_list($specialist_id, $block_id, $service_id, $service_name, $sort, $start_date, $end_date, $orderId)
+function add_promo_list($specialist_id, $block_id, $service_id, $service_name, $sort, $start_date, $end_date, $orderId, $price)
 {
     global $data_base;
 
@@ -2905,9 +2935,9 @@ function add_promo_list($specialist_id, $block_id, $service_id, $service_name, $
 
     // Выполняем SQL-запрос с добавлением поля orderId
     $data_base->add(
-        "INSERT INTO dt_promo_list (specialist_id, block_id, sort, service_slug, service_name, date_start, date_expires, orderId)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [$specialist_id, $block_id, $sort, $service_id, $service_name, $formatted_start_date, $formatted_end_date, $orderId]
+        "INSERT INTO dt_promo_list (specialist_id, block_id, sort, service_slug, service_name, date_start, date_expires, orderId, amount)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [$specialist_id, $block_id, $sort, $service_id, $service_name, $formatted_start_date, $formatted_end_date, $orderId, $price]
     );
 }
 

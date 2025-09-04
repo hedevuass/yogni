@@ -3,42 +3,44 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
+require_once __DIR__ . '/../../libs/securimage/securimage.php';
+
 //Социальные сети
 $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
-    if (!empty($social['link'])) {
-        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
-        $height = 24; 
+  if (!empty($social['link'])) {
+    $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+    $height = 24;
+    $width = 30;
+
+    switch ($social['alt']) {
+      case 'Youtube':
+        $image_src .= $social['image'];
+        $height = 24;
         $width = 30;
-        
-        switch ($social['alt']) {
-            case 'Youtube':
-                $image_src .= $social['image'];
-                $height = 24;
-                $width = 30;
-                break;
-            case 'Telegram':
-                $image_src .= $social['image'];
-                $height = 24;
-                $width = 24;
-                break;
-            case 'Vk':
-                $image_src .= $social['image'];
-                $height = 24;
-                $width = 24;
-                break;
-            case 'Yandex':
-                $image_src .= $social['image'];
-                $height = 24;
-                $width = 24;
-                break;
-            default:
-                $image_src .= $social['image'];
-                break;
-        }
-        
-        $social_html .= '
+        break;
+      case 'Telegram':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'Vk':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'Yandex':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      default:
+        $image_src .= $social['image'];
+        break;
+    }
+
+    $social_html .= '
             <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
                 <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
                    style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px">
@@ -50,72 +52,87 @@ foreach ($socials as $social) {
                          style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic">
                 </a>
             </td>';
-    }
+  }
 }
 
 $social_html .= '</tr>';
 
 if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['password'])) {
-    foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+  $securimage = new Securimage();
+
+  $captchaCode = $_POST['captcha_code'] ?? '';
+  $captchaId = $_POST['captcha_id'] ?? null;
+
+  // собираем данные из формы
+  foreach ($_POST as $key => $value) {
+    $data[$key] = clean_elem_form($value);
+  }
+
+  // массив ошибок
+  $json = ['error' => []];
+
+  // проверка капчи
+  if (!$captchaCode) {
+    $json['error']['captcha_error'] = 'Введите код с картинки.';
+  }
+
+  if (!$securimage->check($captchaCode, $captchaId)) {
+    $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
+  }
+
+  // проверка других полей
+  if (!$data['name']) $json['error']['name'] = 'Укажите ваше имя';
+  if (!$data['lastname']) $json['error']['lastname'] = 'Укажите вашу фамилию';
+
+  $pattern = '/^((\+?7|8)(?!95[4-7]|99[08]|907|94[^09]|336)([348]\d|9[0-6789]|7[0247])\d{8}|\+?(99[^4568]\d{7,11}|994\d{9}|9955\d{8}|996[57]\d{8}|9989\d{8}|380[34569]\d{8}|375[234]\d{8}|372\d{7,8}|37[0-4]\d{8}))$/';
+  if ($data['phone']) {
+    $data['phone'] = preg_replace("/[^0-9]/", '', $data['phone']);
+    if (substr($data['phone'], 0, 1) == 8) $data['phone'][0] = 7;
+    if (!preg_match($pattern, $data['phone'])) $json['error']['phone'] = 'Некорректный номер телефона';
+  } else $json['error']['phone'] = 'Укажите номер телефона';
+
+  if ($data['email']) {
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $json['error']['email'] = 'Некорректный email';
+
+    $email_check = check_email($data['email']);
+    if ($email_check !== false) {
+      if ($email_check === 2) $json['error']['email'] = '<span class="basic_text">Страница с такой почтой уже существует.</span>
+                <span class="basic_text">Для получения доступа к странице <a class="recovery_popup_call">восстановите пароль</a>.</span>';
+      else if ($email_check === 1) $json['error']['email_resend'] = true;
     }
+  } else $json['error']['email'] = 'Укажите email';
 
-    if (!$data['name']) $json['error']['name'] = 'Укажите ваше имя';
-    if (!$data['lastname']) $json['error']['lastname'] = 'Укажите вашу фамилию';
+  if (strlen($data['password']) < 6) $json['error']['password'] = 'Минимальная длина пароля 6 символов';
+  if ($data['password']) $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
-    $data['city_id'] = isset($_POST['city_id']) && $_POST['city_id']
-    ? (int) clean_elem_form($_POST['city_id'])
-    : (int) $_SESSION['city']['id'];
+  if (isset($data['company']) && !$data['company']) $json['error']['company'] = 'Укажите название компании';
 
-    $pattern = '/^((\+?7|8)(?!95[4-7]|99[08]|907|94[^09]|336)([348]\d|9[0-6789]|7[0247])\d{8}|\+?(99[^4568]\d{7,11}|994\d{9}|9955\d{8}|996[57]\d{8}|9989\d{8}|380[34569]\d{8}|375[234]\d{8}|372\d{7,8}|37[0-4]\d{8}))$/';
+  // если есть хоть одна ошибка, возвращаем JSON с ними всеми
+  if (!empty($json['error'])) {
+    responseJson($json);
+  }
 
-    if ($data['phone']) {
-        $data['phone'] = preg_replace("/[^0-9]/", '', $data['phone']);
+  $data['hash'] = md5($data['phone'] . bin2hex(random_bytes(10)));
 
-        if (substr($data['phone'], 0, 1) == 8) $data['phone'][0] = 7;
+  $data['company_id'] = null;
 
-        if (!preg_match($pattern, $data['phone'])) $json['error']['phone'] = 'Некорректный номер телефона';
-    } else $json['error']['phone'] = 'Укажите номер телефона';
-
-    if ($data['email']) {
-        if (!filter_var($data['email'], FILTER_SANITIZE_EMAIL)) $json['error']['email'] = 'Некорректный email';
-
-        $email_check = check_email($data['email']);
-        if ($email_check !== false) {
-            if ($email_check === 2) $json['error']['email'] = '<span class="basic_text">Страница с такой почтой уже существует.</span>
-            <span class="basic_text">Для получения доступа к странице <a class="recovery_popup_call">восстановите пароль</a>.</span>';
-            else if ($email_check === 1) $json['error']['email_resend'] = true;
-        }
-    } else $json['error']['email'] = 'Укажите email';
-
-    if (strlen($data['password']) < 6) $json['error']['password'] = 'Минимальная длина пароля 6 символов';
-    if ($data['password']) $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
-
-    if (isset($data['company']) && !$data['company']) $json['error']['company'] = 'Укажите название компании';
-
-    if (isset($json['error'])) responseJson($json);
-
-    $data['hash'] = md5($data['phone'] . bin2hex(random_bytes(10)));
-
-    $data['company_id'] = null;
-
-    if (isset($data['company'])) {
-        $data['company_id'] = set_company($data['company'], $data['classification']);
-    }
+  if (isset($data['company'])) {
+    $data['company_id'] = set_company($data['company'], $data['classification']);
+  }
 
 
-    // $user_id = check_registration($data);
-    $user_id = registration($data);
+  // $user_id = check_registration($data);
+  $user_id = registration($data);
 
-    if (!$user_id) {
-        $json['fatal_error'] = 'Регистрация временно недоступна';
-    } else {
-        if (set_specialist_description($user_id) && set_specialist_contacts($user_id, $data['phone']) && set_specialist_blog($user_id)) {
-            $title = 'ЮРФАК - регистрация';
-            $email_name = $data['name'] . ' ' . $data['lastname'];
-            $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-            $link_url .= '/action?reg&user_id=' . $user_id.'&hash='.$data['hash'];
-            $body = <<<EOF
+  if (!$user_id) {
+    $json['fatal_error'] = 'Регистрация временно недоступна';
+  } else {
+    if (set_specialist_description($user_id) && set_specialist_contacts($user_id, $data['phone']) && set_specialist_blog($user_id)) {
+      $title = 'ЮРФАК - регистрация';
+      $email_name = $data['name'] . ' ' . $data['lastname'];
+      $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+      $link_url .= '/action?reg&user_id=' . $user_id . '&hash=' . $data['hash'];
+      $body = <<<EOF
     <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0">
  <head>
   <meta charset="UTF-8">
@@ -288,34 +305,34 @@ a[x-apple-data-detectors] {
  </body>
 </html>
 EOF;
-            if (send_mail_smtp($data['email'], $title, $body)) {
-                $json['success'] = true;
-            } else {
-                $json['fatal_error'] = 'Ошибка отправки письма, проверьте корректность введенной вами почты.';
-            }
-        } else {
-            $json['fatal_error'] = 'Регистрация временно недоступна'; 
-        }
+      if (send_mail_smtp($data['email'], $title, $body)) {
+        $json['success'] = true;
+      } else {
+        $json['fatal_error'] = 'Ошибка отправки письма, проверьте корректность введенной вами почты.';
+      }
+    } else {
+      $json['fatal_error'] = 'Регистрация временно недоступна';
     }
-    responseJson($json);
+  }
+  responseJson($json);
 } else if (isset($_POST['email']) && isset($_POST['type'])) {
-    foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+  foreach ($_POST as $key => $value) {
+    $data[$key] = clean_elem_form($value);
+  }
+  if ($data['type'] == 'resend-confirmation') {
+
+    $user = get_user_by_email($data['email']);
+
+    if (!$user) {
+      $json['fatal_error'] = 'Регистрация временно недоступна';
+      responseJson($json);
     }
-    if ($data['type'] == 'resend-confirmation') {
 
-        $user = get_user_by_email($data['email']);
-
-        if (!$user) {
-            $json['fatal_error'] = 'Регистрация временно недоступна';
-            responseJson($json);
-        }
-
-        $title = 'ЮРФАК - регистрация';
-            $email_name = $user['name'] . ' ' . $user['lastname'];
-            $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-            $link_url .= '/action?reg&user_id=' . $user['id'].'&hash='.$user['hash'];
-            $body = <<<EOF
+    $title = 'ЮРФАК - регистрация';
+    $email_name = $user['name'] . ' ' . $user['lastname'];
+    $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $link_url .= '/action?reg&user_id=' . $user['id'] . '&hash=' . $user['hash'];
+    $body = <<<EOF
     <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0">
  <head>
   <meta charset="UTF-8">
@@ -488,56 +505,54 @@ a[x-apple-data-detectors] {
  </body>
 </html>
 EOF;
-        if (send_mail_smtp($user['email'], $title, $body)) {
-            $json['success'] = true;
-        } else {
-            $json['fatal_error'] = 'Ошибка отправки письма, проверьте корректность введенной вами почты.';
-        }
+    if (send_mail_smtp($user['email'], $title, $body)) {
+      $json['success'] = true;
     } else {
-        $json['fatal_error'] = 'Регистрация временно недоступна';
+      $json['fatal_error'] = 'Ошибка отправки письма, проверьте корректность введенной вами почты.';
     }
-    responseJson($json);
+  } else {
+    $json['fatal_error'] = 'Регистрация временно недоступна';
+  }
+  responseJson($json);
 } else if (isset($_POST['spec_name']) && isset($_POST['spec_type'])) {
   foreach ($_POST as $key => $value) {
-      $data[$key] = clean_elem_form($value);
+    $data[$key] = clean_elem_form($value);
   }
 
   if ($data['spec_type'] == 'company') {
-      $companies = check_сompany($data['spec_name']);
-      if ($companies) {
-          $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
-          foreach ($companies as $company) {
-              // Получаем ОДНОГО специалиста с этой компанией
-              $spec = get_specialists_by_company($company['id']);
-              if ($spec) {
-                  $classification = get_classification($spec['classification_id']);
-                  $response .= '<a href="/specialist/id' . $spec['id'] . '">';
-                  $response .= $company['title'] . ', ';
-                  $response .= mb_strtolower($classification['title']) . '</a>';
-              }
-          }
-          $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
-          echo $response;
+    $companies = check_сompany($data['spec_name']);
+    if ($companies) {
+      $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
+      foreach ($companies as $company) {
+        // Получаем ОДНОГО специалиста с этой компанией
+        $spec = get_specialists_by_company($company['id']);
+        if ($spec) {
+          $classification = get_classification($spec['classification_id']);
+          $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+          $response .= $company['title'] . ', ';
+          $response .= mb_strtolower($classification['title']) . '</a>';
+        }
       }
-
+      $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
+      echo $response;
+    }
   } else if ($data['spec_type'] == 'specialist') {
-      $name = explode(' ', $data['spec_name']);
-      if (!empty($name[0]) && !empty($name[1])) {
-          $specialists = check_user_name($name[0], $name[1]);
-          if ($specialists) {
-              $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
-              foreach ($specialists as $spec) {
-                  $classification = get_classification($spec['classification_id']);
-                  $response .= '<a href="/specialist/id' . $spec['id'] . '">';
-                  $response .= $spec['name'] . ' ' . $spec['lastname'] . ', ';
-                  $response .= mb_strtolower($classification['title']) . '</a>';
-              }
-              $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
-              echo $response;
-          }
-      } else {
-          die();
+    $name = explode(' ', $data['spec_name']);
+    if (!empty($name[0]) && !empty($name[1])) {
+      $specialists = check_user_name($name[0], $name[1]);
+      if ($specialists) {
+        $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
+        foreach ($specialists as $spec) {
+          $classification = get_classification($spec['classification_id']);
+          $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+          $response .= $spec['name'] . ' ' . $spec['lastname'] . ', ';
+          $response .= mb_strtolower($classification['title']) . '</a>';
+        }
+        $response .= '</div><span>Если это не ваша страница, то продолжайте регистрацию.</span>';
+        echo $response;
       }
+    } else {
+      die();
+    }
   }
 }
-

@@ -19,6 +19,102 @@ $include_ads = $main_page = true;
 $posts = get_actual_posts('', 0, 0, 5, 0);
 $data['breadcrumbs'] = '<span class="curr-page">Журнал</span>';
 $tag_id = $theme_id = 0;
+
+if (!isset($requestion_arr[2]) || $requestion_arr[2] === '') {
+    // Главная /journal
+    $posts = get_actual_posts('', 0, 0, 10, 0);
+    $count_posts = get_actual_posts('', 0, 0, 200, 0);
+    echo generateJournalPostsJsonLd($posts, $count_posts);
+    echo generateJournalBreadcrumbsJsonLd($requestion_str ?? '');
+}
+function generateJournalPostsJsonLd(array $posts, array $count_posts, string $pageType = ''): string
+{
+    // Обрезаем количество постов
+    $limit = ($pageType === '') ? 10 : 5; // 10 для главной, 5 для разделов
+    $posts = array_slice($posts, 0);
+
+    $articleType = ($pageType == 'news') ? 'NewsArticle' : 'Article';
+
+    // Формируем список публикаций
+    $workExamples = array_map(function ($post) {
+        $articleType = ($post['post_type'] === 'news') ? 'NewsArticle' : 'Article';
+        return [
+            "@type" => $articleType,
+            "url" => full_url($post['url'] ?? ''),
+            "datePublished" => date('Y-m-d', strtotime($post['date'] ?? 'now')),
+            "articleSection" => $post['service_title'] ?? '',
+            "headline" => strip_tags($post['title'] ?? ''),
+            "description" => strip_tags($post['content'] ?? '')
+        ];
+    }, $posts);
+
+    // Название и описание
+    switch ($pageType) {
+        case 'news':
+            $listName = "Новости журнала";
+            $listDescription = "Все новости журнала — " . count($count_posts) . " публикаций";
+            break;
+        case 'articles':
+            $listName = "Статьи журнала";
+            $listDescription = "Все статьи журнала — " . count($count_posts) . " публикаций";
+            break;
+        case 'blogs':
+            $listName = "Блоги журнала";
+            $listDescription = "Все блоги журнала — " . count($count_posts) . " публикаций";
+            break;
+        default:
+            $listName = "Статьи, новости и блоги журнала";
+            $listDescription = "Все статьи, новости и блоги журнала по темам и категориям — " . count($count_posts) . " публикаций";
+            break;
+    }
+
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "CreativeWorkSeries",
+        "name" => $listName,
+        "description" => $listDescription,
+        "workExample" => $workExamples
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+function generateJournalBreadcrumbsJsonLd(string $pageType = ''): string
+{
+    $items = [];
+
+    // Главная
+    $items[] = [
+        "@type" => "ListItem",
+        "position" => 1,
+        "name" => "Главная",
+        "item" => "https://urfaq.ru/"
+    ];
+
+    // Если не главная страница журнала, то добавляем "Журнал"
+    if (in_array($pageType, ['news', 'articles', 'blogs'])) {
+        $items[] = [
+            "@type" => "ListItem",
+            "position" => 2,
+            "name" => "Журнал",
+            "item" => "https://urfaq.ru/journal"
+        ];
+    }
+
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "BreadcrumbList",
+        "itemListElement" => $items
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+
 if (isset($requestion_arr[2])) {
     $requestion_str = $requestion_arr[2];
     if ($requestion_str != '') {
@@ -109,6 +205,8 @@ if (isset($requestion_arr[2])) {
             }
             $include_ads = true;
             $data['breadcrumbs'] .= '<span>/</span><span class="curr-page">' . strip_tags(html_entity_decode($breadcrumbs_type)) . '</span>';
+
+            echo generateJournalBreadcrumbsJsonLd($requestion_str ?? '');
         } else responseRedirect('/'); // Если раздела\записи нет делаем редирект на главную
     }
 }
@@ -207,7 +305,7 @@ foreach ($filteredBanners as $index => $banner) {
         // HTML для первого баннера
         $first_banner = '
         <a href="' . htmlspecialchars($banner['link']) . '" class="item">
-            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '">
+            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '" alt="Первый боковой баннер журнала">
             <div class="text">
                 <p>' . htmlspecialchars_decode($banner['title']) . '</p>
                 <button>' . htmlspecialchars_decode($banner['button_text']) . '</button>
@@ -217,14 +315,14 @@ foreach ($filteredBanners as $index => $banner) {
         // HTML для второго баннера
         $second_banner = '
         <a href="' . htmlspecialchars($banner['link']) . '" class="item">
-            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '">
+            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '" alt="Второй боковой баннер журнала">
             <span class="link">' . htmlspecialchars_decode($banner['title']) . '</span>
         </a>';
     } elseif ($banner['id'] == 5) {
         // HTML для третьего баннера
         $third_banner = '
 				<div class="image">
-					<img src="/assets/img/' . htmlspecialchars($banner['image']) . '">
+					<img src="/assets/img/' . htmlspecialchars($banner['image']) . '" alt="Третий боковой баннер журнала">
 				</div>
 				<span class="name">' . htmlspecialchars_decode($banner['title']) . '</span>
 				<p>' . htmlspecialchars_decode($banner['description']) . '</p>
@@ -299,6 +397,9 @@ if (isset($single_post) && isset($journal_page) && str_starts_with($_SERVER['REQ
 }
 if (isset($journal_page) && !isset($single_post)) {
     $posts = get_actual_posts($journal_page);
+    $posts_for_jsonld = get_actual_posts($journal_page, 0, 0, 10, 0);
+    $count_posts = get_actual_posts($journal_page, 0, 0, 200, 0);
+    echo generateJournalPostsJsonLd($posts_for_jsonld, $count_posts, $requestion_str);
 }
 
 if (isset($blog)) {
@@ -339,7 +440,7 @@ if (isset($blog)) {
         $adress[] = 'м. ' . $specialist['metro'];
     }
 
-   /*  if (!is_null($specialist['street']) && $specialist['street']) {
+    /*  if (!is_null($specialist['street']) && $specialist['street']) {
         $adress[] = $specialist['street'];
     }
 
@@ -383,6 +484,154 @@ if (isset($blog)) {
             </div>
             <a href="/specialist/id' . $specialist['id'] . '" class="link">Перейти на страницу</a>
         </div>';
+
+        function generateAuthorProfileJsonLd(array $specialist, array $posts = []): string
+        {
+            if (empty($specialist)) return '';
+
+            // Имя автора
+            $authorName = !empty($specialist['company'])
+                ? $specialist['company']
+                : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? ''));
+
+            // Тип специалиста
+            $additionalType = $specialist['classification'] ?? '';
+
+            // Фото
+            $imageUrl = !empty($specialist['photo'])
+                ? 'https://urfaq.ru/uploads/avatars/' . $specialist['photo']
+                : '';
+
+            // Адрес
+            $streetAddress = [];
+            if (!empty($specialist['metro'])) $streetAddress[] = 'м. ' . $specialist['metro'];
+            if (!empty($specialist['street'])) $streetAddress[] = $specialist['street'];
+            if (!empty($specialist['house'])) $streetAddress[] = $specialist['house'];
+            $streetAddressStr = implode(', ', $streetAddress);
+
+            // URL страницы специалиста
+            $profileUrl = $specialist['url'] ?? 'https://urfaq.ru/specialist/id' . $specialist['id'];
+
+            // Ограничение постов до 10 последних
+            $posts = array_slice($posts, 0, 10);
+
+            $itemListElements = [];
+            $position = 1;
+            foreach ($posts as $post) {
+                $itemListElements[] = [
+                    "@type" => "ListItem",
+                    "position" => $position,
+                    "item" => [
+                        "@type" => "Article",
+                        "url" => full_url($post['url'] ?? ''),
+                        "datePublished" => date('Y-m-d', strtotime($post['date'] ?? 'now')),
+                        "articleSection" => $post['service_title'] ?? '',
+                        "headline" => strip_tags($post['title'] ?? ''),
+                        "description" => strip_tags($post['content'] ?? ''),
+                        "author" => [
+                            "@type" => !empty($specialist['company']) ? "Organization" : "Person",
+                            "name" => $authorName
+                        ]
+                    ]
+                ];
+                $position++;
+            }
+
+            // JSON-LD для профиля
+            $profileJsonLd = [
+                "@context" => "https://schema.org",
+                "@type" => "ProfilePage",
+                "url" => $profileUrl,
+                "name" => $authorName,
+                "mainEntity" => [
+                    "@type" => !empty($specialist['company']) ? "Organization" : "Person",
+                    "name" => $authorName,
+                    "additionalType" => $additionalType,
+                    "image" => $imageUrl,
+                    "address" => [
+                        "@type" => "PostalAddress",
+                        "streetAddress" => $streetAddressStr,
+                        "addressLocality" => $specialist['city'] ?? '',
+                        "addressCountry" => "RU"
+                    ]
+                ]
+            ];
+
+            $postsJsonLd = [
+                "@context" => "https://schema.org",
+                "@type" => "CreativeWorkSeries",
+                "name" => "Публикации автора",
+                "description" => "Все опубликованные статьи автора — " . count($posts) . " публикаций",
+                "workExample" => array_map(function ($post) use ($specialist) {
+                    $authorType = !empty($specialist['company']) ? "Organization" : "Person";
+                    $authorName = !empty($specialist['company'])
+                        ? $specialist['company']
+                        : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? ''));
+
+                    return [
+                        "@type" => "Article",
+                        "url" => full_url($post['url'] ?? ''),
+                        "datePublished" => date('Y-m-d', strtotime($post['date'] ?? 'now')),
+                        "articleSection" => $post['service_title'] ?? '',
+                        "headline" => strip_tags($post['title'] ?? ''),
+                        "description" => strip_tags($post['content'] ?? ''),
+                        "author" => [
+                            "@type" => $authorType,
+                            "name" => $authorName
+                        ]
+                    ];
+                }, $posts)
+            ];
+
+            // Объединяем два объекта и выводим
+            return '<script type="application/ld+json">' . PHP_EOL .
+                json_encode([$profileJsonLd, $postsJsonLd], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+                PHP_EOL . '</script>';
+        }
+
+
+        $posts = get_blog_posts($blog['id'], 10); // последние 10 постов
+        echo generateAuthorProfileJsonLd($specialist, $posts);
+
+        /**
+         * Генерация JSON-LD для хлебных крошек журнала
+         *
+         * @param array $single_post Данные поста
+         * @param array $specialist Данные специалиста (для блогов)
+         * @return string
+         */
+        function generateJournalBreadcrumbJsonLd(array $specialist = []): string
+        {
+            // Базовые уровни
+            $breadcrumbs = [
+                ['name' => 'Главная', 'url' => '/'],
+                ['name' => 'Журнал', 'url' => '/journal']
+            ];
+
+
+            // Собираем JSON-LD
+            $itemListElements = [];
+            foreach ($breadcrumbs as $i => $crumb) {
+                $itemListElements[] = [
+                    '@type' => 'ListItem',
+                    'position' => $i + 1,
+                    'name' => strip_tags(htmlspecialchars_decode($crumb['name'])),
+                    'item' => full_url($crumb['url'])
+                ];
+            }
+
+            $breadcrumbLd = [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => $itemListElements
+            ];
+
+            return '<script type="application/ld+json">' . PHP_EOL .
+                json_encode($breadcrumbLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+                PHP_EOL . '</script>';
+        }
+        // Генерация JSON-LD
+        echo generateJournalBreadcrumbJsonLd($specialist);
     }
     if (!isset($requestion_arr[3]) && isset($blog)) {
         $limit = 5;
@@ -466,6 +715,209 @@ if (isset($single_post)) {
     $data['single_post'] .= $post_blog_info;
     $data['single_post'] .= '</div>';
     $data['h1_hidden_title'] = '<h1 class="dn">' . htmlspecialchars_decode($single_post['title']) . '</h1>';
+
+    /**
+     * Генерация JSON-LD для открытой страницы: блог / статья / новость.
+     *
+     * @param array $post         Массив записи: ['post_type','alias','photo','date','service_title','title','description','content','site_from_name','site_from_link']
+     * @param array $tags         Массив тегов: каждый тег ['title', ...]
+     * @param array|null $blog    Инфо о блоге/авторе (опционально): ['title', 'url'] или ['name','url']
+     * @param array|null $specialist  Инфо о специалисте/авторе (опционально): ['company','name','lastname','id','alias']
+     * @param array $siteInfo     Опции издателя: ['name'=>'Сайт', 'url'=>'https://...'] (опционально)
+     * @return string             <script type="application/ld+json">...</script>
+     */
+    function generateBlogJsonLd(array $post, array $tags = [], ?array $blog = null, ?array $specialist = null, array $siteInfo = []): string
+    {
+        // Выбираем тип: NewsArticle для news, иначе Article
+        $type = 'Article';
+        if (!empty($post['post_type']) && mb_strtolower($post['post_type']) === 'news') {
+            $type = 'NewsArticle';
+        }
+
+        // URL поста: используем alias если есть, иначе текущий REQUEST_URI
+        $postUrl = null;
+        if (!empty($post['alias'])) {
+            // предполагаем маршрут /journal/{alias} — при необходимости подкорректируйте
+            $postUrl = full_url('/journal/' . ltrim($post['alias'], '/'));
+        }
+        if (!$postUrl) {
+            $postUrl = (isset($_SERVER['REQUEST_URI']) ? ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'example.com') . $_SERVER['REQUEST_URI'] : null);
+        }
+
+        // Image: ожидаем $post['photo'] — храним в /uploads/articles/ если это относительный файл
+        $image = null;
+        if (!empty($post['photo'])) {
+            if (preg_match('#^/uploads/#', $post['photo']) || preg_match('#^https?://#i', $post['photo'])) {
+                $image = full_url($post['photo']);
+            } else {
+                $image = full_url('/uploads/articles/' . ltrim($post['photo'], '/'));
+            }
+        }
+
+        // datePublished: приводим к YYYY-MM-DD (если указана дата)
+        $datePublished = null;
+        if (!empty($post['date'])) {
+            $ts = strtotime($post['date']);
+            if ($ts !== false) $datePublished = date('Y-m-d', $ts);
+        }
+
+        // articleSection
+        $articleSection = !empty($post['service_title']) ? strip_tags(html_entity_decode($post['service_title'])) : null;
+
+        // headline
+        $headline = !empty($post['title']) ? trim(strip_tags(htmlspecialchars_decode($post['title']))) : null;
+
+        // description (берём explicit description либо весь content)
+        $description = null;
+        if (!empty($post['description'])) {
+            $description = trim(strip_tags(htmlspecialchars_decode($post['description'])));
+        } elseif (!empty($post['content'])) {
+            $description = trim(strip_tags(htmlspecialchars_decode($post['content'])));
+        }
+
+        // keywords из тегов
+        $keywords = null;
+        if (!empty($tags) && is_array($tags)) {
+            $kw = [];
+            foreach ($tags as $t) {
+                if (!empty($t['title'])) $kw[] = trim(strip_tags($t['title']));
+            }
+            if (!empty($kw)) $keywords = implode(', ', $kw);
+        }
+
+        $author = null;
+        if ($post['post_type'] === 'blogs' && !empty($specialist)) {
+            if (!empty($specialist['company'])) {
+                $author = [
+                    "@type" => "Organization",
+                    "name"  => strip_tags($specialist['company'])
+                ];
+            } else {
+                $fio = trim(
+                    (!empty($specialist['lastname']) ? $specialist['lastname'] . ' ' : '') .
+                        (!empty($specialist['name']) ? $specialist['name'] . ' ' : '') .
+                        (!empty($specialist['patronymic']) ? $specialist['patronymic'] : '')
+                );
+                if (!empty($fio)) {
+                    $author = [
+                        "@type" => "Person",
+                        "name"  => $fio
+                    ];
+                }
+            }
+        }
+
+        // publisher: только для статей/новостей
+        $publisher = null;
+        if ($post['post_type'] !== 'blogs') {
+            $publisher = [
+                "@type" => "Organization",
+                "name"  => "ЮРФАК.РУ"
+            ];
+        }
+
+
+        $articleLd = ['@context' => 'https://schema.org', '@type' => $type];
+        if ($postUrl) $articleLd['url'] = $postUrl;
+        if ($image) $articleLd['image'] = $image;
+        if ($datePublished) $articleLd['datePublished'] = $datePublished;
+        if ($articleSection) $articleLd['articleSection'] = $articleSection;
+        if ($headline) $articleLd['headline'] = $headline;
+        if ($description) $articleLd['description'] = $description;
+
+        // **Логика author/publisher остаётся без изменений**
+        if (!empty($author)) {
+            $articleLd['author'] = $author;
+        }
+        if (!empty($publisher)) {
+            $articleLd['author'] = $publisher;
+        }
+
+        if (!empty($keywords)) $articleLd['keywords'] = $keywords;
+
+        // Возвращаем корректный JSON-LD
+        $json = json_encode($articleLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        return "<script type=\"application/ld+json\">\n" . $json . "\n</script>\n";
+    }
+
+    /**
+     * Генерация JSON-LD для хлебных крошек журнала
+     *
+     * @param array $single_post Данные поста
+     * @param array $specialist Данные специалиста (для блогов)
+     * @return string
+     */
+    function generateJournalBreadcrumbJsonLd(array $single_post, array $specialist = []): string
+    {
+        if (empty($single_post)) return '';
+
+        // Базовые уровни
+        $breadcrumbs = [
+            ['name' => 'Главная', 'url' => '/'],
+            ['name' => 'Журнал', 'url' => '/journal']
+        ];
+
+        // Если блог
+        if ($single_post['post_type'] === 'blogs' && !empty($specialist)) {
+            $breadcrumbs_title = 'Блог ';
+
+            if ($specialist['company']) {
+                $name = '"' . $specialist['company'] . '"';
+                $classificationMap = [
+                    '5' => 'юридической компании',
+                    '6' => 'коллегии адвокатов',
+                    '7' => 'адвокатского бюро',
+                    '8' => 'экспертного учреждения'
+                ];
+            } else {
+                $name = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'родительный');
+                $name = implode(' ', array_reverse(explode(' ', $name)));
+                $classificationMap = [
+                    '1' => 'юриста',
+                    '2' => 'адвоката',
+                    '3' => 'эксперта',
+                    '4' => 'нотариуса'
+                ];
+            }
+
+            $breadcrumbs_title .= ($classificationMap[$specialist['classification_id']] ?? 'специалиста') . ' ' . $name;
+
+            // Третий уровень — URL блога без alias поста
+            $currentUrl = full_url($_SERVER['REQUEST_URI']);
+            $baseBlogUrl = preg_replace('#/[^/]*$#', '', $currentUrl);
+
+            $breadcrumbs[] = [
+                'name' => $breadcrumbs_title,
+                'url' => $baseBlogUrl
+            ];
+        }
+
+        // Собираем JSON-LD
+        $itemListElements = [];
+        foreach ($breadcrumbs as $i => $crumb) {
+            $itemListElements[] = [
+                '@type' => 'ListItem',
+                'position' => $i + 1,
+                'name' => strip_tags(htmlspecialchars_decode($crumb['name'])),
+                'item' => full_url($crumb['url'])
+            ];
+        }
+
+        $breadcrumbLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => $itemListElements
+        ];
+
+        return '<script type="application/ld+json">' . PHP_EOL .
+            json_encode($breadcrumbLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+            PHP_EOL . '</script>';
+    }
+    // Генерация JSON-LD
+    echo generateJournalBreadcrumbJsonLd($single_post, $specialist);
+
+    // Пример использования
+    echo generateBlogJsonLd($single_post, $tags, $blog, $specialist, ['name' => 'ЮРФАК.РУ', 'url' => 'https://urfaq.ru']);
 }
 
 
@@ -560,6 +1012,24 @@ foreach ($posts as $post) {
         }
     }
     $post_number++;
+}
+
+/**
+ * Возвращает абсолютный URL по относительному пути или возвращает уже абсолютный URL.
+ *
+ * @param string|null $path
+ * @return string|null
+ */
+function full_url(?string $path): ?string
+{
+    if (empty($path)) return null;
+    $path = trim($path);
+    if (preg_match('#^https?://#i', $path)) return $path;
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
+    $path = '/' . ltrim($path, '/');
+    return $scheme . '://' . $host . $path;
 }
 
 // Устанавливаем title

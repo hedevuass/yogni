@@ -2787,7 +2787,7 @@ function filter_valid_entry(array $entry): bool
     $hasDocument = !empty($entry['documentId']);
 
     if ($hasDocument) {
-        return (time() < $connected + 3600); // 1 час
+        return true;
     } else {
         return (time() < $connected + 900); // 10 минут
     }
@@ -2800,7 +2800,7 @@ function get_occupied_entries($service_slug, $sort)
     $rows = $data_base->selectAll(
         "SELECT date_start, date_expires, moderation, connected_at, qrcId, documentId
          FROM dt_promo_list
-         WHERE service_slug = ? AND sort = ? AND moderation = 0
+         WHERE service_slug = ? AND sort = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$service_slug, $sort]
     );
@@ -2823,7 +2823,7 @@ function get_occupied_entries_by_block($block_id, $sort)
          WHERE block_id = ? 
            AND sort = ? 
            AND (service_slug IS NULL OR service_slug = '')
-           AND moderation = 0
+           AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$block_id, $sort]
     );
@@ -2849,35 +2849,36 @@ function get_occupied_entries_by_block_and_service($block_id, $service_slug, $so
     $classification = (int)$specialist['classification_id'];
 
     // Определяем группу специалистов для блокировки
-    if (in_array($classification, [1,2,5,6,7])) {
+    if (in_array($classification, [1, 2, 5, 6, 7])) {
         $group = 1;
-    } elseif (in_array($classification, [3,8])) {
+    } elseif (in_array($classification, [3, 8])) {
         $group = 2;
     } elseif ($classification === 4) {
         $group = 3;
     } else {
-        $group = 1; // дефолт
+        $group = 1;
     }
 
-    // Берем все активные записи по block_id, service_slug и sort
+    // Берем все активные записи по block_id и service_slug (включая moderation = 4)
     $rows = $data_base->selectAll(
-        "SELECT p.date_start, p.date_expires, s.classification_id
+        "SELECT p.date_start, p.date_expires, p.moderation, p.connected_at, p.qrcId, p.documentId,
+                s.classification_id, p.specialist_id, p.sort
          FROM dt_promo_list p
          JOIN dt_specialist s ON s.id = p.specialist_id
-         WHERE p.block_id = ? AND p.service_slug = ? AND p.sort = ? AND p.moderation = 0
+         WHERE p.block_id = ? AND p.service_slug = ?
+           AND p.moderation IN (0,4)
            AND p.date_expires >= CURRENT_DATE",
-        [$block_id, $service_slug, $sort]
+        [$block_id, $service_slug]
     );
 
-    $valid = array_filter($rows, function($e) use ($group) {
-        // проверяем валидность по датам
+    // Фильтруем по группе специалистов и логике sort
+    $valid = array_filter($rows, function ($e) use ($group, $sort, $specialist_id) {
         if (!filter_valid_entry($e)) return false;
 
-        // определяем группу специалиста из promo записи
         $c = (int)$e['classification_id'];
-        if (in_array($c, [1,2,5,6,7])) {
+        if (in_array($c, [1, 2, 5, 6, 7])) {
             $entry_group = 1;
-        } elseif (in_array($c, [3,8])) {
+        } elseif (in_array($c, [3, 8])) {
             $entry_group = 2;
         } elseif ($c === 4) {
             $entry_group = 3;
@@ -2885,13 +2886,21 @@ function get_occupied_entries_by_block_and_service($block_id, $service_slug, $so
             $entry_group = 1;
         }
 
-        // только если группы совпадают, считаем запись занятой
-        return $entry_group === $group;
+        // группы должны совпадать
+        if ($entry_group !== $group) return false;
+
+        // Если запись того же специалиста → блокируем всегда
+        if ($e['specialist_id'] == $specialist_id) return true;
+
+        // Иначе проверяем sort
+        return $e['sort'] == $sort;
     });
 
     return array_map(fn($e) => [
         'date_start'   => $e['date_start'],
         'date_expires' => $e['date_expires'],
+        'specialist_id'=> $e['specialist_id'],
+        'sort'         => $e['sort'],
     ], $valid);
 }
 
@@ -2900,7 +2909,7 @@ function get_entry_count_by_service_slug($service_slug)
 {
     global $data_base;
     $count = $data_base->count(
-        "SELECT COUNT(*) FROM dt_promo_list WHERE service_slug = ?",
+        "SELECT COUNT(*) FROM dt_promo_list WHERE service_slug = ? AND moderation IN (0,4)",
         [$service_slug]
     );
     return (int)$count;
@@ -2914,7 +2923,7 @@ function get_entry_count_by_block($block_id)
         "SELECT COUNT(*) 
          FROM dt_promo_list 
          WHERE block_id = ? 
-           AND (service_slug IS NULL OR service_slug = '')",
+           AND (service_slug IS NULL OR service_slug = '') AND moderation IN (0,4)",
         [$block_id]
     );
     return (int)$count;
@@ -2925,9 +2934,9 @@ function check_conflict_by_service_slug($service_slug, $specialist_id, $sort)
 {
     global $data_base;
     $rows = $data_base->selectAll(
-        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId
+        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId, qrcId
          FROM dt_promo_list
-         WHERE service_slug = ? AND specialist_id = ? AND moderation = 0
+         WHERE service_slug = ? AND specialist_id = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$service_slug, $specialist_id]
     );
@@ -2945,9 +2954,9 @@ function check_conflict_by_block($block_id, $specialist_id, $sort)
 {
     global $data_base;
     $rows = $data_base->selectAll(
-        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId
+        "SELECT date_start, date_expires, sort, moderation, connected_at, documentId, qrcId
          FROM dt_promo_list
-         WHERE block_id = ? AND specialist_id = ? AND moderation = 0
+         WHERE block_id = ? AND specialist_id = ? AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$block_id, $specialist_id]
     );
@@ -2968,7 +2977,7 @@ function get_conflicting_entries($specialist_id, $service_slug, $sort = null)
     $sql = "SELECT date_start, date_expires, moderation, connected_at, qrcId, documentId
             FROM dt_promo_list
             WHERE specialist_id = ?
-              AND service_slug = ? AND moderation = 0
+              AND service_slug = ? AND moderation IN (0,4)
               AND date_expires >= CURRENT_DATE";
     if ($sort !== null) {
         $sql .= " AND sort = ?";
@@ -2992,7 +3001,7 @@ function get_conflicting_entries_by_block($specialist_id, $block_id)
          WHERE specialist_id = ? 
            AND block_id = ? 
            AND (service_slug IS NULL OR service_slug = '')
-           AND moderation = 0
+           AND moderation IN (0,4)
            AND date_expires >= CURRENT_DATE",
         [$specialist_id, $block_id]
     );
@@ -3040,7 +3049,7 @@ function get_all_payments(?int $specialistId = null): array
             "SELECT * 
              FROM dt_payments 
              WHERE specialist_id = ? 
-             ORDER BY paymentDate DESC",
+             ORDER BY date_start DESC",
             [$specialistId]
         );
     } else {

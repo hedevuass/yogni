@@ -82,17 +82,17 @@ if (isset($_POST['search'])) {
                 $notary_classifications = [4];
 
                 if (in_array($specialist['classification_id'], $lawyer_classifications) && !$lawyers) {
-                    $specialist['bottom_text'] = 'В категории "юристы и адвокаты"';
+                    $specialist['bottom_text'] = 'В категории "Юристы и адвокаты"';
                     /* $specialist['link1'] .= '&filter=lawyers'; */
                     $found_in_categories[] = $specialist;
                     $lawyers = true;
                 } else if (in_array($specialist['classification_id'], $expert_classifications) && !$experts) {
-                    $specialist['bottom_text'] = 'В категории "эксперты"';
+                    $specialist['bottom_text'] = 'В категории "Эксперты"';
                     /* $specialist['link1'] .= '&filter=expert'; */
                     $found_in_categories[] = $specialist;
                     $experts = true;
                 } else if (in_array($specialist['classification_id'], $notary_classifications) && !$notaries) {
-                    $specialist['bottom_text'] = 'В категории "нотариусы"';
+                    $specialist['bottom_text'] = 'В категории "Нотариусы"';
                     /* $specialist['link1'] .= '&filter=notaries'; */
                     $found_in_categories[] = $specialist;
                     $notaries = true;
@@ -107,12 +107,12 @@ if (isset($_POST['search'])) {
             // ссылка на результаты поиска
             $company['link1'] = '/specialist/id' . $company['id_link'];
             if (($company['classification'] == 5 || $company['classification'] == 6 || $company['classification'] == 7) && !$lawyers) {
-                $company['bottom_text'] = 'В категории "' . 'юристы и адвокаты"';
+                $company['bottom_text'] = 'В категории "' . 'Юристы и адвокаты"';
                 /* $company['link1'] .= '&filter=lawyers'; */
                 $found_in_categories[] = $company;
                 $lawyers = true;
             } else if ($company['classification'] == 8 && !$experts) {
-                $company['bottom_text'] = 'В категории "' . 'эксперты"';
+                $company['bottom_text'] = 'В категории "' . 'Эксперты"';
                 /* $company['link1'] .= '&filter=experts'; */
                 $found_in_categories[] = $company;
                 $experts = true;

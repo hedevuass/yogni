@@ -127,68 +127,83 @@ if (!empty($preview['invoice_id']) && !empty($preview['invoice_url'])) {
     $targetTable = $tableMap[$tableType] ?? null;
 
     if ($targetTable && $orderId) {
-        // 1) Переводим запись в статус «ожидает модерации»
-        $data_base->update(
-            "UPDATE `$targetTable` SET moderation = 4 WHERE orderId = ?",
-            [$orderId]
+        // Берём часть orderId без последнего символа
+        $orderIdPrefix = substr($orderId, 0, -1);
+
+        // Находим все записи с совпадением по префиксу
+        $promoRows = $data_base->selectAll(
+            "SELECT * FROM `$targetTable` WHERE LEFT(orderId, LENGTH(orderId)-1) = ?",
+            [$orderIdPrefix]
         );
 
-        // 2) Берём specialist_id для связи с платежом
-        $row = $data_base->selectRow(
-            "SELECT specialist_id FROM `$targetTable` WHERE orderId = ? LIMIT 1",
-            [$orderId]
-        );
-        $specialist_id = $row['specialist_id'] ?? null;
+        foreach ($promoRows as $row) {
+            $promoOrderId = $row['orderId'];
+            $specialist_id = $row['specialist_id'];
 
-        // 3) Собираем человекочитаемое название услуги / тарифа / опции
-        switch ($service_name) {
-            case 'Подключение тарифа':
-                // Ищем в справочнике тарифов
-                $r = $data_base->selectRow(
-                    "SELECT name FROM dt_tariff WHERE id = ? LIMIT 1",
-                    [$serviceId]
+            // Обновляем moderation
+            $data_base->update(
+                "UPDATE `$targetTable` SET moderation = 4 WHERE orderId = ?",
+                [$promoOrderId]
+            );
+
+            // Проверяем, есть ли уже запись в dt_payments
+            $exists = $data_base->selectRow(
+                "SELECT 1 FROM dt_payments WHERE orderId = ? LIMIT 1",
+                [$promoOrderId]
+            );
+
+            if (!$exists) {
+                // Формируем displayName
+                switch ($service_name) {
+                    case 'Подключение тарифа':
+                        $r = $data_base->selectRow(
+                            "SELECT name FROM dt_tariff WHERE id = ? LIMIT 1",
+                            [$serviceId]
+                        );
+                        $displayName = 'Тариф "' . ($r['name'] ?? '') . '"';
+                        $amount = $pay_amount; // берём из формы
+                        break;
+
+                    case 'Подключение опции':
+                        $r = $data_base->selectRow(
+                            "SELECT name FROM dt_option WHERE id = ? LIMIT 1",
+                            [$serviceId]
+                        );
+                        $displayName = 'Опция "' . ($r['name'] ?? '') . '"';
+                        $amount = $pay_amount; // берём из формы
+                        break;
+
+                    case 'Размещение карточки в промо-блоках':
+                        $displayName = $row['service_name'];
+                        $amount = $row['amount']; // берём цену из dt_promo_list
+                        $sort = $row['sort'];
+                        break;
+
+                    default:
+                        $displayName = $service_name;
+                        $amount = $pay_amount;
+                }
+
+                // Вставка в dt_payments
+                $data_base->add(
+                    "INSERT INTO dt_payments 
+                        (orderId, tableType, paymentType, status, serviceName, amount, specialist_id, date_start, date_end, sort, paymentDate) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+                    [
+                        $promoOrderId,
+                        $tableType,
+                        'card',
+                        'Pending',
+                        $displayName,
+                        $amount,
+                        $specialist_id,
+                        $row['date_start'] ?? $dateStart,
+                        $row['date_expires'] ?? $dateEnd,
+                        $sort ?? null
+                    ]
                 );
-                $tariffName = $r['name'] ?? '';
-                $displayName = 'Тариф "' . $tariffName . '"';
-                break;
-
-            case 'Подключение опции':
-                // Ищем в справочнике опций
-                $r = $data_base->selectRow(
-                    "SELECT name FROM dt_option WHERE id = ? LIMIT 1",
-                    [$serviceId]
-                );
-                $optionName = $r['name'] ?? '';
-                $displayName = 'Опция "' . $optionName . '"';
-                break;
-
-            case 'Размещение карточки в промо-блоках':
-                // Для промо просто используем переданный заголовок
-                $displayName = $serviceId;
-                break;
-
-            default:
-                $displayName = $service_name;
+            }
         }
-
-        // 4) Записываем платеж
-        //    Если нужно сохранять даты – добавьте dateStart/dateEnd поля в INSERT и БД!
-        $data_base->add(
-            "INSERT INTO dt_payments 
-                (orderId, tableType, paymentType, status, serviceName, amount, specialist_id, date_start, date_end, paymentDate) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
-            [
-                $orderId,
-                $tableType,
-                'card',
-                'Pending',
-                $displayName,
-                $pay_amount,
-                $specialist_id,
-                $dateStart,
-                $dateEnd
-            ]
-        );
     }
 
     // Добавляем параметр pstype к ссылке счета для карт

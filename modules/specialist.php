@@ -140,16 +140,16 @@ if (!empty($connected_tariffs)) {
         }
 
         if ($other['site']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="https://' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
         }
         if ($other['tg']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="https://t.me/' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
         }
         if ($other['vk']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="https://' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
         }
         if ($other['dzen']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="https://' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
         }
     }
 } elseif (!empty($connected_option_ids)) {
@@ -173,16 +173,16 @@ if (!empty($connected_tariffs)) {
 
     if (in_array(3, $connected_option_ids) && ($other['site'] || $other['tg'] || $other['vk'] || $other['dzen'])) {
         if ($other['site']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="https://' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
         }
         if ($other['tg']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="https://t.me/' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
         }
         if ($other['vk']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="https://' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
         }
         if ($other['dzen']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="https://' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
         }
     }
 
@@ -282,6 +282,7 @@ $data['specialist'] .= <<<EOF
 EOF;
 
 $email = htmlspecialchars($other['email']);
+$randId = 'id' . bin2hex(random_bytes(6));
 $data['specialist'] .= <<<EOF
 <div class="popup write">
   <div class="bg"></div>
@@ -308,6 +309,27 @@ $data['specialist'] .= <<<EOF
                       class="popup-textarea"
                   ></textarea>
               </div>
+              <div class="field captcha-field">
+                <div class="captcha-row">
+                    <div class="captcha-left">
+                    <img id="captcha" src="/libs/securimage/securimage_show.php?id={$randId}" alt="CAPTCHA" aria-hidden="false" />
+                    <button type="button" id="captcha_refresh" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    </div>
+
+                    <div class="captcha-right">
+                    <label class="captcha-label" for="captcha_code">Подтвердите, что вы не робот</label>
+                    <input class="captcha-input" id="captcha_code" name="captcha_code" type="text" placeholder="Введите код" autocomplete="off" />
+                    <input type="hidden" id="captcha_captcha_id" name="captcha_id" value="{$randId}" />
+                    </div>
+                </div>
+                <div class="captcha-error"></div>
+                </div>
+
               <div class="button">
                   <p>
                       Нажимая “Отправить”, я принимаю изложенное в документах,
@@ -409,7 +431,7 @@ if (
     )
 ) {
     $data['specialist'] .= <<<EOF
-        <button class="contacts-button"><img src="/assets/img/contacts8.svg"> Контакты</button>
+        <button class="contacts-button"><img src="/assets/img/contacts8.svg"> Записаться</button>
     EOF;
 }
 // Описание
@@ -1284,3 +1306,368 @@ function block_documents(string $documents): string
 
     return $code;
 }
+
+/**
+ * Генерация JSON-LD для специалиста или компании
+ *
+ * @param array $specialist
+ * @return array
+ */
+function generateSpecialistJsonLd(array $specialist, ?array $other = null): array
+{
+    // Получаем все специализации специалиста
+    $specializations = get_specialist_specialization($specialist['id']);
+
+    // Берем только названия (title) и сортируем
+    $knowsAbout = [];
+    if ($specializations) {
+        // Оставляем только родительские специализации
+        $parent_specializations = array_filter($specializations, function ($item) {
+            return empty($item['p_id']);
+        });
+
+        usort($parent_specializations, function ($a, $b) {
+            return mb_strtolower($a['title']) <=> mb_strtolower($b['title']);
+        });
+
+        $knowsAbout = array_map(fn($spec) => $spec['title'], $parent_specializations);
+    }
+
+    // Формируем адрес для JSON-LD
+    $streetAddress = [];
+    if (!empty($specialist['city'])) {
+        $streetAddress[] = 'г. ' . $specialist['city'];
+    }
+    if (!empty($specialist['metro'])) {
+        $streetAddress[] = 'м. ' . $specialist['metro'];
+    }
+    if (!empty($specialist['street'])) {
+        $streetAddress[] = $specialist['street'];
+    }
+    if (!empty($specialist['house'])) {
+        $streetAddress[] = $specialist['house'];
+    }
+    $streetAddressStr = implode(', ', $streetAddress);
+
+    $sameAs = [];
+    if (!empty($other['tg'])) {
+        $sameAs[] = $other['tg'];
+    }
+    if (!empty($other['vk'])) {
+        $sameAs[] = $other['vk'];
+    }
+    if (!empty($other['dzen'])) {
+        $sameAs[] = $other['dzen'];
+    }
+
+    // Основной объект
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "LegalService",
+        "url" => $specialist['url'] ?? "https://urfaq.ru/specialist/id{$specialist['id']}",
+        "image" => $specialist['photo'] ? "https://urfaq.ru/uploads/avatars/" . $specialist['photo'] : null,
+        "name" => $specialist['company'] ?? $specialist['name'] . ' ' . $specialist['lastname'],
+        "additionalType" => $specialist['classification_name'] ?? $specialist['classification'] ?? "Юрист",
+        "description" => strip_tags(htmlspecialchars_decode($specialist['description']) ?? ''),
+        "address" => [
+            "@type" => "PostalAddress",
+            "streetAddress" => $streetAddressStr,
+            "addressLocality" => $specialist['city'] ?? '',
+            "addressCountry" => "RU",
+            "description" => $specialist['how_to_get'] ?? ''
+        ],
+        "hasMap" => !empty($specialist['coordinates'])
+            ? 'https://yandex.ru/maps/?whatshere[point]=' . str_replace(' ', ',', $specialist['coordinates'])
+            : ($specialist['map_url'] ?? ''),
+        "areaServed" => [
+            "@type" => "State",
+            "name" => $specialist['city'] ?? ''
+        ],
+        "aggregateRating" => isset($specialist['rating'], $specialist['count_rating']) ? [
+            "@type" => "AggregateRating",
+            "ratingValue" => $specialist['rating'],
+            "reviewCount" => $specialist['count_rating']
+        ] : null,
+        "knowsAbout" => $knowsAbout,
+        "contactPoint" => [
+            "@type" => "ContactPoint",
+            "contactType" => "Записаться",
+            "telephone" => $specialist['phone'] ?? '',
+            "email" => $specialist['email'] ?? '',
+            "url" => $other['site'] ?? '',
+            "availableLanguage" => ["Russian"],
+            "areaServed" => "RU"
+        ],
+        "sameAs" => $sameAs,
+        /* "blogPost" => !empty($specialist['blog']) ? [
+            "@type" => "Article",
+            "url" => $specialist['blog']['url'] ?? '',
+            "datePublished" => $specialist['blog']['date'] ?? '',
+            "articleSection" => $specialist['blog']['section'] ?? '',
+            "headline" => $specialist['blog']['title'] ?? '',
+            "description" => $specialist['blog']['description'] ?? '',
+            "author" => $specialist['company'] ?? $specialist['name'] . ' ' . $specialist['lastname']
+        ] : null, */
+        "hasCredential" => []
+    ];
+
+    // Заполняем услуги / предложения
+    $services = get_specialist_service($specialist['id'] ?? 0);
+    if (!empty($services) && is_array($services)) {
+        $offers = [];
+        foreach ($services as $s) {
+            $offer = ["@type" => "Offer"];
+            if (!empty($s['name'])) $offer['name'] = $s['name'];
+            if (isset($s['price']) && $s['price'] !== '') {
+                $offer['price'] = (float)$s['price'];
+                $offer['priceCurrency'] = "RUB";
+            } elseif (!empty($s['price_text'])) {
+                $offer['description'] = $s['price_text'];
+            }
+            // serviceType — корректное поле для Offer
+            if (!empty($specialist['classification_name'])) {
+                $offer['serviceType'] = $specialist['classification_name'];
+            } elseif (!empty($s['service_type'])) {
+                $offer['serviceType'] = $s['service_type'];
+            }
+            $offers[] = $offer;
+        }
+        $jsonLd['makesOffer'] = (count($offers) === 1) ? $offers[0] : $offers;
+    }
+
+    if (!empty($specialist['foundation'])) {
+        $f = (int)$specialist['foundation'];
+        if ($f >= 1000 && $f <= (int)date('Y')) {
+            $jsonLd['foundingDate'] = (string)$f;
+        }
+    }
+
+    if (!empty($specialist['schedule'])) {
+        $schedule = json_decode($specialist['schedule'], true);
+        if (is_array($schedule)) {
+            $dayMap = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+            $ohs = [];
+
+            foreach ($schedule as $key => $value) {
+                $d = (int)$key;
+                if (!isset($dayMap[$d])) continue;
+
+                $start = $value['start'] ?? null;
+                $end = $value['end'] ?? null;
+                $vac = $value['vac'] ?? null;
+
+                // Выводим только если рабочий день
+                if (isset($vac) && $start && $end) {
+                    $ohs[] = [
+                        "@type" => "OpeningHoursSpecification",
+                        "dayOfWeek" => "https://schema.org/" . $dayMap[$d],
+                        "opens" => $start,
+                        "closes" => $end
+                    ];
+
+                    $shortDay = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'][$d - 1];
+                }
+            }
+
+            if (!empty($ohs)) $jsonLd['openingHoursSpecification'] = $ohs;
+        }
+    }
+
+    // Заполняем документы / сертификаты
+    if (!empty($specialist['document'])) {
+        $documents = json_decode($specialist['document'], true);
+        foreach ($documents as $doc) {
+            $jsonLd['hasCredential'][] = [
+                "@type" => "EducationalOccupationalCredential",
+                "name" => $doc['name'] ?? '',
+                "image" => isset($doc['file']) ? "https://urfaq.ru/uploads/documents/" . $doc['file'] : null,
+            ];
+        }
+    }
+
+    if (!empty($specialist['company']) && ($employees = get_company_employees($specialist['company_id'] ?? 0))) {
+        $jsonLd['employee'] = [];
+        foreach ($employees as $employee) {
+            $jsonLd['employee'][] = array_filter([
+                "@type" => "Person",
+                "name" => trim(($employee['name'] ?? '') . ' ' . ($employee['lastname'] ?? '')),
+                "jobTitle" => $employee['post'] ?? null,
+                "image" => !empty($employee['photo']) ? "https://urfaq.ru/uploads/employee/" . $employee['photo'] : null
+            ], function ($v) {
+                return !is_null($v) && $v !== '';
+            });
+        }
+    }
+
+    /* $blog = get_specialist_blog($specialist['id']);
+    if ($blog) {
+        $articles = get_blog_articles($blog['id'], 0, 1); // берем последнюю статью
+        if ($articles && count($articles) > 0) {
+            $article = $articles[0];
+            $author_name = $specialist['company']
+                ? $specialist['company']
+                : $specialist['name'] . ' ' . $specialist['lastname'];
+
+            $jsonLd['blogPost'] = [
+                "@type" => "Article",
+                "url" => "/journal/id{$article['blog_id']}/{$article['alias']}",
+                "datePublished" => date('Y-m-d', strtotime($article['date'])),
+                "articleSection" => $article['service_title'] ?? '',
+                "headline" => strip_tags(html_entity_decode($article['title'])),
+                "description" => strip_tags(html_entity_decode($article['content'])),
+                "author" => $author_name
+            ];
+        }
+    } */
+
+    return $jsonLd;
+}
+
+/**
+ * Генерация JSON-LD для хлебных крошек (BreadcrumbList) специалиста
+ *
+ * @param array $specialist Данные специалиста
+ * @return string
+ */
+function generateSpecialistBreadcrumbJsonLd(array $specialist): string
+{
+    if (empty($specialist)) return '';
+
+    $classificationId = isset($specialist['classification_id']) ? (int)$specialist['classification_id'] : null;
+
+    // Определяем категорию и slug
+    $categoryMap = [
+        1 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
+        2 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
+        5 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
+        6 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
+        7 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
+        3 => ['name' => 'Эксперты', 'slug' => 'experty'],
+        8 => ['name' => 'Эксперты', 'slug' => 'experty'],
+        4 => ['name' => 'Нотариусы', 'slug' => 'notariusy'],
+    ];
+
+    $category = $categoryMap[$classificationId] ?? ['name' => 'Специалисты', 'slug' => 'specialisty'];
+
+    $breadcrumbs = [
+        ['name' => 'Главная', 'url' => '/'],
+        ['name' => $category['name'], 'url' => '/' . $category['slug']]
+    ];
+
+    $itemListElements = [];
+    foreach ($breadcrumbs as $i => $crumb) {
+        $itemListElements[] = [
+            '@type' => 'ListItem',
+            'position' => $i + 1,
+            'name' => strip_tags(htmlspecialchars_decode($crumb['name'])),
+            'item' => full_url($crumb['url'])
+        ];
+    }
+
+    $breadcrumbLd = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => $itemListElements
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($breadcrumbLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+/**
+ * Возвращает абсолютный URL по относительному пути или возвращает уже абсолютный URL.
+ *
+ * @param string|null $path
+ * @return string|null
+ */
+function full_url(?string $path): ?string
+{
+    if (empty($path)) return null;
+    $path = trim($path);
+    if (preg_match('#^https?://#i', $path)) return $path;
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
+    $path = '/' . ltrim($path, '/');
+    return $scheme . '://' . $host . $path;
+}
+
+/**
+ * Генерация JSON-LD для всех отзывов специалиста как один объект Review
+ *
+ * @param array $specialist
+ * @return string
+ */
+function generateSpecialistReviewsJsonLd(array $specialist): string
+{
+    $reviews = get_specialist_reviews($specialist['id'] ?? 0);
+    if (empty($reviews)) return '';
+
+    $nestedReviews = [];
+
+    foreach ($reviews as $review) {
+        $authorName = $review['author'] ?? 'Аноним';
+        $reviewDate = date('Y-m-d', strtotime($review['date'] ?? 'now'));
+
+        $nestedReviews[] = [
+            "@type" => "Review",
+            "author" => [
+                "@type" => "Person",
+                "name" => $authorName
+            ],
+            "datePublished" => $reviewDate,
+            "reviewBody" => strip_tags($review['review'] ?? ''),
+            "reviewRating" => [
+                "@type" => "Rating",
+                "ratingValue" => isset($review['rating']) ? (int)$review['rating'] : 0,
+            ]
+        ];
+    }
+
+    // Один главный объект Review, внутри массив reviews
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "Review",
+        "name" => $specialist['company'] ?? trim(($specialist['lastname'] ?? '') . ' ' . ($specialist['name'] ?? '')),
+        "reviewRating" => [
+            "@type" => "AggregateRating",
+            "ratingValue" => $specialist['rating'] ?? 0,
+            "reviewCount" => $specialist['count_rating'] ?? 0,
+        ],
+        "reviews" => $nestedReviews
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+function generateSpecialistImageJsonLd(array $specialist): string
+{
+    if (empty($specialist['photo'])) return '';
+
+    $name = $specialist['company'] ?? trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? ''));
+
+    $imageLd = [
+        "@context" => "https://schema.org",
+        "@type" => "ImageObject",
+        "contentUrl" => "https://urfaq.ru/uploads/avatars/" . $specialist['photo'],
+        "name" => $name
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($imageLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+// Пример использования
+$specialist_jsonld = generateSpecialistJsonLd($specialist, $other);
+$specialist_breadcrumb_jsonld = generateSpecialistBreadcrumbJsonLd($specialist);
+$specialist_review_jsonld = generateSpecialistReviewsJsonLd($specialist);
+echo $specialist_breadcrumb_jsonld;
+echo $specialist_review_jsonld;
+echo generateSpecialistImageJsonLd($specialist);
+
+// Для вставки в страницу
+echo '<script type="application/ld+json">' . json_encode($specialist_jsonld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '</script>';

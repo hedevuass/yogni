@@ -2,7 +2,22 @@
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 
+require_once __DIR__ . '/../libs/securimage/securimage.php';
+
 $forbidden_words = getForbiddenWords();
+
+/* $securimage = new Securimage();
+
+$captchaCode = $_POST['captcha_code'] ?? '';
+$captchaId = $_POST['captcha_id'] ?? null;
+
+if ($securimage->check($captchaCode, $captchaId) == false) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Неправильный код каптчи. Попробуйте снова.'
+    ]);
+    exit;
+} */
 
 if (isset($_POST['specialist'])) {
     $fields_to_check = ['name', 'contact', 'review'];

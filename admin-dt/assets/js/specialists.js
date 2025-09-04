@@ -1561,7 +1561,7 @@ let Specialists = {
             let res = JSON.parse(response);
             if (res.success) {
               // Успешное подключение
-              alert("Опция успешно подключен!");
+              alert("Опция успешно подключена!");
               location.reload(); // Перезагружаем страницу для обновления данных
             } else {
               // Ошибка
@@ -1683,7 +1683,7 @@ let Specialists = {
         try {
           let res = JSON.parse(response);
           if (res.success) {
-            alert(`${type === "tariff" ? "Тариф" : "Опция"} успешно удален!`);
+            alert(`Подключение успешно удалено!`);
             location.reload();
           } else {
             alert(res.error || "Ошибка при удалении");

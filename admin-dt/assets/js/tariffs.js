@@ -28,14 +28,28 @@ let Tariffs = {
         const connectedPromoTable = $('#connected-promo-options').DataTable({
             language: Helper.dataTableLanguage(),
             iDisplayLength: 5,
+            order: [[0, 'desc']], // сортируем по скрытой колонке sortValue
+            columnDefs: [
+                { targets: 0, visible: false, searchable: false }
+            ]
         });
+
         const connectedTariffsTable = $('#connected-tariffs').DataTable({
             language: Helper.dataTableLanguage(),
             iDisplayLength: 5,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { targets: 0, visible: false, searchable: false }
+            ]
         });
+
         const connectedOptionsTable = $('#connected-options').DataTable({
             language: Helper.dataTableLanguage(),
             iDisplayLength: 5,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { targets: 0, visible: false, searchable: false }
+            ]
         });
 
         // Кнопки "Показать все" для каждой таблицы

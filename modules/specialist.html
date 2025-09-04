@@ -175,3 +175,12 @@
     </div>
   </div>
 </div>
+
+<script src="/libs/securimage/securimage.js"></script>
+<script>
+document.getElementById('captcha_refresh').addEventListener('click', function(e){
+  e.preventDefault();
+  // используем библиотечную функцию, она поменяет id и src корректно
+  securimageRefreshCaptcha('captcha', '');
+});
+</script>

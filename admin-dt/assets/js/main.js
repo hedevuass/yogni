@@ -30,7 +30,7 @@ import {
 } from "./journal.js";
 import {
     banners
-} from "./banners.js";
+} from "./bn.js";
 
 MainPage.start()
 Specialists.start()
@@ -44,52 +44,76 @@ Photo.start()
 Journal.start()
 banners.start()
 
-$(document).on("click", ".go-to-specialists", function() {
-    let recordId = $(this).data("id");  
+$(document).on("click", ".go-to-specialists", function () {
+    let recordId = $(this).data("id");
     let specialistId = $(this).data("specialist-id");
     let tableName = $(this).data("table");
     let moderation = $(this).data("moderation");
     let tab = $(this).data("tab");
 
     let status = (moderation < 1) ? moderation : 1;
-    
+
     $.ajax({
         type: "POST",
         url: "actions/update_status.php",
-        data: { 
+        data: {
             table: tableName,
             id: recordId,
             status: status
         },
-        success: function(response) {
+        success: function (response) {
             window.location.href = "specialists?id=" + specialistId + "&tab=" + tab;
         }
     });
 });
 
-$(document).ready(function() {
-    setTimeout(function() {
-      $('input[type="search"]').each(function() {
-        $(this).attr({
-          'autocomplete': 'off',
-          'autocorrect': 'off',
-          'autocapitalize': 'off',
-          'spellcheck': 'false',
-          'name': 'no-autofill-' + Date.now()
+$(document).ready(function () {
+    setTimeout(function () {
+        $('input[type="search"]').each(function () {
+            let $real = $(this);
+
+            // Делаем реальное поле "пароль" и прячем
+            $real.attr({
+                'type': 'password',
+                'autocomplete': 'off',
+                'autocorrect': 'off',
+                'autocapitalize': 'off',
+                'spellcheck': 'false',
+                'name': 'no-autofill-' + Date.now()
+            }).css({
+                position: 'absolute',
+                left: '-9999px',
+                opacity: 0
+            });
+
+            // Создаём "двойника" для пользователя
+            let $clone = $('<input>', {
+                type: 'text',
+                class: $real.attr('class'),
+                placeholder: $real.attr('placeholder') || 'Поиск...',
+            });
+
+            // Подставляем двойника после скрытого
+            $real.after($clone);
+
+            // Синхронизируем ввод в клон → в реальное поле
+            $clone.on('input', function () {
+                $real.val(this.value).trigger('input'); // триггерим для DataTables
+            });
         });
-      });
     }, 100);
-  });
-  
-  $('#specialists thead input').on('keyup change', function () {
+});
+
+
+$('#specialists thead input').on('keyup change', function () {
     const columnIndex = $(this).parent().index();
     if (columnIndex === 9) return; // НЕ фильтровать по "Действие"
-  
+
     table
-      .column(columnIndex)
-      .search(this.value)
-      .draw();
-  });
+        .column(columnIndex)
+        .search(this.value)
+        .draw();
+});
 
 /**
  * Инициализирует TinyMCE для указанных селекторов.
@@ -103,10 +127,10 @@ function initEditor(selectors, customConfig) {
         console.error('TinyMCE не загружен.');
         return;
     }
-    
+
     // Удаляем предыдущие экземпляры редактора по заданным селекторам
     tinymce.remove(selectors);
-    
+
     // Базовая конфигурация
     var defaultConfig = {
         selector: selectors,
@@ -126,8 +150,8 @@ function initEditor(selectors, customConfig) {
         force_br_newlines: true,
         force_p_newlines: false,
         forced_root_block: 'div',
-        setup: function(editor) {
-            editor.on('init', function() {
+        setup: function (editor) {
+            editor.on('init', function () {
                 console.log('Editor initialized for selectors: ' + selectors);
             });
         }
@@ -135,6 +159,6 @@ function initEditor(selectors, customConfig) {
 
     // Объединяем стандартную конфигурацию с дополнительными настройками, если они переданы
     var finalConfig = customConfig ? Object.assign({}, defaultConfig, customConfig) : defaultConfig;
-    
+
     tinymce.init(finalConfig);
 }

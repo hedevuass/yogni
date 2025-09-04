@@ -170,6 +170,11 @@
     position: relative;
     margin-top: 10px;
     color: #373737;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-right: 30px;
+    box-sizing: border-box;
   }
 
   #select-option-promo {
@@ -371,6 +376,15 @@
   .delete-selected-promo {
     border-radius: 8px;
     padding: 0 2px;
+    background: transparent;
+    background: url("../assets/img/cabinet/delete2.svg") no-repeat center / cover;
+    transition: background-image 0.2s ease;
+    width: 24px;
+    height: 24px;
+  }
+
+  .delete-selected-promo:hover {
+    background-image: url("../assets/img/cabinet/delete2-hover.svg");
   }
 
   .popup-content .selected-promo .promo-info {
@@ -698,7 +712,7 @@
   <div id="promo-href" class="promo-section white-mobile-promo hidden-comp">
     <div class="promo-text">
       <h2 class="promo-placement-title">Размещение карточки в <span class="highlight">промо-блоках</span></h2>
-        <!--data:promo_connected--><!--data:promo_connected-->
+      <!--data:promo_connected--><!--data:promo_connected-->
       <p>
         Размещение карточки на самых заметных позициях каталога. Выберите первое место или позиции со второй по восьмую.
         Доступно на страницах разделов и подразделов, а также на главной странице.
@@ -927,8 +941,7 @@
               К оплате: <span id="popup-old-price"></span> <span class="total_price" id="total-price2"></span>
             </div>
             <div class="button">
-              <button type="button"
-                class="add-more-promo">Добавить ещё размещение</button>
+              <button type="button" class="add-more-promo">Добавить ещё размещение</button>
               <button style="margin-top: 0px;" type="submit" class="confirm-promo"><span
                   id="confirm-price"></span></button>
               <p>Нажимая “Подключить”, вы соглашаетесь с <a href="../o-proekte">Условиями</a> предоставления услуг</p>

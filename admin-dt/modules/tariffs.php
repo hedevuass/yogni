@@ -10,9 +10,22 @@ $option_connections = array_filter($paid_connections, fn($p) => ($p['tableType']
 
 function getStatus($item, $type)
 {
+    // Если есть поле status и оно cancelled
+    if (!empty($item['status']) && $item['status'] === 'cancelled') {
+        return "<span class='text-danger'>Отключено</span>";
+    }
+
     $now = new DateTime();
     $dateStart = !empty($item['date_start']) ? new DateTime($item['date_start']) : null;
     $dateEnd   = !empty($item['date_end']) ? new DateTime($item['date_end']) : null;
+
+    // Нормализуем границы
+    if ($dateStart) {
+        $dateStart->setTime(0, 0, 0);       // начало дня
+    }
+    if ($dateEnd) {
+        $dateEnd->setTime(23, 59, 59);      // конец дня
+    }
 
     $statusText = '';
     $statusClass = ''; // CSS класс для цвета
@@ -51,26 +64,26 @@ function sortByStatus($a, $b, $type)
     return $statusA == 'Завершено' ? 1 : -1;
 }
 
-// Пример: сортировка массива promo
-usort($paid_promos, fn($a, $b) => sortByStatus($a, $b, 'promo'));
-usort($tariff_connections, fn($a, $b) => sortByStatus($a, $b, 'tariff'));
-usort($option_connections, fn($a, $b) => sortByStatus($a, $b, 'option'));
-
 // Функция вывода таблицы
 function renderTableRows($connections, $type)
 {
     foreach ($connections as $item):
         $specialist = get_specialist($item['specialist_id'] ?? 0);
-        $specialistName = $specialist ? $specialist['name'] . ' ' . $specialist['lastname'] : '';
-        $connectDate = !empty($item['paymentDate']) ? date('d.m.Y', strtotime($item['paymentDate'])) : '';
+        $specialistName = $specialist
+            ? (!empty($specialist['company']) ? $specialist['company'] : $specialist['name'] . ' ' . $specialist['lastname'])
+            : '';
+        $connectDate = !empty($item['createdAt']) ? date('d.m.Y', strtotime($item['createdAt'])) : '';
         $period = '';
         if (!empty($item['date_start'])) $period .= 'с ' . date('d.m.Y', strtotime($item['date_start']));
         if (!empty($item['date_end'])) $period .= ' по ' . date('d.m.Y', strtotime($item['date_end']));
-        $cost = number_format($item['amount'] ?? 0, 0, ',', ' ');
+        $cost = number_format($item['amount'] ?? 0, 2, ',', ' ');
         $status = getStatus($item, $type);
         $placeText = ($item['sort'] ?? 2) == 1 ? '1 место' : '2-8 место';
+
+        $sortValue = !empty($item['date_start']) ? strtotime($item['date_start']) : 0;
 ?>
         <tr>
+            <td class="d-none"><?= $sortValue ?></td>
             <td class="nowrap" style="width:10.4%"><?= $connectDate ?></td>
             <td class="nowrap" style="width:7.7%"><?= (int)$item['specialist_id'] ?></td>
             <td class="nowrap" style="width:17.4%"><?= htmlspecialchars($specialistName) ?></td>
@@ -146,6 +159,7 @@ function renderTableRows($connections, $type)
             <table id="connected-tariffs" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
+                        <td class="d-none"></td>
                         <td class="text-nowrap col-1">Дата подключения</td>
                         <td class="text-nowrap">ID</td>
                         <td class="text-nowrap">Имя</td>
@@ -207,6 +221,7 @@ function renderTableRows($connections, $type)
             <table id="connected-promo-options" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
+                        <td class="d-none"></td>
                         <td class="text-nowrap col-1">Дата подключения</td>
                         <td class="text-nowrap">ID</td>
                         <td class="text-nowrap">Имя</td>
@@ -277,6 +292,7 @@ function renderTableRows($connections, $type)
             <table id="connected-options" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
+                        <td class="d-none"></td>
                         <td class="text-nowrap col-1">Дата подключения</td>
                         <td class="text-nowrap">ID</td>
                         <td class="text-nowrap">Имя</td>

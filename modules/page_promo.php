@@ -119,28 +119,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $sort = $promo_id;
 
       foreach ($service_ids as $service_id) {
-        // Определяем block_id
-        switch ($specialist_classification) {
-          case 1:
-          case 2:
-          case 5:
-          case 6:
-          case 7:
-            $block_id = 1;
-            break;
-          case 3:
-          case 8:
-            $block_id = 2;
-            break;
-          case 4:
-            $block_id = 3;
-            break;
-          default:
-            $block_id = null; // Обработка случая, если классификация не совпадает
-            break;
+        // Определяем block_id в зависимости от service_slug
+        if ($service_id  == 'block_specialist_positions') {
+          $block_id = 2;
+        } elseif ($service_id  == 'block_top_specialists') {
+          $block_id = 1;
+        } else {
+          // Если slug не специальный — используем классификацию
+          switch ($specialist_classification) {
+            case 1:
+            case 2:
+            case 5:
+            case 6:
+            case 7:
+              $block_id = 1;
+              break;
+            case 3:
+            case 8:
+              $block_id = 2;
+              break;
+            case 4:
+              $block_id = 3;
+              break;
+            default:
+              $block_id = null;
+              break;
+          }
         }
-        // Передаем block_id в add_promo_placement
-        add_promo_list($specialist_id, $block_id, $service_id, $service_name, $sort, $start_date, $end_date, $orderId);
+
+        // Передаем block_id в add_promo_list
+        add_promo_list($specialist_id, $block_id, $service_id, $service_name, $sort, $start_date, $end_date, $orderId, $price);
       }
     }
 
@@ -167,49 +175,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       // Обработка для специальных service_slug, когда нужно использовать block_id
       if ($service_slug == 'block_specialist_positions') {
-        /* switch ($specialist_classification) {
-          case 1:
-          case 2:
-          case 5:
-          case 6:
-          case 7:
-            $block_id = 1;
-            break;
-          case 3:
-          case 8:
-            $block_id = 2;
-            break;
-          case 4:
-            $block_id = 3;
-            break;
-          default:
-            $block_id = 1;
-            break;
-        } */
         $block_id = 2;
 
-        // Получаем все активные записи для этого блока и sort
         $conflicting_entries = get_occupied_entries_by_block_and_service($block_id, $service_slug, $sort, $specialist['id']);
 
-        // Блокируем даты только если записей >= 8 для sort = 2
-        if ($sort == 2 && count($conflicting_entries) >= 7) {
-          foreach ($conflicting_entries as $entry) {
-            $entry['date_start'] = strtotime($entry['date_start']);
-            $entry['date_expires'] = strtotime($entry['date_expires']);
-            $occupied_entries[] = $entry;
-          }
-        } elseif ($sort != 2) {
-          // Для остальных sort блокируем даты всегда
-          foreach ($conflicting_entries as $entry) {
-            $entry['date_start'] = strtotime($entry['date_start']);
-            $entry['date_expires'] = strtotime($entry['date_expires']);
-            $occupied_entries[] = $entry;
+        // Подсчёт только записей с sort = 2 (для проверки >= 7)
+        $conflicting_entries_sort2 = array_filter($conflicting_entries, function ($e) {
+          return isset($e['sort']) && (int)$e['sort'] === 2;
+        });
+
+        foreach ($conflicting_entries as $entry) {
+          // Если это тот же специалист — блокируем всегда
+          if ($entry['specialist_id'] == $specialist['id']) {
+            $occupied_entries[] = [
+              'date_start'   => strtotime($entry['date_start']),
+              'date_expires' => strtotime($entry['date_expires']),
+            ];
+          } else {
+            // Другие специалисты
+            if ($sort == 2 && count($conflicting_entries_sort2) >= 7) {
+              $occupied_entries[] = [
+                'date_start'   => strtotime($entry['date_start']),
+                'date_expires' => strtotime($entry['date_expires']),
+              ];
+            } elseif ($sort != 2) {
+              $occupied_entries[] = [
+                'date_start'   => strtotime($entry['date_start']),
+                'date_expires' => strtotime($entry['date_expires']),
+              ];
+            }
           }
         }
       } else {
 
         $conflicting_entries = get_conflicting_entries($specialist['id'], $service_slug);
-
 
         // Далее обрабатываем только для обычных service_slug
         foreach ($conflicting_entries as $entry) {
@@ -220,9 +219,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Логика по sort = 2 применяется только для обычных записей
         if ($sort == 2) {
-          $entry_count = get_entry_count_by_service_slug($service_slug);
-          if ($entry_count >= 8) {
-            $additional_entries = get_occupied_entries($service_slug, $sort);
+          // считаем только записи с sort = 2 (без создания новой функции)
+          $entries_sort2 = get_occupied_entries($service_slug, 2);
+          $entry_count = is_array($entries_sort2) ? count($entries_sort2) : 0;
+
+          if ($entry_count >= 7) {
+            $additional_entries = get_occupied_entries($service_slug, 2);
             foreach ($additional_entries as $entry) {
               $entry['date_start'] = strtotime($entry['date_start']);
               $entry['date_expires'] = strtotime($entry['date_expires']);
@@ -250,9 +252,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       if ($sort == 2) {
-        $entry_count = get_entry_count_by_block($block_id);
-        if ($entry_count >= 8) {
-          $additional_entries = get_occupied_entries_by_block($block_id, $sort);
+        // считаем только записи с sort = 2 для данного блока
+        $entries_sort2 = get_occupied_entries_by_block($block_id, 2);
+        $entry_count = is_array($entries_sort2) ? count($entries_sort2) : 0;
+
+        if ($entry_count >= 7) {
+          $additional_entries = get_occupied_entries_by_block($block_id, 2);
           foreach ($additional_entries as $entry) {
             $entry['date_start'] = strtotime($entry['date_start']);
             $entry['date_expires'] = strtotime($entry['date_expires']);
@@ -271,11 +276,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     header('Content-Type: application/json');
     echo json_encode($occupied_entries);
-    error_log('Occupied entries: ' . print_r($occupied_entries, true));
     exit();
   } else {
     echo json_encode(['status' => 'error', 'message' => 'Неверный запрос']);
   }
+
   exit();
 }
 
@@ -1011,7 +1016,7 @@ if (in_array($specialist_classification, ['1', '2', '5', '6', '7']) || in_array(
     EOF;
 }
 
-if ($specialist_classification == "3" || $specialist_classification == 3) {
+if ($specialist_classification == "3" || $specialist_classification == 3 || $specialist_classification == 8) {
   $popup_promo_html .= <<<EOF
         <label class="select-option service-icon m1_vse_uristy">
             <input type="radio" name="service_ids[]" value="" data-block="2" data-name="{$promo_data[4]['title_escaped']}" data-price-block1="{$promo_data[4]['price_block1']}" data-price-block2="{$promo_data[4]['price_block2']}">
@@ -1111,7 +1116,7 @@ EOF;
       }
     }
   }
-  if ($specialist_classification == '3' || $specialist_classification == 3) {
+  if ($specialist_classification == '3' || $specialist_classification == 3 || $specialist_classification == 8) {
     // Если категория экспертизы (ключ 3)
     if ($key == 3) {
       $last_cat = '';

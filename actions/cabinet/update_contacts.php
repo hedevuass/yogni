@@ -38,7 +38,7 @@ if (isset($_POST['phone'])) {
     }
 
     // Валидация доп сетей
-    if ($data['tg']) {
+    /* if ($data['tg']) {
         $url = explode('@', $data['tg']);
         $data['tg'] = end($url);
     }
@@ -51,7 +51,7 @@ if (isset($_POST['phone'])) {
     if ($data['dzen']) {
         $url = explode('/', $data['dzen']);
         $data['dzen'] = end($url);
-    }
+    } */
 
     $data['other'] = json_encode([
         'email'     => $data['email'],

@@ -3014,7 +3014,6 @@ function clampLines($el, lines) {
   el.removeChild(temp);
 
   if (!lineHeight || lineHeight <= 0) {
-    console.warn('Не удалось определить высоту строки:', $el);
     return;
   }
 
@@ -4047,7 +4046,6 @@ $(document).ready(function () {
                   <div class="promo-price"><span class="light">${promo.price
         }</span> <span>₽</span></div>
                   <button class="delete-selected-promo" data-index="${index}">
-                    <img src="../assets/img/cabinet/delete2.svg" alt="Delete">
                   </button>
                 </div>
               </div>`;
@@ -4293,21 +4291,32 @@ $(document).ready(function () {
   $(document).on('submit', '#promo-confirm-form', function (event) {
     event.preventDefault();
 
-    var orderId = Date.now();
-    $("#js-order-id").val(orderId);
-    $("#js-order-id-ip").val(orderId);
-    $("#js-order-id-legal").val(orderId);
+    const paymentOrderId = Date.now();
+    $("#js-order-id").val(paymentOrderId);
+    $("#js-order-id-ip").val(paymentOrderId);
+    $("#js-order-id-legal").val(paymentOrderId);
 
-    const promoData = selectedPromos.map(promo => ({
-      promo_id: promo.id,
-      service_ids: promo.service_ids,
-      start_date: promo.dates.split(' по ')[0].replace('с ', '').trim(),
-      end_date: promo.dates.split(' по ')[1].trim(),
-      price: promo.price,
-      specialist_id: promo.specialistId,
-      service_name: promo.title,
-      orderId: orderId
-    }));
+    // Формируем массив промо с уникальными orderId для БД
+    const promoData = selectedPromos.map((promo, index) => {
+      const orderId = paymentOrderId + index; // уникальный для каждой промо
+
+      // Применяем скидку, если есть
+      let finalPrice = promo.price;
+      if (discount > 0) {
+        finalPrice = +(finalPrice * (1 - discount / 100)).toFixed(2);
+      }
+
+      return {
+        promo_id: promo.id,
+        service_ids: promo.service_ids,
+        start_date: promo.dates.split(' по ')[0].replace('с ', '').trim(),
+        end_date: promo.dates.split(' по ')[1].trim(),
+        price: finalPrice, // передаём уже со скидкой
+        specialist_id: promo.specialistId,
+        service_name: promo.title,
+        orderId: orderId
+      };
+    });
 
     const firstPromo = promoData[0];
 

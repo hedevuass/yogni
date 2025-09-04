@@ -2106,8 +2106,22 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                 $promo_list = get_all_connected_promo_placements($specialist_id);
                 $all_promotions = get_promotions();
                 $journals = get_journals();
-                $connected_journals = get_all_connected_journals($specialist_id);
+                $connected_journals = get_all_connected_journals($specialist_id);   
+                
+                usort($connected_journals, function($a, $b) {
+                    $aValue = !empty($a['start_date']) ? strtotime($a['start_date']) : 0;
+                    $bValue = !empty($b['start_date']) ? strtotime($b['start_date']) : 0;
+                    return $bValue <=> $aValue; // по возрастанию
+                });
+
                 $banner_list = get_all_connected_banners($specialist_id);
+
+                usort($banner_list, function($a, $b) {
+                    $aValue = !empty($a['start_date']) ? strtotime($a['start_date']) : 0;
+                    $bValue = !empty($b['start_date']) ? strtotime($b['start_date']) : 0;
+                    return $bValue <=> $aValue; // сортировка по возрастанию даты начала
+                });
+
                 $all_banners = [];
 
                 $connected_tariffs   = get_connected_tariffs($specialist_id);
@@ -2153,6 +2167,12 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
 
                 $payments = get_all_payments($specialist_id);
 
+                usort($payments, function($a, $b) {
+                    $aValue = !empty($a['date_start']) ? strtotime($a['date_start']) : 0;
+                    $bValue = !empty($b['date_start']) ? strtotime($b['date_start']) : 0;
+                    return $bValue <=> $aValue; // по возрастанию
+                });
+
                 ?>
 
                 <div class="tab-pane fade" id="content-payment" role="tabpanel" aria-labelledby="tab-reviews">
@@ -2169,8 +2189,10 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                                 </thead>
                                 <tbody>
 
-                                    <?php foreach ($payments as $pay): ?>
+                                    <?php foreach ($payments as $pay): 
+                                        ?>
                                         <tr>
+                                            <td class="d-none"><?= $sortValue ?></td>
                                             <td>
                                                 <strong><?= htmlspecialchars($pay['serviceName']) ?></strong><br>
                                                 <?php if (!empty($pay['date_start'])): ?>
@@ -2189,7 +2211,7 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                                                     : '' ?>
                                             </td>
                                             <td>
-                                                <?= number_format($pay['amount'], 0, ',', ' ') ?> р
+                                                <?= number_format($pay['amount'], 2, ',', ' ') ?> р
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

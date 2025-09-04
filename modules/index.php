@@ -172,7 +172,7 @@ foreach ($second_banners as $slide) {
             <div class="banner-slide__wrapper">
                 <a href="' . htmlspecialchars($targetLink) . '" class="banner-full-link" aria-label="Открыть баннер"></a>
                 <div class="background_img">
-                    <img src="assets/img/' . htmlspecialchars($slide['image']) . '" alt="">
+                    <img src="assets/img/' . htmlspecialchars($slide['image']) . '" alt="' . htmlspecialchars($current_description['line1']) . '">
                     <div class="background_fade"></div>
                 </div>
                 <div class="text">
@@ -241,7 +241,7 @@ foreach ($third_banners as $slide) {
         <div class="banner-slide__wrapper">
             <a href="' . htmlspecialchars($targetLink) . '" class="banner-full-link" aria-label="Открыть баннер"></a>
             <div class="background_img">
-                <img src="assets/img/' . htmlspecialchars($slide['image']) . '">
+                <img src="assets/img/' . htmlspecialchars($slide['image']) . '" alt="' . htmlspecialchars($current_description['line1']) . '">
                 <div class="background_fade"></div>
             </div>
             <div class="text">
@@ -312,7 +312,7 @@ foreach ($fourth_banners as $slide) {
             <div class="banner-slide__wrapper">
                 <a href="' . htmlspecialchars($targetLink) . '" class="banner-full-link" aria-label="Открыть баннер"></a>
                 <div class="background_img">
-                    <img src="assets/img/' . htmlspecialchars($slide['image']) . '">
+                    <img src="assets/img/' . htmlspecialchars($slide['image']) . '" alt="' . htmlspecialchars($current_description['line1']) . '">
                     <div class="background_fade"></div>
                 </div>
                 <div class="text">
@@ -455,7 +455,7 @@ function get_actual_services(): array
 
             $code[$array_key] .= <<<EOF
                 <div class="item">
-                    <img src="/assets/img/{$service['img']}">
+                    <img src="/assets/img/{$service['img']}" alt="Раздел &quot;{$service['title']}&quot;">
                     <p><span>{$service['title']}</span></p>
                     <a href="{$service['slug']}"></a>
                 </div>
