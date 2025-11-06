@@ -27,15 +27,21 @@ function block(array $specialists, $class = false)
         }
 
         // Устанавливаем стиль фона и видимость rocket в зависимости от тарифов
-        $style = $tariff2Connected || $tariff3Connected ? 'background-color: #D9EAF6;' : '';
+        /* $style = $tariff2Connected || $tariff3Connected ? 'background-color: #D9EAF6;' : ''; */
         $rocketStyle = $tariff3Connected ? 'display: block;' : 'display: none;';
 
-        $specialist['photo'] = !empty($specialist['photo'])
-            ? $specialist['photo']
-            : (!empty($specialist['company_name']) ? '022.jpg' : '02.jpg');
+        if (!empty($specialist['photo']) && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/thumb_' . $specialist['photo'])) {
+            $specialist['photo_path'] = '/uploads/avatars/thumb_' . $specialist['photo'];
+        } elseif (!empty($specialist['photo']) && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/' . $specialist['photo'])) {
+            $specialist['photo_path'] = '/uploads/avatars/' . $specialist['photo'];
+        } else {
+            $specialist['photo_path'] = !empty($specialist['company_name']) ? '/uploads/avatars/022.webp' : '/uploads/avatars/02.webp';
+        }
+
         $data .= <<<EOF
-            <div class="item $cl" style="$style">
-            <div class="image"><div class="image-box" style="background-image: url('/uploads/avatars/{$specialist['photo']}')"></div>
+        <div class="item $cl" style="$style">
+            <div class="image">
+                <div class="image-box lazy-bg" data-bg="{$specialist['photo_path']}"></div>
                 <div class="rating">
         EOF;
 
@@ -187,7 +193,7 @@ function block_articles(array $articles, bool $is_single = false, int $blog_id =
             <div class="article_item">
                 <div class="article_profile item">
 			    	<div class="image">
-						<div class="image-box" style="background-image: url('/uploads/avatars/{$specialist['photo']}')"></div>
+						<div class="image-box lazy-bg" data-bg="/uploads/avatars/{$specialist['photo']}"></div>
 			    		<div class="rating">{$specialist_rating}</div>
 			    	</div>
 			    	<div class="name">{$specialist_name}</div>
@@ -505,7 +511,20 @@ function block_articles_cabinet(array $articles, bool $has_text_no_articles): st
             //     $themes .= '</div>';
             // }
             $themes = '<div class="tags"><a href="/journal/' . $article['service_slug'] . '">' . $article['service_title'] . '</a></div>';
-            $short_content = cut_text(htmlspecialchars_decode($article["content"]), 300);
+            $content = htmlspecialchars_decode($article["content"], ENT_QUOTES);
+
+            // Заменяем переносы и блочные теги на пробел
+            $content = preg_replace('/<\s*br\s*\/?>/i', ' ', $content);
+            $content = preg_replace('/<\/(p|div|li|h[1-6])>/i', ' ', $content);
+
+            // Убираем все оставшиеся теги
+            $content = strip_tags($content);
+
+            // Убираем множественные пробелы
+            $content = preg_replace('/\s{2,}/u', ' ', trim($content));
+
+            // Передаём в функцию обрезки
+            $short_content = cut_text($content, 300);
             $decodedTitle = htmlspecialchars_decode($article['title']);
             if ($article['moderation'] == 0) {
                 $link = "<a href='/journal/id{$article['blog_id']}/{$article['alias']}'class='link'>{$decodedTitle}</a>";

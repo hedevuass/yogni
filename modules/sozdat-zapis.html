@@ -77,3 +77,43 @@
 		</div>
 	</div>
 </div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+	  // Делегируем beforeinput — работает, даже если textarea появляется динамически
+	  document.addEventListener('beforeinput', function (e) {
+		// Проверка, что событие от нужного textarea
+		if (!e.target || !e.target.matches || !e.target.matches('textarea[name="content"]')) return;
+	
+		// Ищем конкретно вставку перевода строки
+		if (e.inputType === 'insertLineBreak') {
+		  e.preventDefault();
+		  e.stopPropagation();
+	
+		  const ta = e.target;
+		  // Если элемент не в фокусе или не поддерживает selectionStart, ставим фокус
+		  if (typeof ta.selectionStart === 'undefined') {
+			ta.focus();
+		  }
+	
+		  // Получаем позиции
+		  const start = ta.selectionStart ?? ta.value.length;
+		  const end = ta.selectionEnd ?? start;
+	
+		  const before = ta.value.substring(0, start);
+		  const after = ta.value.substring(end);
+	
+		  // Вставляем двойной перенос строк (\n\n)
+		  ta.value = before + "\n\n" + after;
+	
+		  const newPos = start + 2;
+		  ta.selectionStart = ta.selectionEnd = newPos;
+	
+		  // Для ситуаций с привязанными визуализациями — триггерим input
+		  ta.dispatchEvent(new Event('input', { bubbles: true }));
+		  console.log('beforeinput handled: inserted double newline at', start);
+		}
+	  }, true);
+	});
+	</script>
+	

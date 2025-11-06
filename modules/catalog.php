@@ -30,7 +30,7 @@ if (in_array($last_segment, ['private', 'company'])) {
     array_pop($uri_arr); // удаляем фильтр из массива
 }
 
-// Теперь последний сегмент — это категория или подкатегория
+// Категория или подкатегория
 $requestion_str = end($uri_arr);
 $requestion = $requestion_str !== '' ? strtok($requestion_str, '?') : 'yuristy-i-advokaty';
 
@@ -38,12 +38,12 @@ $requestion = $requestion_str !== '' ? strtok($requestion_str, '?') : 'yuristy-i
 $service_parent_slug = $uri_arr[0] ?? 'yuristy-i-advokaty';
 
 // Получаем данные из БД
-$service_parent = get_service_parent_catalog($service_parent_slug);
+$service_parent = get_service_parent_by_slug($service_parent_slug);
 
 // Проверка существования категории
 $category = get_service_by_slug($requestion);
-if (!$category && !in_array($requestion, ['yuristy-i-advokaty', 'experty', 'notariusy'])) {
-    responseRedirect('/');
+if (!$category && !in_array($requestion, get_catalog_slugs(), true)) {
+    responseRedirect('/404');
 }
 
 // Данные пагинации
@@ -61,7 +61,8 @@ if ($category) {
     // Хлебные крошки
     $vars = vars(
         classification: $category['classification'],
-        service_parent: $service_parent
+        service_parent: $service_parent,
+        cityGenitive: $cityGenitive
     );
     $link_for_pagination = $vars['slug'] . ($category['p_id'] == 0 ? '' : '/' . $category['p_slug']) . '/' . $category['slug'];
 
@@ -115,12 +116,72 @@ if ($category) {
 
     $specialists = get_specialists_by_service($services, $limit, $start);
     $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start);
+
+    /* $specialists_with_tarrifs = getCachedData(
+        'catalog_by_service', 
+        600,
+        function () use ($category, $services, $limit, $start) {
+            return get_specialists_by_service_with_tariffs(
+                $category['classification_array'],
+                $services,
+                $limit,
+                $start
+            );
+        }
+    ); */
+
+    // Формирование JSON LD
+    $jsonld_limit = 20;
+    $jsonld_start = ($page - 1) * $jsonld_limit;
+
+    // Получаем специалистов для JSON-LD
+    $specialists_jsonld = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $jsonld_limit, $jsonld_start);
+    $specialists_without_limit = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start);
+
+    // Формируем заголовок с фильтром, если есть
+    $categoryTitle = $category['title'];
+    if (!empty($filter)) {
+        $categoryTitle .= $filter === 'private' ? ' (частные)' : ' (компании)';
+    }
+
+    // Формируем заголовок категории с учетом фильтра
+    $categoryTitle = $category['title'];
+    if (!empty($filter)) {
+        $categoryTitle .= $filter === 'private' ? ' (частные)' : ' (компании)';
+    }
+
+    // CollectionPage JSON-LD
+    echo generateSpecialistsCollectionPageJsonLd(
+        vars: $vars,
+        category: $category,
+        service_parent: $service_parent,
+        filter: $filter,
+        cityGenitive: $cityGenitive,
+    );
+
+    // Breadcrumbs JSON-LD
+    echo generateCatalogBreadcrumbsJsonLd($vars, $category, $filter ?? '');
+
+    // ItemList JSON-LD
+    echo generateSpecialistsItemListJsonLd(
+        specialists: $specialists_jsonld,
+        specialist_wihout_limit: $specialists_without_limit,
+        vars: $vars,
+        category: $category,
+        service_parent: $service_parent,
+        filter: $filter ?? null,
+        cityGenitive: $cityGenitive,
+        categoryDescription: $category['description'] ?? ''
+    );
 }
 
 if (!$category) {
+    $requestion_for_vars = $service_parent['base_slug'] ?? $service_parent['slug'] ?? $requestion;
+
     $vars = vars(
-        requestion: $requestion,
-        service_parent: $service_parent
+        requestion: $requestion_for_vars,
+        service_parent: $service_parent,
+        cityGenitive: $cityGenitive
     );
 
     $page = intval($_GET['page']) ?: 1;
@@ -154,7 +215,7 @@ if (!$category) {
 
     // Загружаем иконку
     $icon_url = '';
-    $service = get_service_parent_catalog($item['slug']);
+    $service = get_service_parent_by_slug($item['slug']);
     if (!empty($service['icon'])) {
         $icon_url = htmlspecialchars($service['icon']);
     }
@@ -176,11 +237,11 @@ if (!$category) {
         if (isset($_SESSION['metro']) && $_SESSION['metro']) {
             $metro = get_metro_by_ids($_SESSION['metro']);
             $count = count($metro);
-        
+
             if ($count > 0) $string = "Выбрано ($count)";
         }
-        
-        
+
+
         $metro_text = $string ?? 'Выбрать метро';
         $mobile_btn_title = "<span class='metro_text'>{$metro_text}</span>";
         $mobile_btn_class = " metro";
@@ -215,6 +276,54 @@ if (!$category) {
     $count = count_specialists_by_classification($vars['classification']);
     $specialists = get_specialists_by_classification($vars['classification'], $limit, $start);
     $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($vars['classification'], $limit, $start);
+
+    /* $specialists_with_tarrifs = getCachedData(
+        'catalog_by_classification', 
+        600,
+        function () use ($vars, $limit, $start) {
+            return get_specialists_by_classification_with_tariffs(
+                $vars['classification'],
+                $limit,
+                $start
+            );
+        }
+    ); */
+
+    // Формирование JSON LD
+    $jsonld_limit = 20;
+    $jsonld_start = ($page - 1) * $jsonld_limit;
+
+    // Получаем специалистов для JSON-LD
+    $specialists_jsonld = get_specialists_by_classification_with_tariffs($vars['classification'], $jsonld_limit, $jsonld_start);
+    $specialists_without_limit = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start);
+
+    // CollectionPage JSON-LD
+    echo generateSpecialistsCollectionPageJsonLd(
+        vars: $vars,
+        classification: $classification,
+        service_parent: $service_parent,
+        filter: $filter,
+        cityGenitive: $cityGenitive
+    );
+
+    // Breadcrumbs JSON-LD
+    echo generateCatalogBreadcrumbsJsonLd([
+        'slug'  => $vars['slug'],
+        'title' => $vars['title']
+    ], null, $filter ?? '');
+
+    // ItemList JSON-LD
+    echo generateSpecialistsItemListJsonLd(
+        specialists: $specialists_jsonld,
+        specialist_wihout_limit: $specialists_without_limit,
+        vars: $vars,
+        category: [],
+        classification: $classification,
+        service_parent: $service_parent,
+        filter: $filter ?? null,
+        cityGenitive: $cityGenitive,
+        categoryDescription: $service_parent['description'] ?? ''
+    );
 }
 
 
@@ -326,12 +435,19 @@ $HTML = modules_include($HTML);
  */
 function breadcrumbs(array $vars, array $category = null): string
 {
-    $code = '<span>/</span><span class="curr-page">' . $vars['title'] . '</a>';
+    // Если передан breadcrumbs_title — используем его, иначе обычный title
+    $title = $vars['breadcrumbs_title'] ?? $vars['title'];
+
+    $code = '<span>/</span><span class="curr-page">' . htmlspecialchars($title) . '</span>';
 
     if ($category) {
-        $code = '<span>/</span><a href="/' . $vars["slug"] . '">' . $vars['title'] . '</a>';
-        if ($category['p_id']) $code .= "<span>/</span><a href='/{$vars['slug']}/{$category['p_slug']}'>{$category['p_title']}</a>";
-        $code .= '<span>/</span><span class="curr-page">' . $category['title'] . '</span>';
+        $code = '<span>/</span><a href="/' . htmlspecialchars($vars["slug"]) . '">' . htmlspecialchars($title) . '</a>';
+
+        if (!empty($category['p_id'])) {
+            $code .= "<span>/</span><a href='/" . htmlspecialchars($vars['slug']) . "/" . htmlspecialchars($category['p_slug']) . "'>" . htmlspecialchars($category['p_title']) . "</a>";
+        }
+
+        $code .= '<span>/</span><span class="curr-page">' . htmlspecialchars($category['title']) . '</span>';
     }
 
     return $code;
@@ -460,7 +576,9 @@ function top_text(
         $code .= "<div class=\"links\">\n";
         foreach ($links as $link) {
             $class_link = get_classification_link($link['classification']);
-            $active = ($link['id'] ?? null) == ($category['id'] ?? null) ? ' class="active"' : '';
+            $active = ($link['id'] ?? null) == ($category['base_id'] ?? $category['id'] ?? null)
+                ? ' class="active"'
+                : '';
             $url = "/{$class_link}/"
                 . (($link['p_id'] ?? 0) === 0 ? '' : ($link['p_slug'] ?? '') . '/')
                 . ($link['slug'] ?? '');
@@ -476,11 +594,17 @@ function top_text(
 
 /**
  * @param array $category
- * @return string
+ * @return array
  */
 function get_links(array $category): array
 {
-    $array = get_services_by_parrent_id($category['id']);
+    // Если категория альтернатива — используем original_id, иначе обычный id
+    $base_id = (!empty($category['original_id']) && $category['original_id'] != 0)
+        ? (int)$category['original_id']
+        : (int)$category['id'];
+
+    $array = get_services_by_parrent_id($base_id);
+
     if (!$array) {
         if (in_array($category['classification'], [1, 2, 3, 5, 6, 7]) && !$category['p_id']) {
             $array = get_services_by_classification($category['classification'], 0);
@@ -489,7 +613,7 @@ function get_links(array $category): array
         }
     }
 
-    return $array;
+    return (array)$array;
 }
 
 function get_mobile(array $category): array
@@ -524,35 +648,102 @@ function get_mobile(array $category): array
  * @param string $requestion
  * @return array
  */
-function vars(int $classification = null, string $requestion = null, ?array $service_parent = null): array
-{
+function vars(
+    ?int $classification = null,
+    ?string $requestion = null,
+    ?array $service_parent = null,
+    ?string $cityGenitive = null
+): array {
     $vars = [];
+
+    function add_city_to_text(string $text, string $cityGenitive): string
+    {
+        if (trim($text) === '' || trim($cityGenitive) === '') {
+            return $text;
+        }
+
+        // Список ключевых профессий/слов
+        $specialists = [
+            'юристы и адвокаты',
+            'юристы',
+            'адвокаты',
+            'нотариусы',
+            'эксперты',
+            'юридические компании',
+            'экспертные учреждения',
+            'специалисты',
+            'компании',
+            'организации',
+        ];
+
+        // === 1. Если строка начинается с профессии ===
+        $patternStart = '/^(?:Каталог\s+)?(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $specialists)) . ')\b/iu';
+        if (preg_match($patternStart, $text, $m)) {
+            $phrase = $m[0];
+            return preg_replace(
+                $patternStart,
+                $phrase . ' ' . $cityGenitive,
+                $text,
+                1
+            );
+        }
+
+        // === 2. Если есть "Каталог <профессии>" внутри текста ===
+        $patternCatalog = '/Каталог\s+(' . implode('|', array_map('preg_quote', $specialists)) . ')\b/iu';
+        if (preg_match($patternCatalog, $text, $m)) {
+            $word = $m[1];
+            return preg_replace(
+                $patternCatalog,
+                'Каталог ' . $word . ' ' . $cityGenitive,
+                $text,
+                1
+            );
+        }
+
+        // === 3. В остальных случаях — вставляем после первого встреченного ключевого слова ===
+        $patternAny = '/\b(' . implode('|', array_map('preg_quote', $specialists)) . ')\b/iu';
+        if (preg_match($patternAny, $text, $m)) {
+            $word = $m[1];
+            return preg_replace(
+                $patternAny,
+                $word . ' ' . $cityGenitive,
+                $text,
+                1
+            );
+        }
+
+        // === 4. Если ничего не найдено — добавляем город в конец ===
+        return rtrim($text, " .,") . ' ' . $cityGenitive;
+    }
 
     if ($classification) {
         $vars = match ($classification) {
             1, 2 => [
                 'title'       => $service_parent['title'],
+                'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'        => 'yuristy-i-advokaty',
-                'description' => 'Найдите лучших юристов и адвокатов по всем направлениям. Мы поможем вам решить любые юридические вопросы.',
-                'keywords'    => 'юристы, адвокаты, юридическая помощь, консультации',
+                'description' => $service_parent['meta_description'],
+                'keywords'    => $service_parent['meta_keywords'],
                 'h1'          => 'Юристы и адвокаты по направлению ',
                 'block'       => 1,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
             ],
             3 => [
                 'title'       => $service_parent['title'],
+                'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'        => 'experty',
-                'description' => 'Каталог экспертов для профессиональных консультаций и помощи. Найдите подходящего эксперта прямо сейчас.',
-                'keywords'    => 'эксперты, профессиональные консультации, помощь специалистов',
+                'description' => $service_parent['meta_description'],
+                'keywords'    => $service_parent['meta_keywords'],
                 'h1'          => 'Эксперты по направлению ',
                 'block'       => 2,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
             ],
             4 => [
                 'title'       => $service_parent['title'],
+                'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'        => 'notariusy',
-                'description' => 'Список нотариусов для заверения документов и юридических услуг. Найдите надежного нотариуса.',
-                'keywords'    => 'нотариусы, заверение документов, юридические услуги',
+                'description' => $service_parent['meta_description'],
+                'keywords'    => $service_parent['meta_keywords'],
                 'h1'          => 'Все нотариусы по направлению ',
                 'block'       => 3,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
@@ -564,19 +755,21 @@ function vars(int $classification = null, string $requestion = null, ?array $ser
         $vars = match ($requestion) {
             'experty' => [
                 'title'             => $service_parent['title'],
+                'meta_title'        => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'              => 'experty',
-                'description'       => 'Каталог экспертов из различных областей. Мы собрали лучших специалистов для ваших нужд.',
-                'keywords'          => 'эксперты, профессионалы, услуги экспертов',
+                'description'       => $service_parent['meta_description'],
+                'keywords'          => $service_parent['meta_keywords'],
                 'h1'                => $service_parent['title'],
                 'classification'    => [3, 8],
                 'block'             => 2,
                 'pre_list'          => 'Топ ' . mb_strtolower($service_parent['title']),
             ],
             'notariusy' => [
-                'title'             => $service_parent['title'],
+                'title'             => add_city_to_text($service_parent['meta_title'], $cityGenitive),
+                'breadcrumbs_title'        => $service_parent['title'],
                 'slug'              => 'notariusy',
-                'description'       => 'Лучшие нотариусы для заверения документов и юридических услуг. Ознакомьтесь с нашим каталогом.',
-                'keywords'          => 'нотариусы, услуги нотариуса, заверение документов',
+                'description'       => $service_parent['meta_description'],
+                'keywords'          => $service_parent['meta_keywords'],
                 'h1'                => $service_parent['title'],
                 'classification'    => [4],
                 'block'             => 3,
@@ -584,9 +777,10 @@ function vars(int $classification = null, string $requestion = null, ?array $ser
             ],
             default => [
                 'title'             => $service_parent['title'],
+                'meta_title'        => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'              => 'yuristy-i-advokaty',
-                'description'       => 'Лучшие юристы и адвокаты для ваших юридических вопросов. Найдите подходящего специалиста прямо сейчас.',
-                'keywords'          => 'юристы, адвокаты, консультации, юридическая помощь',
+                'description'       => $service_parent['meta_description'],
+                'keywords'          => $service_parent['meta_keywords'],
                 'h1'                => $service_parent['title'],
                 'classification'    => [1, 2, 5, 6, 7],
                 'block'             => 1,
@@ -637,6 +831,318 @@ function pre_list(string $text): string
     EOF;
 }
 
+
+/**
+ * Генерация JSON-LD для CollectionPage (раздел/подраздел/фильтр)
+ */
+function generateSpecialistsCollectionPageJsonLd(
+    array $vars,
+    array $category = [],
+    array $classification = [],
+    array $service_parent = [],
+    ?string $filter = null,
+    ?string $cityGenitive = null
+): string {
+    // Метки фильтров
+    $filter_labels = [
+        'private' => 'Частные',
+        'company' => 'Юридические компании'
+    ];
+
+    // Собираем h1 (точно как в top_text)
+    $h1 = $category
+        ? $vars['h1'] . ' «' . $category['title'] . '»'
+        : $vars['h1'];
+
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            $h1 = $filter_labels[$filter]
+                . ' '
+                . mb_strtolower(mb_substr($h1, 0, 1))
+                . mb_substr($h1, 1);
+        } else { // company
+            if (mb_stripos($h1, 'Юристы и адвокаты') === 0) {
+                $h1 = preg_replace(
+                    '/^Юристы и адвокаты/ui',
+                    $filter_labels[$filter],
+                    $h1
+                );
+            } elseif (mb_stripos($h1, 'Эксперты') === 0) {
+                $h1 = preg_replace(
+                    '/^Эксперты/ui',
+                    'Экспертные учреждения',
+                    $h1
+                );
+            }
+        }
+    }
+
+    if ($cityGenitive) {
+        $basePhrases = [
+            'Юристы и адвокаты',
+            'Эксперты',
+            'Нотариусы',
+            'Юридические компании',
+            'Экспертные учреждения'
+        ];
+        $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
+
+        if (preg_match($regex, $h1, $m)) {
+            $full = mb_strtolower($m[0]);
+            $rest = mb_substr($h1, mb_strlen($full));
+            $h1   = $full . ' ' . $cityGenitive . $rest;
+        } else {
+            $h1 = mb_strtolower($h1) . ' ' . $cityGenitive;
+        }
+    }
+
+    // Собираем URL
+    $parentSlug = $service_parent['slug'] ?? $service_parent['base_slug'] ?? $vars['slug'] ?? '';
+    $url = 'https://urfaq.ru/' . trim($parentSlug, '/');
+
+    if (!empty($category['slug'])) {
+        $url .= '/' . ltrim($category['slug'], '/');
+    }
+
+    // JSON-LD
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type"    => "CollectionPage",
+        "url"      => $url,
+        "name"     => "ЮРФАК-каталог: " . $h1
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+
+/**
+ * Генерация JSON-LD для хлебных крошек
+ */
+function generateCatalogBreadcrumbsJsonLd(array $vars, array $category = null, ?string $filter = ''): string
+{
+    $items = [];
+    $position = 1;
+
+    // 1. Главная
+    $items[] = [
+        "@type" => "ListItem",
+        "position" => $position++,
+        "name" => "Главная",
+        "item" => "https://urfaq.ru/"
+    ];
+
+    // Формируем путь
+    $urlPath = '/' . ($vars['slug'] ?? '');
+    if (!empty($category['p_slug'])) {
+        $urlPath .= '/' . $category['p_slug'];
+    }
+    if (!empty($category['slug'])) {
+        $urlPath .= '/' . $category['slug'];
+    }
+    if (!empty($filter)) {
+        $urlPath .= '/' . $filter;
+    }
+
+    $segments = explode('/', trim($urlPath, '/'));
+
+    // Убираем последний сегмент только если их больше 1
+    if (empty($category)) {
+        if (!empty($filter)) {
+            $segments = [$vars['slug']]; // показываем родительскую категорию при фильтре
+        } else {
+            $segments = []; // ничего кроме "Главная"
+        }
+    } else {
+        if (count($segments) > 0) {
+            array_pop($segments); // убираем последний сегмент (категория или фильтр)
+        }
+    }
+
+    $currentPath = '';
+    foreach ($segments as $seg) {
+        $currentPath .= '/' . $seg;
+
+        // Определяем читаемое название
+        if ($seg === ($category['slug'] ?? '')) {
+            $name = $category['title'] ?? ucfirst(str_replace('-', ' ', $seg));
+        } elseif ($seg === ($category['p_slug'] ?? '')) {
+            $name = $category['p_title'] ?? ucfirst(str_replace('-', ' ', $seg));
+        } elseif ($seg === ($vars['slug'] ?? '')) {
+            $name = $vars['title'] ?? ucfirst(str_replace('-', ' ', $seg));
+        } else {
+            $name = ucfirst(str_replace('-', ' ', $seg));
+        }
+
+        $items[] = [
+            "@type" => "ListItem",
+            "position" => $position++,
+            "name" => $name,
+            "item" => "https://urfaq.ru" . $currentPath
+        ];
+    }
+
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "BreadcrumbList",
+        "itemListElement" => $items
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+/**
+ * Генерация JSON-LD для списка специалистов (ItemList)
+ */
+function generateSpecialistsItemListJsonLd(
+    array $specialists,
+    array $specialist_wihout_limit,
+    array $vars = [],
+    array $category = [],
+    array $classification = [],
+    array $service_parent = [],
+    ?string $filter = null,
+    ?string $cityGenitive = null,
+    string $categoryDescription = '',
+    int $startPosition = 1
+): string {
+    $filter_labels = [
+        'private' => 'Частные',
+        'company' => 'Юридические компании'
+    ];
+
+    // Заголовок категории (аналогично top_text / CollectionPage)
+    $categoryTitle = $category
+        ? $vars['h1'] . ' «' . $category['title'] . '»'
+        : $vars['h1'];
+
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            $categoryTitle = $filter_labels[$filter]
+                . ' '
+                . mb_strtolower(mb_substr($categoryTitle, 0, 1))
+                . mb_substr($categoryTitle, 1);
+        } else {
+            if (mb_stripos($categoryTitle, 'Юристы и адвокаты') === 0) {
+                $categoryTitle = preg_replace(
+                    '/^Юристы и адвокаты/ui',
+                    $filter_labels[$filter],
+                    $categoryTitle
+                );
+            } elseif (mb_stripos($categoryTitle, 'Эксперты') === 0) {
+                $categoryTitle = preg_replace(
+                    '/^Эксперты/ui',
+                    'Экспертные учреждения',
+                    $categoryTitle
+                );
+            }
+        }
+    }
+
+    if ($cityGenitive) {
+        $basePhrases = [
+            'Юристы и адвокаты',
+            'Эксперты',
+            'Нотариусы',
+            'Юридические компании',
+            'Экспертные учреждения'
+        ];
+        $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
+        if (preg_match($regex, $categoryTitle, $m)) {
+            $full = $m[0];
+            $rest = mb_substr($categoryTitle, mb_strlen($full));
+            $categoryTitle = $full . ' ' . $cityGenitive . $rest;
+        } else {
+            $categoryTitle .= ' ' . $cityGenitive;
+        }
+    }
+
+    // Формируем описание (как в top_text)
+    $description = htmlspecialchars_decode(
+        $categoryDescription
+            ?: $category['description']
+            ?? $service_parent['description']
+            ?? ''
+    );
+
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            $description = preg_replace('/\bюристов\b/ui', 'частных юристов', $description);
+            $description = preg_replace('/\bэкспертов\b/ui', 'частных экспертов', $description, 1);
+        } else {
+            $description = preg_replace('/\b(лучших\s+)?юристов\s+и\s+адвокатов\b/ui', 'юридические компании', $description);
+            $description = preg_replace('/\bэкспертов\b/ui', 'экспертные учреждения', $description);
+        }
+    }
+
+    // Элементы списка специалистов
+    $itemListElements = [];
+    foreach ($specialists as $i => $spec) {
+        $knowsAbout = '';
+        if (!empty($spec['specialization'])) {
+            if (!empty($spec['specialization_count']) && $spec['specialization_count'] > 1) {
+                $knowsAbout = mb_strimwidth($spec['specialization'], 0, 21, '...', 'UTF-8');
+                $specializationText = num_decline($spec['specialization_count'] - 1, 'специализация, специализации, специализаций');
+                $knowsAbout .= " и ещё {$specializationText}";
+            } else {
+                $knowsAbout = mb_strimwidth($spec['specialization'], 0, 42, '...', 'UTF-8');
+            }
+        }
+
+        $itemListElements[] = [
+            "@type" => "ListItem",
+            "position" => $startPosition + $i,
+            "item" => [
+                "@type" => "LegalService",
+                "url" => full_url('specialist/id' . ($spec['id'] ?? '')),
+                "image" => !empty($spec['photo']) ? full_url('/uploads/avatars/' . $spec['photo']) : '',
+                "name" => !empty($spec['company_name'])
+                    ? $spec['company_name']
+                    : trim(($spec['name'] ?? '') . ' ' . ($spec['lastname'] ?? '')),
+                "additionalType" => $spec['classification_title'] ?? '',
+                "knowsAbout" => $knowsAbout,
+                "address" => [
+                    "@type" => "PostalAddress",
+                    "streetAddress" => $spec['metro_name'] ?? '',
+                    "addressLocality" => $spec['city_name'] ?? ''
+                ]
+            ]
+        ];
+    }
+
+    // Фикс для альтернативных slug: используем текущий slug родителя, а не base_slug
+    $parentSlug = $service_parent['slug'] ?? $service_parent['base_slug'] ?? $vars['slug'] ?? '';
+    $parentSlug = trim($parentSlug, '/');
+
+    if (!empty($category['slug'])) {
+        $parentSlug .= '/' . ltrim($category['slug'], '/');
+    }
+
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "ItemList",
+        "name" => $categoryTitle ?: "Специалисты",
+        "description" => strip_tags($description),
+        "url" => "https://urfaq.ru/" . $parentSlug,   // <-- ключевой фикс
+        "numberOfItems" => count($specialist_wihout_limit),
+        "itemListOrder" => "Descending",
+        "itemListElement" => $itemListElements
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+$isCategoryPage = ($requestion === $service_parent_slug);
+$categorySlug = $isCategoryPage
+    ? ($service_parent['base_slug'] ?? $requestion)
+    : $requestion;
+
 ?>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
@@ -645,7 +1151,7 @@ function pre_list(string $text): string
         let start = <?= $limit ?>; // из PHP
         let loading = false;
         let hadError = false; // флаг «ошибка уже была»
-        let categorySlug = '<?= addslashes($requestion) ?>';
+        let categorySlug = '<?= addslashes($categorySlug) ?>';
         let metro_ids = <?= json_encode($_SESSION['metro'] ?? []) ?>;
         let filter = <?= $filter !== null ? "'" . addslashes($filter) . "'" : 'null' ?>;
         let filter_type_url = <?= $filter_type_url !== null ? "'" . addslashes($filter_type_url) . "'" : 'null' ?>;
@@ -662,6 +1168,33 @@ function pre_list(string $text): string
 
             // Если #load-trigger в зоне [низа экрана - 800px, низа экрана + 200px]
             if (triggerTop <= viewportHeight + 800 && triggerTop >= viewportHeight - 800) {
+                const lazyBgs = document.querySelectorAll('.lazy-bg');
+
+                if ('IntersectionObserver' in window) {
+                    const observer = new IntersectionObserver((entries, obs) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const el = entry.target;
+                                const bg = el.dataset.bg;
+                                if (bg) {
+                                    el.style.backgroundImage = `url('${bg}')`;
+                                    obs.unobserve(el);
+                                }
+                            }
+                        });
+                    }, {
+                        rootMargin: "0px 0px 200px 0px"
+                    });
+
+                    lazyBgs.forEach(el => observer.observe(el));
+                } else {
+                    // fallback: сразу подставляем фоновое изображение
+                    lazyBgs.forEach(el => {
+                        const bg = el.dataset.bg;
+                        if (bg) el.style.backgroundImage = `url('${bg}')`;
+                    });
+                }
+
                 loading = true;
 
                 $.ajax({
@@ -692,7 +1225,7 @@ function pre_list(string $text): string
                         // 2) Отключаем обработчик scroll, чтобы не было новых запросов
                         $(window).off('scroll', onScrollHandler);
                         // 3) Показываем alert только один раз
-                        alert('Ошибка загрузки, проверьте подключение к интернету.');
+                        /* alert('Ошибка загрузки, проверьте подключение к интернету.'); */
                         loading = false;
                     }
                 });

@@ -6,30 +6,17 @@ require_once __DIR__ . '/../libs/securimage/securimage.php';
 
 $forbidden_words = getForbiddenWords();
 
-/* $securimage = new Securimage();
-
-$captchaCode = $_POST['captcha_code'] ?? '';
-$captchaId = $_POST['captcha_id'] ?? null;
-
-if ($securimage->check($captchaCode, $captchaId) == false) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Неправильный код каптчи. Попробуйте снова.'
-    ]);
-    exit;
-} */
-
 if (isset($_POST['specialist'])) {
     $fields_to_check = ['name', 'contact', 'review'];
 
     foreach ($_POST as $key => $value) {
         if (in_array($key, $fields_to_check)) {
             $foundItems = containsForbiddenWords($value, $forbidden_words);
-    
+
             if ($foundItems) {
                 $elements = [];
                 $words = [];
-    
+
                 foreach ($foundItems as $item) {
                     if ($item['type'] === 'element') {
                         $elements[] = '"' . $item['value'] . '"';
@@ -37,7 +24,7 @@ if (isset($_POST['specialist'])) {
                         $words[] = '"' . $item['value'] . '"';
                     }
                 }
-    
+
                 if (!empty($elements) && !empty($words)) {
                     $allItems = array_unique(array_merge($elements, $words));
                     $json['error'][$key][] = 'Обнаружены запрещённые слова и элементы: ' . implode(', ', $allItems) . '.';
@@ -50,9 +37,12 @@ if (isset($_POST['specialist'])) {
                 }
             }
         }
-    
+
         $data[$key] = clean_elem_form($value);
-    }    
+    }
+
+    $captchaCode = $_POST['captcha_code_review'] ?? '';
+    $captchaId = $_POST['captcha_id_review'] ?? null;
 
     if (!$data['contact']) $json['error']['contact'] = 'Укажите email';
     if (!empty($data['contact'])) {
@@ -64,6 +54,14 @@ if (isset($_POST['specialist'])) {
     if (!$data['rating']) $json['error']['rating'] = 'Поставьте оценку';
     if (!$data['review']) {
         $json['error']['review'] = 'Введите текст отзыва';
+    }
+
+    // Проверка капчи
+    $securimage = new Securimage();
+    if (!$captchaCode) {
+        $json['error']['captcha_error'] = 'Введите код с картинки.';
+    } elseif (!$securimage->check($captchaCode, $captchaId)) {
+        $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
     }
 
     if (isset($json['error'])) responseJson($json);

@@ -75,7 +75,7 @@ foreach ($slugs as $slug) {
             'notariusy' => 'notarius'
         ][$slug];
 
-        $style = ' style="background-image: url(assets/img/' . htmlspecialchars($service['icon']) . '); background-size: 16px 14px;"';
+        $style = ' style="background-image: url(../assets/img/' . htmlspecialchars($service['icon']) . '); background-size: 16px 14px;"';
         $title = htmlspecialchars($service['title']);
         $url = '/' . $slug;
 
@@ -128,7 +128,7 @@ foreach ($items as $key => $item) {
     $text = $title ? 'Все ' . mb_strtolower($title) : $item['text'];
 
     $style = $icon
-        ? ' style="background-image: url(assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
+        ? ' style="background-image: url(https://urfaq.ru/assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
         : '';
 
     $data[$key] = '<li class="' . $item['class'] . '"' . $style . '><a href="/' . $item['slug'] . '">' . htmlspecialchars($text) . '</a></li>';
@@ -356,11 +356,92 @@ $data['captcha'] = '
         </div>
     </div>
     <div class="captcha-error"></div>
+</div>';
+
+$data['captcha_registration_company'] = '
+<div class="field captcha-field">
+    <div class="captcha-row">
+        <div class="captcha-left">
+            <img id="captcha_registration_company" src="/libs/securimage/securimage_show.php?id=' . $randId . '" alt="CAPTCHA" aria-hidden="false" />
+            <button type="button" id="captcha_refresh_registration_company" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="captcha-right">
+            <label class="captcha-label" for="captcha_code_registration_company">Подтвердите, что вы не робот</label>
+            <input class="captcha-input" id="captcha_code_registration_company" name="captcha_code_registration_company" type="text" placeholder="Введите код" autocomplete="off" />
+            <input type="hidden" id="captcha_captcha_id_registration_company" name="captcha_id_registration_company" value="' . $randId . '" />
+        </div>
+    </div>
+    <div class="captcha-error"></div>
 </div>
 ';
 
+
+$data['recovery_popup'] = '<div class="popup pass">
+    <div class="bg"></div>
+    <div class="window middle">
+        <div class="close"></div>
+        <div class="reg">
+            <form method="POST" id="recovery-password-popup">
+                <div class="name">
+                    Восстановление пароля
+                </div>
+                <div class="form2">
+                    <div class="field">
+                        <input type="text" name="email" placeholder="Email, указанный при регистрации" class="inp">
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <!-- Капча -->
+                    <div class="field captcha-field">
+                        <div class="captcha-row">
+                            <div class="captcha-left">
+                                <img id="captcha_recovery" src="/libs/securimage/securimage_show.php?id=' . $randId . '" alt="CAPTCHA" aria-hidden="false" />
+                                <button type="button" id="captcha_refresh_recovery" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="captcha-right">
+                                <label class="captcha-label" for="captcha_code_recovery">Подтвердите, что вы не робот</label>
+                                <input class="captcha-input" id="captcha_code_recovery" name="captcha_code_recovery" type="text" placeholder="Введите код" autocomplete="off" />
+                                <input type="hidden" id="captcha_captcha_id_recovery" name="captcha_id_recovery" value="' . $randId . '" />
+                            </div>
+                        </div>
+                        <div class="captcha-error"></div>
+                    </div>
+                    <!-- Конец капчи -->
+
+                    <div class="button other">
+                        <button type="submit" class="popup-btn">Восстановить</button>
+                    </div>
+                </div>
+            </form>
+            <div class="bottom-links flex">
+                <div>
+                    <a class="login">Войти</a>
+                    <a class="reg">Зарегистрироваться</a>
+                </div>
+                <a class="feedback">Контакты</a>
+            </div>
+        </div>
+    </div>
+</div>';
+
 $HTML_ = explode('<!--data:captcha-->', $HTML, 3);
 $HTML = $HTML_[0] . "<!--data:captcha-->{$data['captcha']}<!--data:captcha-->" . $HTML_[2];
+
+$HTML_ = explode('<!--data:captcha_registration_company-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:captcha_registration_company-->{$data['captcha_registration_company']}<!--data:captcha_registration_company-->" . $HTML_[2];
+
+$HTML_ = explode('<!--data:recovery_popup-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:recovery_popup-->{$data['recovery_popup']}<!--data:recovery_popup-->" . $HTML_[2];
 
 
 // Обрабатывает мобильный фильтр

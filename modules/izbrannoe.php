@@ -131,16 +131,16 @@ window.addEventListener("DOMContentLoaded", (event) => {
     }
 
     // приводим к int, убираем дубли и сохраняем порядок
-    $all_ids = array_map('intval', $ids_all); // [1,2,3,2,1]
+    $all_ids = array_map('intval', $ids_all);
 
-    // array_unique убирает дубликаты, оставляя первые вхождения
-    $all_ids = array_unique($all_ids); // [1,2,3]
+    // array_unique убирает дубликаты
+    $all_ids = array_unique($all_ids);
 
     // array_values сбросит ключи
-    $all_ids = array_values($all_ids); // [1,2,3]
+    $all_ids = array_values($all_ids);
 
     // array_reverse разворачивает
-    $all_ids = array_reverse($all_ids); // [3,2,1]
+    $all_ids = array_reverse($all_ids);
 
     if (empty($all_ids)) {
         $data['favorite_items'] = "Не найдено избранных специалистов/компаний.";

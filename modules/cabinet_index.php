@@ -13,7 +13,15 @@ $status_class = $blog_info['class'];
 
 $data['cabinet_photo_mob'] .= mob_input_photo($user);
 
-$photo = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
+$photo = '';
+
+if (!empty($user['photo']) && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/thumb_' . $user['photo'])) {
+    $photo = '/uploads/avatars/thumb_' . $user['photo'];
+} elseif (!empty($user['photo']) && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/' . $user['photo'])) {
+    $photo = '/uploads/avatars/' . $user['photo'];
+} else {
+    $photo = '/assets/img/cabinet/no-photo.svg';
+}
 $photo_class = $user['photo'] ? '' : 'default';
 $photo_edit_class = $user['photo'] ? '' : ' no-photo';
 
@@ -71,10 +79,10 @@ if ($user['company']) {
 }
 
 $pro_photo_records = get_pro_photo_records($user['id']);
-$pro_photo_status = generate_pro_photo_status($pro_photo_records, $user['registered_at']);
-$hide_discount = ($pro_photo_status['status'] === 'Проведена');
+$pro_photo_status = generate_pro_photo_status($pro_photo_records, $user['activated_at']);
 
-if (!$hide_discount) {
+// Берём флаг напрямую
+if ($pro_photo_status['show_discount']) {
     $actual__name = '
         <div class="actual__name">
             <span class="bold orange">PRO</span><span class="bold">-ФОТО</span> со скидкой <span class="orange">50%</span>
@@ -133,7 +141,11 @@ function user_info_block(array $user)
     if (json_last_error() === JSON_ERROR_NONE && isset($otherData['email'])) {
         $email = $otherData['email'];
     }
-    $photo = $user['photo'] ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
+    $photo = ($user['photo'] && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/thumb_' . $user['photo'])) 
+    ? '/uploads/avatars/thumb_' . $user['photo'] 
+    : (($user['photo'] && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/' . $user['photo'])) 
+        ? '/uploads/avatars/' . $user['photo'] 
+        : '/assets/img/cabinet/no-photo.svg');
     $photo_class = $user['photo'] ? '' : 'default';
     $phone = is_null($user['phone']) ? "Не указан" : format_phone($user['phone']);
     $foundation = is_null($user['foundation']) ? "Не указано" : $user['foundation'];

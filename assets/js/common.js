@@ -169,13 +169,8 @@ $(function () {
   });
 
   $(".company-page .top-info .contacts-button").click(function () {
-    var top = $(".contacts-block.mobile-contacts").offset().top;
-    if (window.innerWidth > 575) {
-      extraHeight = 5;
-    } else {
-      extraHeight = 104;
-    }
-    $("body, html").animate({ scrollTop: top - extraHeight }, 800);
+    $(".popup.write").fadeIn();
+    $("body").addClass("hid");
   });
 
   $(".company-page .company-blog-btn").click(function () {
@@ -469,12 +464,12 @@ $(function () {
     $("body").addClass("hid");
   });
   // Открытие попапа выбора города
-  /* $(
+  $(
     ".mobile-filter-block .city, .index-catalog-block .filter .city-link, .topbar .city, .mobile-header .city"
   ).click(function () {
     $(".popup.cities").fadeIn();
     $("body").addClass("hid");
-  }); */
+  });
   $(".sel:not(.subcat, .themes-sel)").styler({
     selectSmartPositioning: false,
     onSelectOpened: function () {
@@ -504,6 +499,7 @@ $(function () {
     nextArrow: $(".docs-block .slider-arrows .slick-next"),
     speed: 300,
     slidesToShow: 5,
+    infinite: false,
     slidesToScroll: 1,
     responsive: [
       { breakpoint: 1200, settings: { slidesToShow: 4 } },
@@ -745,3 +741,25 @@ function copytext(el) {
   document.execCommand("copy");
   $tmp.remove();
 }  
+
+document.querySelectorAll('li.no-sticky, li.contacts-tel, li.contacts-email').forEach(li => {
+  li.addEventListener('click', function(e) {
+      // Если клик был по ссылке внутри, ничего не делаем
+      if (e.target.tagName.toLowerCase() === 'a') return;
+
+      const link = li.querySelector('a');
+      if (!link) return;
+
+      // Телефон и почта — проверяем класс shown
+      if ((li.classList.contains('contacts-tel') || li.classList.contains('contacts-email'))) {
+          if (li.classList.contains('clicked')) {
+              window.location = link.href;
+          }
+      } else {
+          // Все остальные li — редирект всегда
+          window.location = link.href;
+      }
+  });
+
+  li.style.cursor = 'pointer';
+});

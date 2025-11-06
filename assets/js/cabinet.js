@@ -72,24 +72,35 @@ $(function () {
     $(this).siblings(".submenu").slideToggle();
   });
   $("#cabinet-ways.cabinet-popup .confirm-ways-mob").click(function () {
-    let selected = $(
-      "#cabinet-specialization-mobile input[type=checkbox]:checked"
-    ).length;
+    let selected = $("#cabinet-specialization-mobile input[type=checkbox]:checked").length;
+
     $(".specialization-quantity").removeClass("active");
     if (selected > 0) {
-      $(".specialization-quantity").text(
-        "Выбрано " + selected + " направлений"
-      );
-      $(".specialization-quantity").addClass("active");
+      $(".specialization-quantity")
+        .text("Выбрано " + selected + " направлений")
+        .addClass("active");
     } else {
       $(".specialization-quantity").text("Направления не выбраны");
     }
+
     $('#cabinet-specialization-mobile button[type="submit"]')
       .prop("disabled", false)
       .text("Сохранить информацию");
 
-    $(".cabinet-popup").fadeOut(200);
-    $("body").removeClass("hid");
+    const $btn = $(".confirm-ways-mob");
+    $btn.addClass("disabled");
+    $btn.text("Подтверждение");
+
+    // Через 1 секунду меняем текст
+    setTimeout(() => {
+      $btn.text("Подтверждено");
+    }, 1000);
+
+    // Ещё через 1 секунду (т.е. через 2 секунды от нажатия) — закрываем попап
+    setTimeout(() => {
+      $(".cabinet-popup").fadeOut(200);
+      $("body").removeClass("hid");
+    }, 1500);
   });
   $(
     ".cabinet-page .cabinet-content .mob-ways-block button, .popup-ways header a"
@@ -565,6 +576,12 @@ $(function () {
         .children("li:first-child")
         .text()
     );
+    var listHtml = $(card).closest('.pro-photo__card-block')
+      .find('.popup-description ul')
+      .html() || '';
+
+    // Подставляем в попап, вместе с <li class="amount"> для кол-ва
+    $(".buy-pro-photo .photo-type ul").html(listHtml + '<li class="amount"></li>');
     $(".buy-pro-photo .photo-price").text(price);
     $(".popup.buy-pro-photo #buy-photo-popup .photo-type").show();
     $(".more-photo-employee .delete-emp").show();
@@ -674,9 +691,20 @@ $(function () {
   );
   $("#break_submit").on("click", function (e) {
     e.preventDefault();
-    $(".break__popup").fadeOut(200);
-    $(".hid").css("overflow", "auto");
-    $("#shedule_submit").prop("disabled", false).text("Сохранить информацию");
+
+    const $btn = $("#break_submit");
+
+    $btn.prop("disabled", true).text("Подтверждение");
+
+    setTimeout(function () {
+      $btn.text("Подтверждено");
+    }, 1000);
+
+    setTimeout(function () {
+      $(".break__popup").fadeOut(200);
+      $(".hid").css("overflow", "auto");
+      $("#shedule_submit").prop("disabled", false).text("Сохранить информацию");
+    }, 1500);
   });
   if (window.innerWidth < 575) {
     $(
@@ -920,72 +948,7 @@ $("#photo_file").change(function () {
   reader.readAsDataURL(file);
 });
 
-$("#main-info").on("click", 'button[type="submit"]', function (e) {
-  if (window.FormData === undefined) {
-    alert("В вашем браузере FormData не поддерживается");
-  } else {
-    e.preventDefault();
 
-    $(".photo__rules-block").text("");
-    $(
-      ".photo__item .invalid-feedback, #change-photo-mobile .popup__body .photo__wrapper .invalid-feedback"
-    ).remove();
-    $(
-      ".photo__item .valid-feedback, #change-photo-mobile .popup__body .photo__wrapper .valid-feedback"
-    ).remove();
-
-    var formData = new FormData();
-    formData.append("photo_file", $("#photo_file")[0].files[0]);
-    $.ajax({
-      type: "POST",
-      url: "/actions/cabinet/upload_image.php",
-      cache: false,
-      contentType: false,
-      processData: false,
-      data: formData,
-      dataType: "json",
-      success: function (json) {
-        if (json["error"]) {
-          $(
-            ".photo__item, #change-photo-mobile .popup__body .photo__wrapper"
-          ).append(`<div class="invalid-feedback">${json["error"]}</div>`);
-        }
-
-        if (json["success"]) {
-          $(".photo__rules-block").remove();
-          $(
-            ".photo__item, #change-photo-mobile .popup__body .photo__wrapper"
-          ).append(`<div class="valid-feedback">Фото успешно сохранено.</div>`);
-          $(
-            ".cabinet-page .cabinet-content .main-info-block .block1 .item .photo__btn"
-          )
-            .html("<i></i>Изменить")
-            .addClass("refresh");
-          $("#change-photo-mobile .popup__body .photo__btn").html(
-            "<i></i>Изменить"
-          );
-          $(".photo__image")
-            .css(
-              "background-image",
-              "url(/uploads/avatars/" + json["success"] + ")"
-            )
-            .addClass("refresh");
-          if (
-            $(".index-mob__info-block .photo-block.profile-photo-mmenu .photo")
-              .length
-          ) {
-            $(
-              ".index-mob__info-block .photo-block.profile-photo-mmenu .photo"
-            ).css(
-              "background-image",
-              "url(/uploads/avatars/" + json["success"] + ")"
-            );
-          }
-        }
-      },
-    });
-  }
-});
 
 function checkForbiddenWords(inputsSelector) {
   let forbiddenWords = [];
@@ -1051,65 +1014,174 @@ function showForbiddenPopup(wordsArray) {
   $("#forbidden-popup").fadeIn();
 }
 
-// Update Main Info
 $("#main-info").on("click", 'button[type="submit"]', function (e) {
   e.preventDefault();
+  const btn = $(this);
 
+  // Если кнопка находится внутри #change-photo-mobile → грузим только фото и выходим
+  if (btn.closest("#change-photo-mobile").length) {
+    uploadOnlyPhoto(btn);
+    return;
+  }
+
+  // === СТАНДАРТНОЕ ПОВЕДЕНИЕ ДЛЯ #main-info ===
   $("input, textarea").removeClass("error");
   $(".item:not(.photo__item) .invalid-feedback").remove();
-  $(this).prop("disabled", true).text("Сохранение");
 
+  btn.prop("disabled", true).text("Сохранение");
   let form = "#main-info";
-  const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
 
+  const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
   if (hasForbidden) {
     showForbiddenPopup(words);
-    $(this).prop("disabled", false).text("Сохранить");
+    btn.prop("disabled", true).text("Сохранение");
     return false;
   }
 
-  $.ajax({
-    type: "POST",
-    url: "/actions/cabinet/update_main_info.php",
-    dataType: "json",
-    data: $(
-      `${form} input[type=text]:not(.quantity.default), ${form} input[type=hidden], ${form} textarea, ${form} input[type=radio]:checked`
-    ),
-    success: function (json) {
-      if (json["error"]) {
-        $(this).text("Сохранить информацию");
-        if (json["error"]["fatal_error"]) {
-          $(`${form}`).prepend(
-            `<div class="invalid-feedback">${json["error"]["fatal_error"]}</div>`
-          );
-        }
-
-        $.each(json["error"], function (key, value) {
-          if (key == "description") {
-            let textarea = $(`${form} textarea[name=${key}]`);
-            textarea.addClass("error");
-
-            if (textarea.siblings(".invalid-feedback").length) {
-              textarea.siblings(".invalid-feedback").html(value);
-            } else {
-              textarea.after(`<div class="invalid-feedback">${value}</div>`);
-            }
-            return true;
+  function sendMainInfo() {
+    $.ajax({
+      type: "POST",
+      url: "/actions/cabinet/update_main_info.php",
+      dataType: "json",
+      data: $(`${form} input[type=text]:not(.quantity.default), ${form} input[type=hidden], ${form} textarea, ${form} input[type=radio]:checked`),
+      success: function (json) {
+        if (json["error"]) {
+          btn.text("Сохранить информацию");
+          if (json["error"]["fatal_error"]) {
+            $(`${form}`).prepend(`<div class="invalid-feedback">${json["error"]["fatal_error"]}</div>`);
           }
 
-          $(`${form} input[name=${key}]`).addClass("error");
-          $(`${form} input[name=${key}]`).after(
-            `<div class="invalid-feedback">${value}</div>`
-          );
-        });
-      }
+          $.each(json["error"], function (key, value) {
+            if (key == "description") {
+              let textarea = $(`${form} textarea[name=${key}]`);
+              textarea.addClass("error");
+              if (textarea.siblings(".invalid-feedback").length) {
+                textarea.siblings(".invalid-feedback").html(value);
+              } else {
+                textarea.after(`<div class="invalid-feedback">${value}</div>`);
+              }
+              return true;
+            }
+            $(`${form} input[name=${key}]`).after(`<div class="invalid-feedback">${value}</div>`);
+          });
+        }
 
-      if (json["success"]) {
-        $('#main-info button[type="submit"]').text("Сохранено");
+        if (json["success"] && window.photoUploaded !== false) {
+          btn.text("Сохранено");
+        } else {
+          btn.prop("disabled", true).text("Сохранение");
+        }
+      },
+      error: function () {
+        btn.prop("disabled", true).text("Сохранение");
+      },
+    });
+  }
+
+  // Если выбран файл — сначала грузим фото, потом форму
+  if (window.FormData !== undefined && $("#photo_file")[0].files.length) {
+    uploadPhoto(btn, sendMainInfo);
+  } else {
+    // Фото не выбрано — сразу шлём форму
+    sendMainInfo();
+  }
+});
+
+
+// === Вспомогательная функция для полной загрузки фото + формы ===
+function uploadPhoto(btn, callback) {
+  $(".photo__rules-block").text("");
+  $(".photo__item .invalid-feedback, #change-photo-mobile .popup__body .photo__wrapper .invalid-feedback").remove();
+  $(".photo__item .valid-feedback, #change-photo-mobile .popup__body .photo__wrapper .valid-feedback").remove();
+
+  const formData = new FormData();
+  formData.append("photo_file", $("#photo_file")[0].files[0]);
+
+  $.ajax({
+    type: "POST",
+    url: "/actions/cabinet/upload_image.php",
+    cache: false,
+    contentType: false,
+    processData: false,
+    data: formData,
+    dataType: "json",
+    success: function (json) {
+      if (json["error"]) {
+        window.photoUploaded = false;
+        $(".photo__item, #change-photo-mobile .popup__body .photo__wrapper").append(
+          `<div class="invalid-feedback">${json["error"]}</div>`
+        );
+      } else if (json["success"]) {
+        window.photoUploaded = true;
+        handlePhotoSuccess(json["success"], btn);
+      }
+    },
+    error: function () {
+      window.photoUploaded = false;
+    },
+    complete: function () {
+      // После загрузки фото (успешно или нет) — отправляем форму
+      callback();
+    },
+  });
+}
+
+
+// === Только загрузка фото, без update_main_info.php ===
+function uploadOnlyPhoto(btn) {
+  btn.prop("disabled", true).text("Сохранение");
+  $(".photo__item .invalid-feedback, #change-photo-mobile .popup__body .photo__wrapper .invalid-feedback").remove();
+  $(".photo__item .valid-feedback, #change-photo-mobile .popup__body .photo__wrapper .valid-feedback").remove();
+
+  const fileInput = $("#photo_file")[0];
+  if (!fileInput.files.length) {
+    $(".photo__wrapper").append(`<div class="invalid-feedback">Выберите фото для загрузки</div>`);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("photo_file", fileInput.files[0]);
+
+  $.ajax({
+    type: "POST",
+    url: "/actions/cabinet/upload_image.php",
+    cache: false,
+    contentType: false,
+    processData: false,
+    data: formData,
+    dataType: "json",
+    success: function (json) {
+      if (json["error"]) {
+        $(".photo__wrapper").append(`<div class="invalid-feedback">${json["error"]}</div>`);
+      } else if (json["success"]) {
+        handlePhotoSuccess(json["success"], btn);
       }
     },
   });
-});
+}
+
+
+// === Общая логика успешной загрузки фото ===
+function handlePhotoSuccess(filename, btn) {
+  $(".photo__rules-block").remove();
+  $(".photo__item, #change-photo-mobile .popup__body .photo__wrapper").append(
+    `<div class="valid-feedback">Фото успешно сохранено.</div>`
+  );
+  $(".cabinet-page .cabinet-content .main-info-block .block1 .item .photo__btn")
+    .html("<i></i>Изменить")
+    .addClass("refresh");
+  $("#change-photo-mobile .popup__body .photo__btn").html("<i></i>Изменить");
+  $(".photo__image").css("background-image", "url(/uploads/avatars/" + filename + ")").addClass("refresh");
+
+  if ($(".index-mob__info-block .photo-block.profile-photo-mmenu .photo").length) {
+    $(".index-mob__info-block .photo-block.profile-photo-mmenu .photo").css(
+      "background-image",
+      "url(/uploads/avatars/" + filename + ")"
+    );
+  }
+  btn.prop("disabled", true).text("Сохранено");
+}
+
 
 $("#main-info").on(
   "change keyup input",
@@ -1423,7 +1495,6 @@ function digits_int(target) {
     .replace(/[^0-9]/g, "");
   val = val.replace(/\B(?=(\d{3})+(?!\d))/g, "'");
   $(target).val(val);
-  console.log($(target).val());
 }
 
 $("#cabinet-price").on("click", ".delete", function () {
@@ -1442,29 +1513,35 @@ $("#cabinet-price").on("click", ".bottom-button", function (e) {
   let form = "#cabinet-price";
   $(".invalid-feedback").remove();
 
-  // Очистка только числовых полей, таких как цена
-  $(`${form} input[type=text]`).each(function () {
-    let name = $(this).attr("name"); // Получаем имя поля
-    // Если это не поле с названием, очищаем только цену
-    if (name && name.indexOf("price") !== -1) {
-      let cleanVal = $(this).val().replace(/[^\d]/g, ""); // удаление всех символов, кроме цифр
-      $(this).val(cleanVal); // обновление значения поля
-    }
-  });
-
   const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
-
   if (hasForbidden) {
     showForbiddenPopup(words);
     $(this).prop("disabled", false).text("Сохранить");
     return false;
   }
 
+  // Подготовка данных для отправки
+  let data = {};
+
+  $(`${form} input[type=text], ${form} input[type=checkbox]:checked`).each(function () {
+    let name = $(this).attr("name");
+    let val = $(this).val();
+
+    // Очищаем только числовые поля (price), но не меняем значение в самом инпуте
+    if (name && name.indexOf("price") !== -1) {
+      val = val.replace(/[^\d]/g, ""); // удаляем всё, кроме цифр
+    }
+
+    // Добавляем в объект данных
+    data[name] = val;
+  });
+
+  // Отправка AJAX-запроса
   $.ajax({
     type: "POST",
     url: "/actions/cabinet/update_price.php",
     dataType: "json",
-    data: $(`${form} input[type=text], ${form} input[type=checkbox]:checked`),
+    data: data,
     success: function (json) {
       button.text("Сохранить информацию");
 
@@ -1501,6 +1578,9 @@ $("#cabinet-price").on("click", ".bottom-button", function (e) {
         $('#cabinet-price button[type="submit"]')
           .prop("disabled", true)
           .text("Сохранено");
+        $('#cabinet-price td:nth-child(3) input[type="text"]').each(function () {
+          digits_int(this);
+        });
       }
     },
   });
@@ -1511,6 +1591,7 @@ $("#cabinet-price").on("click", ".mob-add", function () {
   $("#popup-price-from").prop("checked", false);
   $("#popup-price-id").val("");
   $("#cabinet-prices-popup").fadeIn(200);
+  $(".mob-prices-btn").addClass("disabled").text("Подтвердить");
   $("body").addClass("hid");
 });
 
@@ -1536,11 +1617,15 @@ $("#cabinet-price").on(
       $("#popup-price-from").prop("checked", from);
       $("#popup-price-id").val(id);
       $("#cabinet-prices-popup").fadeIn(200);
+      $(".mob-prices-btn").addClass("disabled").text("Подтвердить");
       $("body").addClass("hid");
     }
   }
 );
 
+$("#cabinet-prices-popup input[type=text]").on("input", function () {
+  $(".mob-prices-btn").removeClass("disabled").text("Подтвердить");
+});
 $("#cabinet-prices-popup .mob-prices-btn").on("click", function () {
   has_error = false;
   let name = $("#popup-price-name").val();
@@ -1551,6 +1636,7 @@ $("#cabinet-prices-popup .mob-prices-btn").on("click", function () {
   let id = $("#popup-price-id").val();
 
   $(".invalid-feedback").text("").hide();
+  $(".invalid-feedback").remove();
   if (name == "") {
     $("#popup-price-name").after(
       `<div class="invalid-feedback">Введите название услуги</div>`
@@ -1565,7 +1651,6 @@ $("#cabinet-prices-popup .mob-prices-btn").on("click", function () {
   }
 
   let form = "#cabinet-prices-popup";
-  $(".invalid-feedback").remove();
 
   // Очистка только числовых полей, таких как цена
   $(`${form} input[type=text]`).each(function () {
@@ -1632,8 +1717,17 @@ $("#cabinet-prices-popup .mob-prices-btn").on("click", function () {
     $(".cabinet-page .cabinet-content .prices-block .bottom-button")
       .prop("disabled", false)
       .text("Сохранить информацию");
-    $("#cabinet-prices-popup").fadeOut(200);
-    $("body").removeClass("hid");
+    $(".mob-prices-btn").addClass("disabled");
+    $(".mob-prices-btn").text("Подтверждение");
+
+    // Через 1 секунду меняем текст
+    setTimeout(() => {
+      $(".mob-prices-btn").text("Подтверждено");
+    }, 1000);
+    setTimeout(() => {
+      $("#cabinet-prices-popup").fadeOut(200);
+      $("body").removeClass("hid");
+    }, 1500);
   }
 });
 
@@ -1654,6 +1748,7 @@ $("#cabinet-docs").on("click", ".mob-add", function (e) {
     `<a class="upload" onclick="$('#cabinet-docs-popup input[name=${key}]').click()">Загрузить</a>`
   );
   $("#cabinet-docs-popup").fadeIn(200);
+  $(".mob-docs-btn").addClass("disabled").text("Подтвердить");
   $("body").addClass("hid");
 });
 
@@ -1680,75 +1775,95 @@ $("#cabinet-docs").on(
       $("#popup-doc-key").val(key);
       $("#popup-doc-file").val("1");
       $("#cabinet-docs-popup").fadeIn(200);
+      $(".mob-docs-btn").addClass("disabled").text("Подтвердить");
       $("body").addClass("hid");
     }
   }
 );
+
+$("#cabinet-docs-popup input[type=text]").on("input", function () {
+  $(".mob-docs-btn").removeClass("disabled").text("Подтвердить");
+});
+
 $("#cabinet-docs-popup").on("click", ".popup__close", function (e) {
   let key = $("#popup-doc-key").val();
   $('#cabinet-docs-popup input[name="' + key + '"]').remove();
 });
 
-$("#cabinet-docs-popup").on("click", ".mob-docs-btn", function (e) {
+let uploadInProgress = false; // флаг загрузки
+
+$("#cabinet-docs-popup").on("click", ".mob-docs-btn", async function (e) {
+  e.preventDefault();
+
+  if (uploadInProgress) {
+    return;
+  }
+
+  $(".mob-docs-btn").addClass("disabled").text("Подтверждение");
+
   $("#cabinet-docs-popup .invalid-feedback").remove();
   let key = $("#popup-doc-key").val();
   let name = $("#popup-docs-name").val();
   let file = $("#popup-doc-file").val();
-
-  let form = "#cabinet-docs-popup";
-  $(".invalid-feedback").remove();
-
-  // Очистка только числовых полей, таких как цена
-  $(`${form} input[type=text]`).each(function () {
-    let name = $(this).attr("name"); // Получаем имя поля
-    // Если это не поле с названием, очищаем только цену
-    if (name && name.indexOf("price") !== -1) {
-      let cleanVal = $(this).val().replace(/[^\d]/g, ""); // удаление всех символов, кроме цифр
-      $(this).val(cleanVal); // обновление значения поля
-    }
-  });
-  const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
-
-  if (hasForbidden) {
-    has_error = true;
-    $("#cabinet-docs-popup").fadeOut(200);
-    showForbiddenPopup(words);
-    $(this).prop("disabled", false).text("Сохранить");
-    return false;
-  }
+  let fileInput = $("#cabinet-docs-popup input[type=file]")[0];
+  let hasError = false;
 
   if (name == "") {
-    $("#popup-docs-name").after(
-      `<div class="invalid-feedback">Введите наименование документа</div>`
-    );
+    $("#popup-docs-name").after(`<div class="invalid-feedback">Введите наименование документа</div>`);
+    hasError = true;
+  }
+
+  // Если есть выбранный файл — ждём загрузку
+  if (file == "1" && fileInput && fileInput.files[0]) {
+    uploadInProgress = true; // начинаем загрузку
+    const result = await uploadUserDocument(fileInput.files[0]);
+    uploadInProgress = false; // загрузка завершена
+
+    if (!result.success) {
+      hasError = true;
+      $(".mob-docs-btn").addClass("disabled").text("Подтверждение");
+    }
   } else if (file == "0") {
-    $(".docs-load").append(
-      `<div class="invalid-feedback">Загрузите файл</div>`
-    );
-  } else {
-    if ($('#cabinet-docs tr td input[name="name[' + key + ']"]').length == 1) {
-      $('#cabinet-docs tr td input[name="name[' + key + ']"]').val(name);
+    $(".docs-load").append(`<div class="invalid-feedback">Загрузите файл</div>`);
+    $(".mob-docs-btn").addClass("disabled").text("Подтверждение");
+    hasError = true;
+  }
+
+  if (!hasError) {
+    $(".mob-docs-btn").removeClass("disabled").text("Подтверждено");
+    // остальная логика
+    if ($(`#cabinet-docs tr td input[name="name[${key}]"]`).length == 1) {
+      $(`#cabinet-docs tr td input[name="name[${key}]"]`).val(name);
     } else {
       $("#cabinet-docs tbody").append(`
-			<tr>
-				<td><input type="text" name="name[${key}]" data-key="${key}" placeholder="Наименование документа (не более 65 символов)" maxlength="65" value="${name}"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
-				<td>
-					<div class="doc loaded"></div>
-				</td>
-				<td><a class="edit-docs-mobile"></a><a class="delete"></a></td>
-			</tr>
-		`);
+        <tr>
+          <td><input type="text" name="name[${key}]" data-key="${key}" 
+          placeholder="Наименование документа (не более 65 символов)" maxlength="65" value="${name}">
+          <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
+          <td><div class="doc loaded"></div></td>
+          <td><a class="edit-docs-mobile"></a><a class="delete"></a></td>
+        </tr>
+      `);
     }
-    $("#cabinet-docs-popup").fadeOut(200);
+
+    $(".mob-docs-btn").addClass("disabled").text("Подтверждение");
+
+    // Через 1 секунду меняем текст
+    setTimeout(() => {
+      $(".mob-docs-btn").text("Подтверждено");
+    }, 1000);
+    setTimeout(() => {
+      $("#cabinet-docs-popup").fadeOut(200);
+      $("body").removeClass("hid");
+    }, 1500);
     $("body").removeClass("hid");
-    $('#cabinet-docs button[type="submit"]')
-      .prop("disabled", false)
-      .text("Сохранить информацию");
+    $('#cabinet-docs button[type="submit"]').prop("disabled", false).text("Сохранить информацию");
   }
 });
 
 $("#cabinet-docs-popup").on("click", ".popup-delete-doc", function (e) {
   let key = $("#popup-doc-key").val();
+  $("#cabinet-docs-popup .docs-load .invalid-feedback").remove();
   $("#cabinet-docs-popup #popup-doc-file").val("0");
   $(this).siblings(".doc, a").remove();
   if (
@@ -1768,22 +1883,72 @@ $("#cabinet-docs-popup").on("click", ".popup-delete-doc", function (e) {
 });
 
 $("#cabinet-docs-popup").on("change", "input[type=file]", function (e) {
-  console.log(e.target.files);
-  let file = e.target.files[0];
+  const fileInput = e.target;
+  const file = fileInput.files[0];
+
+  $(".mob-docs-btn").removeClass("disabled").text("Подтвердить");
 
   if (!file || !file.type.match("image")) return;
 
-  $("#cabinet-docs-popup #popup-doc-file").val("1");
+  const $docsLoad = $(".docs-load");
 
-  $(".docs-load").prepend(`
-		<div class="doc">
-			Загружен
-		</div>
-	`);
+  // Ставим флаг, что файл есть
+  $("#popup-doc-file").val("1");
+
+  // Вставляем временный блок
+  $docsLoad.prepend(`<div class="doc">Загружен</div>`);
   $(".popup-delete-doc").addClass("showed");
+  $docsLoad.find("a").remove();
 
-  $(".docs-load a").remove();
+  // Загружаем файл через AJAX
+  /* uploadUserDocument(file, fileInput); */
 });
+
+function uploadUserDocument(file) {
+  const $popup = $("#cabinet-docs-popup");
+  const $docsLoad = $popup.find(".docs-load");
+  const formData = new FormData();
+  formData.append("document_file", file);
+
+  // блокируем кнопку на время загрузки
+  $(".mob-docs-btn").prop("disabled", true).text("Подтверждение");
+
+  return new Promise((resolve) => {
+    $.ajax({
+      type: "POST",
+      url: "/actions/cabinet/upload_image_file.php",
+      dataType: "json",
+      data: formData,
+      contentType: false,
+      processData: false,
+      success: function (json) {
+        $(".mob-docs-btn").prop("disabled", false).text("Подтвердить");
+
+        if (json.error) {
+          const firstError = json.error[Object.keys(json.error)[0]];
+          $docsLoad.append(`<div class="invalid-feedback">${firstError}</div>`);
+          resolve({ success: false, error: firstError });
+        } else if (json.success) {
+          const firstSuccess = json.success[Object.keys(json.success)[0]];
+          $("#popup-doc-filename").val(firstSuccess);
+          $docsLoad.find(".doc").first().text("Загружен");
+          resolve({ success: true, name: firstSuccess });
+        } else {
+          $docsLoad.append(`<div class="invalid-feedback">Неизвестная ошибка</div>`);
+          resolve({ success: false, error: "Неизвестная ошибка" });
+        }
+      },
+      error: function () {
+        $(".mob-docs-btn").prop("disabled", false).text("Сохранить");
+        $docsLoad.append(`<div class="invalid-feedback">Ошибка соединения</div>`);
+        resolve({ success: false, error: "Ошибка соединения" });
+      },
+      complete: function () {
+        uploadInProgress = false; // на всякий случай
+      }
+    });
+  });
+}
 
 $("#cabinet-docs table").on("change", "input[type=file]", function (e) {
   const file = e.target.files[0];
@@ -1795,23 +1960,28 @@ $("#cabinet-docs table").on("change", "input[type=file]", function (e) {
 
   let $doc = $td.find("div.doc");
 
-  // Если .doc нет — создаём, но input НЕ трогаем
   if (!$doc.length) {
+    // Если doc нет, создаём и перемещаем туда input
     $doc = $('<div class="doc"></div>');
+    $input.appendTo($doc);
     $td.append($doc);
-    // Удаляем ссылку "Загрузить", если была
+    // Удаляем старую ссылку "Загрузить", если была
     $td.find("a.upload").remove();
   }
 
-  // Удаляем старые ссылки, вставляем новую
-  $doc.find("a").remove();
-  $doc.prepend(`<a onclick="$(this).siblings('input[type=file]').click()">${fileName}</a>`);
+  // Обновляем ссылку внутри doc
+  $doc.html(''); // очищаем содержимое
+  $doc.append(
+    $input, // input должен остаться внутри
+    `<a onclick="$(this).siblings('input[type=file]').click()">${fileName}</a>`
+  );
 
   // Кнопка "Сохранить"
   $('#cabinet-docs button[type="submit"]')
     .prop("disabled", false)
     .text("Сохранить информацию");
 });
+
 
 $("#cabinet-docs").on(
   "input change",
@@ -1957,12 +2127,19 @@ $("#cabinet-employee").on("click", ".add", function () {
 
   $("tbody").append(`
 	<tr>
-		<td><div class="employee-info-mobile"><input type="text" readonly></div><input type="text" name="name[${key}]" data-key="{${key}}" placeholder="Имя (не более 12 символов)" maxlength="12"></td>
-		<td><input type="text" name="lastname[${key}]" placeholder="Фамилия (не более 15 символов)" maxlength="15"></td>
-		<td><input type="text" name="post[${key}]" placeholder="Должность (не более 20 символов)" maxlength="20"></td>
+		<td>
+			<div class="employee-info-mobile"><input type="text" readonly></div>
+			<input type="text" name="name[${key}]" data-key="${key}" placeholder="Имя (не более 12 символов)" maxlength="12">
+		</td>
+		<td>
+			<input type="text" name="lastname[${key}]" data-key="${key}" placeholder="Фамилия (не более 15 символов)" maxlength="15">
+		</td>
+		<td>
+			<input type="text" name="post[${key}]" data-key="${key}" placeholder="Должность (не более 20 символов)" maxlength="20">
+		</td>
 		<td>
 			<a class="upload" onclick="$(this).siblings('input').click()">Загрузить</a>
-			<input type="file" name="{${key}}" hidden>
+			<input type="file" name="${key}" data-key="${key}" hidden>
 		</td>
 		<td><a class="edit-employee-mobile"></a><a class="delete disabled"></a></td>
 	</tr>
@@ -1997,6 +2174,7 @@ $("#cabinet-employee").on("click", ".mob-add", function (e) {
     `<input type="file" name="${key}" hidden>`
   );
   $("#cabinet-employee-popup").fadeIn(200);
+  $(".mob-employee-btn").addClass("disabled").text("Подтвердить");
   $("body").addClass("hid");
 });
 
@@ -2006,12 +2184,13 @@ $("#cabinet-employee").on(
   function (e) {
     if (window.innerWidth < 575) {
       $("input").removeClass("error");
-      /* $(".invalid-feedback").remove(); */
+
       let key = $(this)
         .closest("tr")
         .children("td:first-child")
         .children("input[type=text]")
         .attr("data-key");
+
       let name = $(this)
         .closest("tr")
         .children("td:first-child")
@@ -2027,22 +2206,43 @@ $("#cabinet-employee").on(
         .children("td:nth-child(3)")
         .children("input[type=text]")
         .val();
-      let fileName = $(this)
+
+      // 🔹 Проверяем, есть ли сохранённое изображение
+      let img_name = $(this)
         .closest("tr")
         .find("td:nth-child(4) .doc a")
         .text().trim();
-      let image_url = "/uploads/employee/" + fileName;
-      $("#cabinet-employee-popup .popup-employee-photo")
-        .removeClass("empty")
-        .css("background-image", "url(" + image_url + ")");
-      $("#cabinet-employee-popup .employee-photo-btn").html(
-        '<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить'
-      );
+
+      if (img_name) {
+        // если уже было фото
+        let image_url = "/uploads/employee/" + img_name;
+        $("#cabinet-employee-popup .popup-employee-photo")
+          .removeClass("empty")
+          .css("background-image", "url(" + image_url + ")");
+        $("#popup-emp-file").val("1");
+        $("#popup-emp-filename").val(img_name);
+        $("#cabinet-employee-popup .employee-photo-btn").html(
+          '<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить'
+        );
+      } else {
+        // если фото нет
+        $("#cabinet-employee-popup .popup-employee-photo")
+          .addClass("empty")
+          .css("background-image", "");
+        $("#popup-emp-file").val("0");
+        $("#popup-emp-filename").val("");
+        $("#cabinet-employee-popup .employee-photo-btn").html(
+          '<i><img src="/assets/img/cabinet/employee-change.svg"></i>Загрузить'
+        );
+      }
+
       $("#popup-employee-name").val(name);
       $("#popup-employee-lastname").val(lastname);
       $("#popup-employee-post").val(post);
       $("#popup-emp-key").val(key);
-      $("#popup-emp-file").val("1");
+
+      $(".mob-employee-btn").addClass("disabled").text("Подтвердить");
+      $("#cabinet-employee-popup .invalid-feedback").remove();
       $("#cabinet-employee-popup").fadeIn(200);
       $("body").addClass("hid");
     }
@@ -2065,46 +2265,41 @@ $("#cabinet-employee-popup").on("click", ".popup__close", function (e) {
   $("#popup-emp-filename").val("");
 });
 
-$("#cabinet-employee-popup").on("change", "input[type=file]", function (e) {
-  console.log(e.target.files);
-  let file = e.target.files[0];
+// Вызываем при изменении файла
+$("#cabinet-employee-popup").on("change", "input[type=file]", async function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  if (!file || !file.type.match("image")) return;
-  $(".popup-employee-photo + .invalid-feedback").remove();
-  $("#popup-emp-file").val("0");
-  var formData = new FormData();
-  formData.append("photo_file", e.target.files[0]);
-  $.ajax({
-    type: "POST",
-    url: "/actions/cabinet/upload_image_emp.php",
-    dataType: "json",
-    data: formData,
-    contentType: false,
-    processData: false,
-    success: function (json) {
-      if (json["error"]) {
-        $(".popup-employee-photo").after(
-          `<div class="invalid-feedback">${json["error"]}</div>`
-        );
-      }
-      if (json["success"]) {
-        $("#popup-emp-file").val("1");
-        $("#popup-emp-filename").val(json["success"]);
-        $("#cabinet-employee-popup .popup-employee-photo")
-          .removeClass("empty")
-          .css(
-            "background-image",
-            "url(/uploads/employee/" + json["success"] + ")"
-          );
-        $("#cabinet-employee-popup .employee-photo-btn").html(
-          '<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить'
-        );
-      }
-    },
-  });
+  const $popup = $("#cabinet-employee-popup");
+  const $photo = $popup.find(".popup-employee-photo");
+  const $btn = $popup.find(".employee-photo-btn");
+
+  // Локальное превью сразу
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    $photo.removeClass("empty").css("background-image", `url(${event.target.result})`);
+  };
+  reader.readAsDataURL(file);
+
+  // Ждём загрузку на сервер
+  /* const result = await uploadEmployeePhoto(file); */
+
+  // 🔓 Разблокируем кнопку
+  $btn.prop("disabled", false).html('<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить');
+
+  /* if (result.success) {
+    // Сохраняем имя файла для дальнейшего использования
+    $("#popup-emp-file").val("1");
+    $("#popup-emp-filename").val(result.fileName);
+  } */
 });
 
-$("#cabinet-employee-popup").on("click", ".mob-employee-btn", function () {
+$("#cabinet-employee-popup").on("input", function () {
+  const $mobBtn = $("#cabinet-employee-popup .mob-employee-btn");
+  $mobBtn.removeClass("disabled").text("Подтвердить");
+});
+
+$("#cabinet-employee-popup").on("click", ".mob-employee-btn", async function () {
   $("#cabinet-employee-popup .invalid-feedback").remove();
   $("#cabinet-employee-popup input").removeClass("error");
   let has_error = false;
@@ -2113,6 +2308,10 @@ $("#cabinet-employee-popup").on("click", ".mob-employee-btn", function () {
   let post = $("#popup-employee-post").val();
   let key = $("#popup-emp-key").val();
   let img_name = $("#popup-emp-filename").val();
+  const $btn = $("#cabinet-employee-popup .employee-photo-btn");
+
+  const fileInput = $("#cabinet-employee-popup input[type=file]")[0];
+  const file = fileInput?.files[0];
 
   let form = "#cabinet-employee-popup";
   $(".invalid-feedback").remove();
@@ -2154,12 +2353,48 @@ $("#cabinet-employee-popup").on("click", ".mob-employee-btn", function () {
     );
     has_error = true;
   }
+
+  // Если есть файл, проверяем его перед сохранением
+  if (file) {
+    const $mobBtn = $(this);
+    $mobBtn.addClass("disabled").text("Подтверждение");
+
+    const result = await uploadEmployeePhoto(file);
+
+    $mobBtn.removeClass("disabled").text("Подтвердить");
+
+    if (!result.success) {
+      $mobBtn.addClass("disabled").text("Подтверждение"); // если ошибка — прерываем
+      return;
+    }
+    // ✅ После успешной загрузки обновляем имя файла и флаг
+    img_name = result.fileName;
+    $("#popup-emp-filename").val(img_name);
+    $("#popup-emp-file").val("1");
+  } else if ($("#popup-emp-file").val() !== "1") {
+    const $btn = $("#cabinet-employee-popup .employee-photo-btn");
+    if ($btn.next(".invalid-feedback").length === 0) {
+      $btn.after(`<div class="invalid-feedback">Загрузите изображение</div>`);
+    }
+  }
+
   if ($("#popup-emp-file").val() == "0") {
-    $(".popup-employee-photo").after(
-      `<div class="invalid-feedback">Загрузите подходящее по правилам фото сотрудника</div>`
-    );
+    // Берём текст уже существующей ошибки после кнопки
+    const existingError = $btn.next(".invalid-feedback");
+
+    // Если ошибка уже есть и она не про размер файла — тогда можно показать "Загрузите изображение"
+    if (
+      existingError.length === 0 ||
+      !existingError.text().includes("Файл слишком большой")
+    ) {
+      // Удаляем старую (если вдруг была другая)
+      existingError.remove();
+      $btn.after(`<div class="invalid-feedback">Загрузите изображение</div>`);
+    }
+
     has_error = true;
   }
+
   if (!has_error) {
     if (
       $(`#cabinet-employee tbody tr td:first-child > input[data-key="${key}"]`)
@@ -2192,11 +2427,58 @@ $("#cabinet-employee-popup").on("click", ".mob-employee-btn", function () {
           `<input type="hidden" name="mobile_loaded[${key}]" value="${img_name}">`
         );
     }
+    $(".mob-employee-btn").addClass("disabled").text("Подтверждено");
     $("#popup-emp-filename").val("");
     $("#cabinet-employee-popup").fadeOut(200);
     $("body").removeClass("hid");
   }
 });
+
+function uploadEmployeePhoto(file) {
+  const $photo = $("#cabinet-employee-popup .popup-employee-photo");
+  const $btn = $("#cabinet-employee-popup .employee-photo-btn");
+
+  // Сбрасываем ошибки
+  $(".employee-photo-btn + .invalid-feedback").remove();
+
+  return new Promise((resolve) => {
+    if (!file || !file.type.match("image")) {
+      resolve({ success: false, error: "Файл не является изображением" });
+      return;
+    }
+
+    // Локальное превью
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      $photo.removeClass("empty").css("background-image", `url(${event.target.result})`);
+    };
+    reader.readAsDataURL(file);
+
+    // Отправка на сервер
+    const formData = new FormData();
+    formData.append("photo_file", file);
+
+    $.ajax({
+      type: "POST",
+      url: "/actions/cabinet/upload_image_emp.php",
+      dataType: "json",
+      data: formData,
+      contentType: false,
+      processData: false,
+      success: function (json) {
+        if (json.error) {
+          $btn.after(`<div class="invalid-feedback">${json.error}</div>`);
+          resolve({ success: false, error: json.error });
+        } else if (json.success) {
+          $("#popup-emp-file").val("1");
+          $("#popup-emp-filename").val(json.success);
+          $btn.html('<i><img src="/assets/img/cabinet/employee-change.svg"></i>Изменить');
+          resolve({ success: true, file: json.success });
+        }
+      },
+    });
+  });
+}
 
 $("#cabinet-employee").on("click", ".delete", function () {
   $(this).closest("tr").next(".invalid-feedback").remove();
@@ -2260,21 +2542,36 @@ $("#cabinet-employee").on("click", 'button[type="submit"]', function (e) {
     processData: false,
     success: function (json) {
       console.log(json);
+
+      // Сначала удаляем старые ошибки
+      $(`${form} .error-row`).remove();
+
       if (json["error"]) {
         $(this).text("Сохранить информацию");
+
+        // Фатальная ошибка — в начало формы
         if (json["error"]["fatal_error"]) {
           $(`${form}`).prepend(
             `<div class="invalid-feedback">${json["error"]["fatal_error"]}</div>`
           );
         }
 
+        // Перебираем ошибки по строкам таблицы
         $.each(json["error"], function (key, value) {
-          $(`${form} input[data-key=${key}]`)
-            .closest("tr")
-            .after(`<div class="invalid-feedback">${value}</div>`);
+          const tr = $(`${form} input[data-key=${key}]`).closest("tr");
+
+          // Добавляем под tr отдельную строку с сообщением
+          tr.after(`
+            <tr class="error-row">
+              <td colspan="5">
+                <div class="invalid-feedback">${value}</div>
+              </td>
+            </tr>
+          `);
         });
       }
 
+      // Обновление информации о файлах
       if (json["img_info"]) {
         $.each(json["img_info"], function (key, value) {
           $(`${form} tr td:nth-child(4) input[name=${key}] + .doc a`).attr(
@@ -2284,6 +2581,7 @@ $("#cabinet-employee").on("click", 'button[type="submit"]', function (e) {
         });
       }
 
+      // Успех
       if (json["success"]) {
         $('#cabinet-employee button[type="submit"]').text("Сохранено");
       }
@@ -2446,6 +2744,11 @@ $(".mobile-theme-btn").on("click", function (e) {
 });
 $(".add-break-button").on("click", function (e) {
   e.preventDefault();
+
+  const $btn = $("#break_submit");
+
+  $btn.prop("disabled", true).text("Подтвердить");
+
   $(".break__popup").fadeIn(200);
   $("body").addClass("hid");
 });
@@ -2604,21 +2907,30 @@ $("#buttons-scroll").on("click", "button", function () {
   );
 });
 
+$(document).ready(function () {
+  const $passwordInput = $("#password-input");
+  const $submitBtn = $("#change-password button[type='submit']");
+
+  // при загрузке страницы сразу блокируем кнопку
+  $submitBtn.prop("disabled", true);
+
+  // следим за вводом
+  $passwordInput.on("input", function () {
+    if ($(this).val().trim().length > 0) {
+      $submitBtn.prop("disabled", false);
+    } else {
+      $submitBtn.prop("disabled", true);
+    }
+  });
+});
 $("#change-password").on("click", 'button[type="submit"]', function (e) {
   e.preventDefault();
 
-  if (userId) {
-    $("#change-password").slideUp(200);
-    setTimeout(function () {
-      $("#new-password").slideDown(200);
-    }, 200);
-  }
+  // Берем user_id из URL или hidden input
+  var urlParams = new URLSearchParams(window.location.search);
+  var userId = urlParams.get("user_id") || $("#user_id").val();
 
   $(".invalid-feedback").remove();
-
-  // Получаем id из URL
-  var urlParams = new URLSearchParams(window.location.search);
-  var id = urlParams.get("user_id");
 
   if ($("#password-input").val() == "") {
     $(`#password-input`).after(
@@ -2631,8 +2943,7 @@ $("#change-password").on("click", 'button[type="submit"]', function (e) {
     type: "POST",
     url: "/actions/cabinet/check_password.php",
     dataType: "json",
-    // Добавляем id в данные запроса
-    data: { id: id, password: $("#password-input").val() },
+    data: { id: userId, password: $("#password-input").val() },
     success: function (json) {
       if (json["error"]) {
         $(`#password-input`).after(
@@ -2705,33 +3016,62 @@ $(document).ready(function () {
   }
 });
 
-$("#new-password").on("click", 'button[type="submit"]', function (e) {
-  e.preventDefault();
+$(document).ready(function () {
+  const $newPasswordInput = $("#new-password-input");
+  const $submitBtn = $("#new-password button[type='submit']");
 
-  $(".invalid-feedback").remove();
-  var urlParams = new URLSearchParams(window.location.search);
-  var id = urlParams.get("id");
-  $.ajax({
-    type: "POST",
-    url: "/actions/cabinet/set_new_password.php",
-    dataType: "json",
-    data: { id: id, new_password: $("#new-password-input").val() },
-    success: function (json) {
-      if (json["error"]) {
-        $(`#new-password-input`).after(
-          `<div class="invalid-feedback">${json["error"]}</div>`
-        );
-      }
+  // Сразу блокируем кнопку при загрузке
+  $submitBtn.prop("disabled", true);
 
-      if (json["success"]) {
-        $("#new-password-input").prop("disabled", true);
-        $('#new-password button[type="submit"]')
-          .prop("disabled", true)
-          .text("Сохранено");
-      }
-    },
+  // Следим за вводом в поле нового пароля
+  $newPasswordInput.on("input", function () {
+    if ($(this).val().trim().length > 0) {
+      $submitBtn.prop("disabled", false);
+    } else {
+      $submitBtn.prop("disabled", true);
+    }
+  });
+
+  // Обработка клика по кнопке
+  $("#new-password").on("click", 'button[type="submit"]', function (e) {
+    e.preventDefault();
+
+    $(".invalid-feedback").remove();
+
+    // Берем user_id из URL или hidden input
+    var urlParams = new URLSearchParams(window.location.search);
+    var id = urlParams.get("user_id") || $("#user_id").val();
+    var newPassword = $newPasswordInput.val().trim();
+
+    // Дополнительная проверка на случай обхода блокировки кнопки
+    if (newPassword === "") {
+      $newPasswordInput.after(
+        `<div class="invalid-feedback">Введите новый пароль</div>`
+      );
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "/actions/cabinet/set_new_password.php",
+      dataType: "json",
+      data: { id: id, new_password: newPassword },
+      success: function (json) {
+        if (json["error"]) {
+          $newPasswordInput.after(
+            `<div class="invalid-feedback">${json["error"]}</div>`
+          );
+        }
+
+        if (json["success"]) {
+          $newPasswordInput.prop("disabled", true);
+          $submitBtn.prop("disabled", true).text("Сохранено");
+        }
+      },
+    });
   });
 });
+
 $(".show-pass-link").click(function (e) {
   if (!$(this).hasClass("showed")) {
     $(this).addClass("showed").text("Скрыть");
@@ -2771,6 +3111,7 @@ $(document).ready(function () {
   var isSyncing = false;
 
   $(".tariff-card .confirm-btn").click(function () {
+    console.log('dsadsa');
     $(".confirm-btn").removeClass("active-button");
     $(this).addClass("active-button");
     var tariffId = $(this).data("tariff-id");
@@ -2881,7 +3222,7 @@ $(document).ready(function () {
             'Информация появится в разделе "Продвижение" в течение 60 минут.'
           );
           $("#payment-popup").fadeIn();
-          $(".popup_after_text").html("Услуга будет подключена и отобразится в личном кабинете в течение 60 минут после оплаты.");
+          $(".popup_after_text").html("Услуга будет подключена и отобразится на сайте и в личном кабинете в течение 60 минут после оплаты.");
         });
       },
       error: function (response) {
@@ -3306,7 +3647,7 @@ $(document).ready(function () {
             'Информация появится в разделе "Продвижение" в течение 60 минут.'
           );
           $("#payment-popup").fadeIn();
-          $(".popup_after_text").html("Услуга будет подключена и отобразится в личном кабинете в течение 60 минут после оплаты.");
+          $(".popup_after_text").html("Услуга будет подключена и отобразится на сайте и в личном кабинете в течение 60 минут после оплаты.");
         });
       },
       error: function (response) {
@@ -4365,7 +4706,7 @@ $(document).ready(function () {
         $("#promo-popup").fadeOut();
         $("#promo-popup-2").fadeOut();
         $("#payment-popup").fadeIn();
-        $(".popup_after_text").html("После выбора способа оплаты даты забронируются на 10 минут, успейте завершить бронирование за это время. <br><br>Услуга будет подключена и отобразится в личном кабинете в течение 60 минут после оплаты.")
+        $(".popup_after_text").html("После выбора способа оплаты даты забронируются на 10 минут, успейте завершить бронирование за это время. <br><br>Услуга будет подключена и отобразится на сайте и в личном кабинете в течение 60 минут после оплаты.")
       },
       error: function (xhr, status, error) {
         console.log('Ошибка запроса:', xhr.responseText);

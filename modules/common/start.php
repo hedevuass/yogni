@@ -1,5 +1,93 @@
 <?php
 
+session_cache_limiter('');
+session_start();
+
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$lastModifiedRow = get_last_modified();
+$lastModified = $lastModifiedRow ? strtotime($lastModifiedRow['last_modified']) : time();
+
+$isUser = isset($_SESSION['user']) ? 'user' : 'guest';
+
+$metroData = $_SESSION['metro'] ?? '';
+if (!is_array($metroData)) {
+    $metroData = explode(',', (string)$metroData);
+}
+
+// Формируем ETag с учетом статуса пользователя
+$etag = md5($lastModified . implode(',', $metroData) . $isUser);
+
+// --- 0. URL, для которых кэш всегда запрещён ---
+$noCacheUris = [
+    '/izbrannoe',
+    '/search',
+    '/moy_urfaq',
+    '/404',
+    '/action',
+];
+
+if (in_array($requestUri, $noCacheUris, true)) {
+    header("Cache-Control: no-store, no-cache, must-revalidate");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+    return;
+}
+
+// --- 1. Специальная логика для /notariusy ---
+if ($requestUri === '/notariusy') {
+    if ($isUser === 'user') {
+        // авторизованный — никогда не кэшируем
+        header("Cache-Control: no-store, no-cache, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+    } else {
+        // гость — можно кэшировать
+        header("ETag: \"$etag\"");
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
+        header("Vary: Cookie, Accept-Encoding");
+        header("Cache-Control: private, max-age=300, must-revalidate, no-cache");
+
+        if (!empty($_SERVER['HTTP_IF_NONE_MATCH'])) {
+            $clientEtags = explode(',', $_SERVER['HTTP_IF_NONE_MATCH']);
+            foreach ($clientEtags as $cEtag) {
+                $cEtag = trim($cEtag, " \"");
+                $cEtag = preg_replace('/-gzip$/', '', $cEtag);
+                if ($cEtag === $etag) {
+                    header('HTTP/1.1 304 Not Modified');
+                    exit;
+                }
+            }
+        }
+    }
+    return; // завершаем, чтобы не выполнять общий блок
+}
+
+// --- 2. Общая логика для всех остальных страниц ---
+if ($isUser === 'user') {
+    // авторизованный
+    header("Cache-Control: no-store, no-cache, must-revalidate");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+} else {
+    // гость
+    header("ETag: \"$etag\"");
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
+    header("Cache-Control: private, max-age=300, must-revalidate, no-cache");
+
+    if (!empty($_SERVER['HTTP_IF_NONE_MATCH'])) {
+        $clientEtags = explode(',', $_SERVER['HTTP_IF_NONE_MATCH']);
+        foreach ($clientEtags as $cEtag) {
+            $cEtag = trim($cEtag, " \"");
+            $cEtag = preg_replace('/-gzip$/', '', $cEtag);
+            if ($cEtag === $etag) {
+                header('HTTP/1.1 304 Not Modified');
+                exit;
+            }
+        }
+    }
+}
+
+
 // Путь к фавиконкам
 $uploadDirIcon = $_SERVER['DOCUMENT_ROOT'] . '/uploads/fav-icon/';
 $faviconPath = '';
@@ -25,9 +113,11 @@ $filter_labels = [
     'company' => 'Юридические лица'
 ];
 
-// Разбираем URL
-$url_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+// Разбираем URL без GET-параметров
+$requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$url_parts = explode('/', trim($requestPath, '/'));
 
+// Определяем фильтр и alias
 $last = end($url_parts);
 $filter = in_array($last, array_keys($filter_labels)) ? $last : null;
 
@@ -38,8 +128,6 @@ if ($filter) {
     // иначе — последний
     $alias = $last;
 }
-
-$alias = explode('?', $alias)[0];
 
 if (empty($alias)) {
     $alias = 'index';
@@ -89,7 +177,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
                 $meta['title'] = implode(' |', $parts);
             }
         }
-    
+
         return $meta;
     }
 
@@ -181,8 +269,10 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             $description = "Услуги {$phrase} «{$ownerName}»: подготовка документов, досудебное урегулирование споров, представительство в суде, консультация. Цены, контакты.";
         } elseif (in_array($titleCode, [1, 2], true)) {
             // индивидуальные юрист / адвокат
+            $lastname = str_replace(' ', '', $specialist['lastname']);
+            $name = str_replace(' ', '', $specialist['name']);
             $phrase = $classificationMap[$titleCode];
-            $ownerName = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'родительный');
+            $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
             $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
             $description = "Услуги {$phrase} {$ownerName}: подготовка документов, досудебное урегулирование споров, представительство в суде, консультация. Цены, контакты.";
         } elseif (in_array($titleCode, [3, 8], true)) {
@@ -190,13 +280,17 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
                 // экспертное учреждение
                 $description = "Услуги экспертного учреждения «{$ownerName}»: строительные, медицинские, автотехнические, почерковедческие и другие виды экспертиз. Заключение для суда и страховых компаний. Цены, контакты.";
             } else {
-                $ownerName = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'родительный');
+                $lastname = str_replace(' ', '', $specialist['lastname']);
+                $name = str_replace(' ', '', $specialist['name']);
+                $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
                 $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
                 // индивидуальный эксперт
                 $description = "Услуги эксперта {$ownerName}: строительные, медицинские, автотехнические, почерковедческие и другие виды экспертиз. Заключение для суда и страховых компаний. Цены, контакты.";
             }
         } elseif ($titleCode === 4) {
-            $ownerName = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'родительный');
+            $lastname = str_replace(' ', '', $specialist['lastname']);
+            $name = str_replace(' ', '', $specialist['name']);
+            $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
             $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
             // нотариус
             $description = "Услуги нотариуса {$ownerName}: разработка и удостоверение документов, открытие наследства, свидетельствование верности перевода документов и прочие нотариальные действия. Цены, контакты.";
@@ -237,6 +331,23 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
     ];
 }
 
+/**
+ * Возвращает абсолютный URL по относительному пути или возвращает уже абсолютный URL.
+ *
+ * @param string|null $path
+ * @return string|null
+ */
+function full_url(?string $path): ?string
+{
+    if (empty($path)) return null;
+    $path = trim($path);
+    if (preg_match('#^https?://#i', $path)) return $path;
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
+    $path = '/' . ltrim($path, '/');
+    return $scheme . '://' . $host . $path;
+}
 
 // Получаем финальные мета-данные
 $page_meta = resolve_meta($alias, $section, $category_meta, $cityName, $cityPrepositional);

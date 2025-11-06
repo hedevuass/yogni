@@ -5,9 +5,43 @@
 		}
 	}
 </style>
+<script type="text/javascript">
+	(function(m,e,t,r,i,k,a){
+		m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+		m[i].l=1*new Date();
+		for (var j = 0; j < document.scripts.length; j++) {
+			if (document.scripts[j].src === r) return;
+		}
+		k=e.createElement(t); a=e.getElementsByTagName(t)[0];
+		k.async=1; k.src=r; a.parentNode.insertBefore(k,a);
+	})(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=104107457', 'ym');
+	
+	// Определяем, главная ли страница
+	const isHome = window.location.pathname === '/' || window.location.pathname === '';
+	
+	// Инициализация Метрики
+	ym(104107457, 'init', {
+		ssr: !isHome, // отключаем SSR для главной страницы
+		webvisor: true,
+		clickmap: true,
+		ecommerce: "dataLayer",
+		accurateTrackBounce: true,
+		trackLinks: true
+	});
+	
+	// Принудительно фиксируем главную страницу
+	if (isHome) {
+		ym(104107457, 'hit', '/'); // отправляем путь /
+	}
+	</script>
+<noscript>
+	<div>
+		<img src="https://mc.yandex.ru/watch/104107457" style="position:absolute; left:-9999px;" alt="">
+	</div>
+</noscript>
 <!--data:top_link_lawyer_h2--><!--data:top_link_lawyer_h2-->
 <!--data:top_link_expert_h2--><!--data:top_link_expert_h2-->
-<!--data:top_link_notarius_h2--><!--data:top_link_notarius_h2-->	
+<!--data:top_link_notarius_h2--><!--data:top_link_notarius_h2-->
 <h2 class="dn">ЖУРНАЛ</h2>
 <button class="btn btn__mobile-filters main-categories">Все разделы<i style="margin-top: 4px;"><img
 			src="/assets/img/mobile-filters-btn.svg"></i></button>
@@ -64,25 +98,7 @@
 		<div class="flex desktop-padding">
 			<div class="index-title_journal">Журнал</div>
 			<!--data:fifth_banner--><!--data:fifth_banner-->
-			<a href="/journal" class="banner-sidebar">
-				<div class="sticky">
-					<div class="banner">
-						<div class="name">
-							ЮРФАК:<span>ЖУРНАЛ</span>
-						</div>
-						<p>Читайте онлайн <br />про законы и правила</p>
-						<ul>
-							<li>Полезные статьи</li>
-							<li>Новости</li>
-							<li>Разбор законов</li>
-							<li>Блоги специалистов</li>
-						</ul>
-						<div class="button">
-							<span>Перейти в журнал</span>
-						</div>
-					</div>
-				</div>
-			</a>
+			<!--data:sixth_banner--><!--data:sixth_banner-->
 			<div class="main-content other">
 				<!--data:news_list--><!--data:news_list-->
 				<!--data:posts--><!--data:posts-->

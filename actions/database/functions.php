@@ -419,30 +419,29 @@ function get_service_by_slug(string $slug)
     }
 
     return [
-        // Эти поля — от текущей записи, чтобы URL оставался альтернативным
         'id'          => $row['id'],
         'slug'        => $row['slug'],
-        // А эти данные — из оригинала (или из самого row, если оригинала нет)
+        'base_slug'   => $original['slug'],
+        'original_id' => $row['original_id'],
+        'base_id'     => $original ? $original['id'] : $row['id'],
         'title'       => $row['title'],
         'description' => $row['description'],
         'img'         => $base['img'],
         'p_id'        => $base['p_id'],
         'classification' => $classification,
         'classification_array' => $classification_array,
-        // Данные родителя (заголовок и slug) — от рабочего набора
         'p_title'     => $parrent['title'] ?? null,
         'p_slug'      => $parrent['slug'] ?? null,
-        // Вложим оригинал целиком, чтобы потом брать оттуда id/p_id
         'original'    => $original,
     ];
 }
 
-function mb_lcfirst($string)
+/* function mb_lcfirst($string)
 {
     $firstChar = mb_substr($string, 0, 1);
     $then = mb_substr($string, 1);
     return mb_strtolower($firstChar) . $then;
-}
+} */
 
 function get_all_service_meta($filter = null, $filter_labels = [], $cityGenitive = '')
 {
@@ -606,6 +605,64 @@ function get_service_parent_catalog(string $slug)
     return $service;
 }
 
+/**
+ * Получает все slug из dt_service_parent
+ *
+ * @return array
+ */
+function get_catalog_slugs(): array
+{
+    global $data_base;
+
+    static $slugs = null; // кешируем, чтобы не дёргать БД каждый раз
+    if ($slugs === null) {
+        $rows = $data_base->selectAll("SELECT slug FROM dt_service_parent");
+        $slugs = array_column($rows, 'slug');
+    }
+
+    return $slugs;
+}
+
+function get_service_parent_by_slug(string $slug)
+{
+    global $data_base;
+
+    // Берём запись (оригинал или альтернатива) по slug
+    $row = $data_base->selectRow(
+        "SELECT * FROM dt_service_parent WHERE slug = ?",
+        [$slug]
+    );
+    if (!$row) {
+        return null;
+    }
+
+    // Если это альтернатива — подгружаем оригинал
+    $original = null;
+    if ($row['original_id'] && $row['original_id'] != 0) {
+        $original = $data_base->selectRow(
+            "SELECT * FROM dt_service_parent WHERE id = ?",
+            [$row['original_id']]
+        );
+    }
+
+    // Рабочий набор — оригинал или сама запись
+    $base = $original ?: $row;
+
+    return [
+        'id'          => $row['id'],
+        'slug'        => $row['slug'],
+        'base_slug'   => $base['slug'],
+        'title'       => $row['title'],
+        'description' => $row['description'],
+        'icon'        => $row['icon'],
+        // Метаданные — из оригинала (если есть)
+        'meta_title'       => $base['meta_title'],
+        'meta_description' => $base['meta_description'],
+        'meta_keywords'    => $base['meta_keywords'],
+        'original'    => $original,
+    ];
+}
+
 function search_services(string $search)
 {
     global $data_base;
@@ -693,7 +750,7 @@ function get_specialist(int $id)
                                     LEFT JOIN dt_specialist_description sd ON s.id = sd.specialist_id
                                     LEFT JOIN dt_company com ON s.company_id = com.id
                                     LEFT JOIN dt_metro m ON sc.metro = m.id
-                                    WHERE s.id = ?", [$id, $id, $id]);
+                                    WHERE s.id = ? AND s.deleted = 0", [$id, $id, $id]);
 }
 
 function get_specialists_by_company(int $company_id)
@@ -705,7 +762,7 @@ function get_specialists_by_company(int $company_id)
                                     lastname, 
                                     classification_id 
                                FROM dt_specialist 
-                               WHERE company_id = ?", [$company_id]);
+                               WHERE company_id = ? AND deleted = 0", [$company_id]);
 }
 
 function get_specialist_by_slug(string $slug)
@@ -746,7 +803,7 @@ function get_specialist_by_slug(string $slug)
                                 LEFT JOIN dt_specialist_description sd ON s.id = sd.specialist_id
                                 LEFT JOIN dt_company com ON s.company_id = com.id
                                 LEFT JOIN dt_metro m ON sc.metro = m.id
-                                WHERE s.slug = ?", [$slug]);
+                                WHERE s.slug = ? AND s.deleted = 0", [$slug]);
 }
 
 // Возвращает специалистов
@@ -774,7 +831,7 @@ function get_specialists_by_ids(array $ids)
         LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
         LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
         LEFT JOIN dt_company co ON s.company_id = co.id
-        WHERE s.id IN ($ids_placeholders)
+        WHERE s.id IN ($ids_placeholders) AND s.deleted = 0
         GROUP BY s.id
         ORDER BY FIELD(s.id, $ids_placeholders)
     ");
@@ -809,7 +866,7 @@ function count_specialists_by_ids($ids)
                                             FROM dt_specialist s
                                             LEFT JOIN dt_specialist_contacts sc ON s.id = sc.specialist_id
                                             LEFT JOIN dt_metro cm ON sc.metro = cm.id
-                                            WHERE s.id $where $and", $array);
+                                            WHERE s.id $where $and AND s.deleted = 0", $array);
 
     return $specialists;
 }
@@ -1380,6 +1437,22 @@ function set_company_employee($employee, $company_id)
     );
 }
 
+function add_user_request(int $specialist_id, string $name, string $phone, string $message)
+{
+    global $data_base;
+
+    return $data_base->add(
+        "INSERT INTO dt_user_request (specialist_id, name, phone, message) 
+         VALUES (?, ?, ?, ?)",
+        [
+            $specialist_id,
+            $name,
+            $phone,
+            $message
+        ]
+    );
+}
+
 // Возвращает количество специалистов
 function get_count_specialists()
 {
@@ -1469,7 +1542,7 @@ function get_specialists_by_classification($classification, int $limit, int $sta
         LEFT JOIN dt_classification c ON s.classification_id = c.id
         LEFT JOIN dt_city ci ON s.city_id = ci.id
         LEFT JOIN dt_company co ON s.company_id = co.id
-        WHERE s.classification_id $where AND s.city_id = ? $and
+        WHERE s.classification_id $where AND s.deleted = 0 AND s.city_id = ? $and
         GROUP BY s.id
         ORDER BY rating DESC
         LIMIT $start, $limit
@@ -1494,72 +1567,130 @@ function get_specialists_by_classification_n_block($classification, int $limit, 
         $array = [$classification, $_SESSION['city']['id']];
     } elseif (is_array($classification)) {
         $where = 'IN (' . implode(',', array_map('intval', $classification)) . ')';
-        $array = [$_SESSION['city']['id']]; // Only city_id is a parameter
+        $array = [$_SESSION['city']['id']]; // Только city_id как параметр
     }
 
-    if (($classification == 4 || (is_array($classification) && in_array(4, $classification))) && isset($_SESSION['metro']) && !empty($_SESSION['metro'])) {
-        $and .= 'AND cm.id IN (' . $_SESSION['metro'] . ')';
+    if (($classification == 4 || (is_array($classification) && in_array(4, $classification))) && !empty($_SESSION['metro'])) {
+        $and .= ' AND cm.id IN (' . $_SESSION['metro'] . ')';
     }
 
-    // Get IDs of non-promo specialists from block_top_specialists to avoid overlap
-    $top_specialists = get_promo_list('block_top_specialists');
-    $non_promo_top_ids = [];
-    foreach ($top_specialists as $specialist) {
-        // Check if the specialist is non-promo (no block_top_specialists promo)
-        $has_promo = $data_base->selectRow("
-            SELECT 1 FROM dt_promo_list pl 
-            WHERE pl.specialist_id = ? 
-            AND pl.service_slug = 'block_top_specialists' 
-            AND CURRENT_TIMESTAMP BETWEEN pl.date_start AND pl.date_expires
-        ", [$specialist['id']]);
-        if (!$has_promo) {
-            $non_promo_top_ids[] = $specialist['id'];
-        }
-    }
-    $exclude_clause = !empty($non_promo_top_ids) ? 'AND s.id NOT IN (' . implode(',', array_map('intval', $non_promo_top_ids)) . ')' : '';
-
-    // Query to fetch specialists, prioritizing those with block_specialist_positions promo
-    $query = "
+    // Промо специалисты
+    $promo_query = "
         SELECT
             s.id,
             s.name,
             s.lastname,
             s.photo,
-            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) AS rating,
             c.title AS classification_title,
             ci.name AS city_name,
-            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN (SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id)) AS specialization,
-            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ')
+             FROM dt_service se
+             WHERE se.id IN (SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id)
+            ) AS specialization,
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ')
+             FROM dt_metro cm
+             WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+            ) AS metro_name,
             co.title AS company_name,
             (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
-            (SELECT 1 
- FROM dt_promo_list pl 
- WHERE pl.specialist_id = s.id 
-   AND pl.service_slug = 'block_specialist_positions' 
-   AND CURRENT_DATE BETWEEN DATE(pl.date_start) AND DATE(pl.date_expires)
- LIMIT 1) AS has_block_specialist_positions,
-
-(SELECT MIN(sort) 
- FROM dt_promo_list pl 
- WHERE pl.specialist_id = s.id 
-   AND pl.service_slug = 'block_specialist_positions' 
-   AND CURRENT_DATE BETWEEN DATE(pl.date_start) AND DATE(pl.date_expires)
-) AS sort
+            1 AS has_block_specialist_positions,
+            (SELECT MIN(sort)
+             FROM dt_promo_list pl
+             WHERE pl.specialist_id = s.id
+               AND pl.service_slug = 'block_specialist_positions'
+               AND CURRENT_DATE BETWEEN DATE(pl.date_start) AND DATE(pl.date_expires)
+            ) AS sort
         FROM dt_specialist s
         LEFT JOIN dt_classification c ON s.classification_id = c.id
         LEFT JOIN dt_city ci ON s.city_id = ci.id
         LEFT JOIN dt_company co ON s.company_id = co.id
         WHERE s.classification_id $where
-        AND s.city_id = ?
-        $and
-        $exclude_clause
-        AND IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) >= 0
+          AND s.city_id = ?
+          AND s.deleted = 0
+          $and
+          AND EXISTS (
+              SELECT 1 FROM dt_promo_list pl
+              WHERE pl.specialist_id = s.id
+                AND pl.service_slug = 'block_specialist_positions'
+                AND CURRENT_DATE BETWEEN DATE(pl.date_start) AND DATE(pl.date_expires)
+          )
         GROUP BY s.id
-        ORDER BY has_block_specialist_positions DESC, sort ASC, RAND()
-        LIMIT $start, $limit
+        ORDER BY sort ASC, s.id ASC
+        LIMIT $limit
     ";
 
-    return $data_base->selectAll($query, $array);
+    $promo = $data_base->selectAll($promo_query, $array);
+
+    // Не-промо специалисты
+    $non_promo_query = "
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) AS rating,
+            c.title AS classification_title,
+            ci.name AS city_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ')
+             FROM dt_service se
+             WHERE se.id IN (SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id)
+            ) AS specialization,
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ')
+             FROM dt_metro cm
+             WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
+            ) AS metro_name,
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+            0 AS has_block_specialist_positions,
+            NULL AS sort
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE s.classification_id $where
+          AND s.city_id = ?
+          AND s.deleted = 0
+          $and
+          AND NOT EXISTS (
+              SELECT 1 FROM dt_promo_list pl
+              WHERE pl.specialist_id = s.id
+                AND pl.service_slug = 'block_specialist_positions'
+                AND CURRENT_DATE BETWEEN DATE(pl.date_start) AND DATE(pl.date_expires)
+          )
+        GROUP BY s.id
+        ORDER BY RAND()
+        LIMIT $limit
+    ";
+
+    $non_promo = $data_base->selectAll($non_promo_query, $array);
+
+    // Объединяем и берём первые $limit элементов
+    $all = array_merge($promo, $non_promo);
+    return array_slice($all, 0, $limit);
+}
+
+function getCachedData(string $key, int $ttl, callable $callback)
+{
+    $tmpDir = __DIR__ . '/tmp';
+    if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
+
+    $cacheFile = $tmpDir . '/cache_' . md5($key);
+
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
+        return unserialize(file_get_contents($cacheFile));
+    }
+
+    $data = $callback();
+    file_put_contents($cacheFile, serialize($data));
+
+    return $data;
+}
+
+function clearCache(string $key)
+{
+    $cacheFile = __DIR__ . '/tmp/cache_' . md5($key);
+    if (file_exists($cacheFile)) unlink($cacheFile);
 }
 
 function get_random_specialists_by_classification(array $classArr, int $limit, array $excludeIds = []): array
@@ -1602,6 +1733,7 @@ function get_random_specialists_by_classification(array $classArr, int $limit, a
         LEFT JOIN dt_company co ON s.company_id = co.id
         WHERE s.classification_id IN ($inClasses)
           AND s.city_id = ?
+          AND s.deleted = 0
           AND IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) >= ?
           $excludeClause
         ORDER BY RAND()
@@ -1724,25 +1856,28 @@ FROM (
         SELECT specialist_id, MAX(tariff_id) AS max_tariff
         FROM dt_tariff_list
         WHERE tariff_id IN (1, 2, 3)
+          AND moderation = 0
         GROUP BY specialist_id
     ) AS tl ON s.id = tl.specialist_id
     LEFT JOIN (
         SELECT DISTINCT specialist_id
         FROM dt_options_list
+        WHERE moderation = 0
     ) AS ol ON s.id = ol.specialist_id
     LEFT JOIN (
         SELECT 
             specialist_id, 
             MIN(sort) AS promo_sort, 
-            MAX(id) AS promo_record_id  -- или MAX(id), если последние должны быть сверху
+            MAX(id) AS promo_record_id
         FROM dt_promo_list
         WHERE (service_slug IS NULL OR service_slug = '')
-        AND block_id IN (1,2,3,4,5)
-        AND NOW() >= date_start
-        AND DATE(date_expires) >= CURRENT_DATE
+          AND block_id IN (1,2,3,4,5)
+          AND NOW() >= date_start
+          AND DATE(date_expires) >= CURRENT_DATE
+          AND moderation = 0
         GROUP BY specialist_id
     ) AS pl ON s.id = pl.specialist_id
-    WHERE {$whereClause}{$andFilter}
+    WHERE {$whereClause}{$andFilter} AND s.deleted = 0
     GROUP BY s.id
 ) AS tmp
 ORDER BY
@@ -1751,9 +1886,12 @@ ORDER BY
         WHEN tmp.promo_sort = 2 THEN 1
         ELSE 2
     END,
-    tmp.promo_record_id DESC,  -- последние подключившие промо сверху
-    tmp.computed_rating DESC
-LIMIT {$start}, {$limit};";
+    tmp.promo_record_id DESC,
+    max_tariff DESC,
+    tmp.computed_rating DESC,
+    tmp.id DESC
+LIMIT {$start}, {$limit};
+";
 
 
     return $data_base->selectAll($sql, $params);
@@ -1776,7 +1914,7 @@ function search_specialists(string $search)
             $search_name = '%' . $search[0] . '%';
             $search_lastname = '%' . $search[1] . '%';
         }
-        $specialists = $data_base->selectAll("SELECT * FROM dt_specialist WHERE (name $condition ? AND lastname $condition ?) OR (name $condition ? AND lastname $condition ?)", [$search_name, $search_lastname, $search_lastname, $search_name]);
+        $specialists = $data_base->selectAll("SELECT * FROM dt_specialist WHERE (name $condition ? AND deleted = 0 AND lastname $condition ?) OR (name $condition ? AND deleted = 0 AND lastname $condition ?)", [$search_name, $search_lastname, $search_lastname, $search_name]);
     } else if (!empty($search[0]) && empty($search[1])) {
         if (mb_strlen($search[0]) < 4) {
             $condition = '=';
@@ -1785,7 +1923,7 @@ function search_specialists(string $search)
             $condition = 'LIKE';
             $search_name = '%' . $search[0] . '%';
         }
-        $specialists = $data_base->selectAll("SELECT * FROM dt_specialist WHERE (name $condition ? OR lastname $condition ?)", [$search_name, $search_name]);
+        $specialists = $data_base->selectAll("SELECT * FROM dt_specialist WHERE (name $condition ? OR lastname $condition ?) AND deleted = 0", [$search_name, $search_name]);
     } else
         return false;
     return $specialists;
@@ -1841,8 +1979,8 @@ function full_search_specialists(string $search, int $start = 0, int $limit = 12
                                             LEFT JOIN dt_city ci ON s.city_id = ci.id
                                             LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
                                             LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
-                                            WHERE (s.name $condition ? AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and) 
-                                                OR (s.name $condition ? AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and)
+                                            WHERE (s.name $condition ? AND s.deleted = 0 AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and) 
+                                                OR (s.name $condition ? AND s.deleted = 0 AND s.lastname $condition ? AND s.city_id = ? AND s.company_id IS NULL $and)
                                             ORDER BY has_tariff DESC, has_option DESC, rating DESC
                                             LIMIT $start, $limit",
             [$search_name, $search_lastname, $_SESSION['city']['id'], $search_lastname, $search_name, $_SESSION['city']['id']]
@@ -1880,8 +2018,7 @@ function full_search_specialists(string $search, int $start = 0, int $limit = 12
                                             LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
                                             LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
                                             WHERE (s.name $condition ? OR s.lastname $condition ?) 
-                                                AND s.company_id IS NULL
-                                                AND s.city_id = ? $and
+                                                AND s.deleted = 0 AND s.city_id = ? $and
                                             ORDER BY has_tariff DESC, has_option DESC, rating DESC
                                             LIMIT $start, $limit",
             [$search_name, $search_name, $_SESSION['city']['id']]
@@ -1906,7 +2043,7 @@ function search_companies(string $search)
                                         s.id as id_link
                                         FROM dt_company com
                                         LEFT JOIN dt_specialist s ON s.company_id = com.id
-                                        WHERE com.title $condition ?", [$search]);
+                                        WHERE com.title $condition ? AND s.deleted = 0", [$search]);
     return $companies;
 }
 
@@ -1977,7 +2114,7 @@ function full_search_companies(string $search, int $start = 0, int $limit = 12)
         FROM dt_specialist_contacts 
         WHERE specialist_id = s.id
     )
-    WHERE co.title $condition ? AND s.city_id = ? $and
+    WHERE co.title $condition ? AND s.deleted = 0 AND s.city_id = ? $and
     ORDER BY has_tariff DESC, has_option DESC, rating DESC -- Сортировка: тариф 3 -> тариф 2 -> наличие опции -> рейтинг
     LIMIT $start, $limit
 ", [$search, $_SESSION['city']['id']]);
@@ -2014,7 +2151,7 @@ function count_full_search_companies(string $search): int
         SELECT COUNT(DISTINCT co.id)
         FROM dt_company co
         LEFT JOIN dt_specialist s ON s.company_id = co.id
-        WHERE co.title $condition ? AND s.city_id = ? $and
+        WHERE co.title $condition ? AND s.deleted = 0 AND s.city_id = ? $and
     ", [$search, $_SESSION['city']['id']]);
 
     return intval($count);
@@ -2064,6 +2201,7 @@ function count_full_search_specialists(string $search): int
             FROM dt_specialist s
             WHERE (s.name $condition ? OR s.lastname $condition ?)
               AND s.city_id = ?
+              AND s.deleted = 0
               AND s.company_id IS NULL
               $and
         ", [$search_pattern, $search_pattern, $_SESSION['city']['id']]);
@@ -2188,7 +2326,7 @@ function count_specialists_by_classification($classification)
         FROM dt_specialist s
         LEFT JOIN dt_specialist_contacts sc ON s.id = sc.specialist_id
         LEFT JOIN dt_metro cm ON sc.metro = cm.id
-        WHERE {$whereClause}{$andFilter}
+        WHERE {$whereClause}{$andFilter} AND s.deleted = 0
     ";
 
     return $data_base->count($sql, $params);
@@ -2249,6 +2387,7 @@ function count_specialists_by_service(array $classification, string $services_id
         WHERE ss.service_id IN ({$services_id})
           AND {$whereClause}
           AND s.city_id = ?
+          AND s.deleted = 0
           {$andFilter}
     ";
 
@@ -2297,6 +2436,7 @@ function get_specialists_by_service(string $services, int $limit, int $start = 0
             WHERE specialist_id = s.id AND service_id IN ($services)
         )
           AND s.city_id = ? $and
+          AND s.deleted = 0
         GROUP BY s.id
         ORDER BY rating DESC
         LIMIT $start, $limit
@@ -2369,118 +2509,126 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
     }
 
     $sql = "
-SELECT
-    s.id,
-    s.name,
-    s.lastname,
-    s.photo,
-    IFNULL(
-       (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),
-       0
-    ) AS rating,
-    LEAST(
-        2.0 * IFNULL(
-            (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),
-            0
-        )
-        + 0.1 * (SELECT COUNT(*) FROM dt_post WHERE author_id = s.id AND moderation = 0),
-        99
-    ) AS computed_rating,
-    c.title AS classification_title,
-    ci.name AS city_name,
-    (SELECT GROUP_CONCAT(se.title SEPARATOR ', ')
-       FROM dt_service se
-      WHERE se.id IN ($service_ids_str)
-    ) AS specialization,
-    (SELECT GROUP_CONCAT(cm2.name SEPARATOR ', ')
-       FROM dt_metro cm2
-      WHERE cm2.id = (
-          SELECT metro
-            FROM dt_specialist_contacts
-           WHERE specialist_id = s.id
-      )
-    ) AS metro_name,
-    co.title AS company_name,
-    (SELECT COUNT(*)
-       FROM dt_specialist_specialization
-      WHERE specialist_id = s.id
-    ) AS specialization_count,
-    COALESCE(
-       (SELECT MAX(tariff_id)
-          FROM dt_tariff_list
+    SELECT
+        s.id,
+        s.name,
+        s.lastname,
+        s.photo,
+        IFNULL(
+           (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),
+           0
+        ) AS rating,
+        LEAST(
+            2.0 * IFNULL(
+                (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),
+                0
+            )
+            + 0.1 * (SELECT COUNT(*) FROM dt_post WHERE author_id = s.id AND moderation = 0),
+            99
+        ) AS computed_rating,
+        c.title AS classification_title,
+        ci.name AS city_name,
+        (SELECT GROUP_CONCAT(se.title SEPARATOR ', ')
+           FROM dt_service se
+          WHERE se.id IN ($service_ids_str)
+        ) AS specialization,
+        (SELECT GROUP_CONCAT(cm2.name SEPARATOR ', ')
+           FROM dt_metro cm2
+          WHERE cm2.id = (
+              SELECT metro
+                FROM dt_specialist_contacts
+               WHERE specialist_id = s.id
+          )
+        ) AS metro_name,
+        co.title AS company_name,
+        (SELECT COUNT(*)
+           FROM dt_specialist_specialization
+          WHERE specialist_id = s.id
+        ) AS specialization_count,
+        COALESCE(
+           (SELECT MAX(tariff_id)
+              FROM dt_tariff_list
+             WHERE specialist_id = s.id
+               AND tariff_id IN (1,2,3)
+               AND moderation = 0
+           ), 0
+        ) AS max_tariff,
+        EXISTS(
+           SELECT 1
+             FROM dt_options_list
+            WHERE specialist_id = s.id
+              AND moderation = 0
+        ) AS has_option,
+        /* Вытаскиваем минимальный sort активного промо для специалиста и выбранных услуг */
+        (
+        SELECT MIN(pl.sort)
+        FROM dt_promo_list pl
+        LEFT JOIN dt_service se2 ON pl.service_slug = se2.slug
+        WHERE pl.specialist_id = s.id
+          AND CURRENT_TIMESTAMP >= pl.date_start
+          AND DATE(pl.date_expires) >= CURRENT_DATE
+          AND moderation = 0
+          AND (se2.id IN ($service_ids_str) AND pl.service_slug IS NOT NULL AND pl.service_slug <> '')
+        ) AS promo_sort,
+    
+        (
+        SELECT pl.id
+        FROM dt_promo_list pl
+        LEFT JOIN dt_service se2 ON pl.service_slug = se2.slug
+        WHERE pl.specialist_id = s.id
+          AND CURRENT_TIMESTAMP >= pl.date_start
+          AND DATE(pl.date_expires) >= CURRENT_DATE
+          AND moderation = 0
+          AND (se2.id IN ($service_ids_str) AND pl.service_slug IS NOT NULL AND pl.service_slug <> '')
+        ORDER BY pl.date_start DESC, pl.id DESC
+        LIMIT 1
+        ) AS promo_record_id,
+        
+        (SELECT COUNT(*) FROM dt_post WHERE author_id = s.id) AS blog_posts_count
+    FROM dt_specialist s
+    LEFT JOIN dt_classification c ON s.classification_id = c.id
+    LEFT JOIN dt_city ci           ON s.city_id = ci.id
+    LEFT JOIN dt_company co        ON s.company_id = co.id
+    LEFT JOIN dt_metro cm          ON cm.id = (
+        SELECT metro 
+          FROM dt_specialist_contacts 
          WHERE specialist_id = s.id
-           AND tariff_id IN (1,2,3)
-       ), 0
-    ) AS max_tariff,
-    EXISTS(
-       SELECT 1
-         FROM dt_options_list
-        WHERE specialist_id = s.id
-    ) AS has_option,
-    /* Вытаскиваем минимальный sort активного промо для специалиста и выбранных услуг */
-    (
-    SELECT MIN(pl.sort)
-    FROM dt_promo_list pl
-    LEFT JOIN dt_service se2 ON pl.service_slug = se2.slug
-    WHERE pl.specialist_id = s.id
-      AND CURRENT_TIMESTAMP >= pl.date_start
-      AND DATE(pl.date_expires) >= CURRENT_DATE
-      AND (se2.id IN ($service_ids_str) AND pl.service_slug IS NOT NULL AND pl.service_slug <> '')
-) AS promo_sort,
-
-(
-    SELECT pl.id
-    FROM dt_promo_list pl
-    LEFT JOIN dt_service se2 ON pl.service_slug = se2.slug
-    WHERE pl.specialist_id = s.id
-      AND CURRENT_TIMESTAMP >= pl.date_start
-      AND DATE(pl.date_expires) >= CURRENT_DATE
-      AND (se2.id IN ($service_ids_str) AND pl.service_slug IS NOT NULL AND pl.service_slug <> '')
-    ORDER BY pl.date_start DESC, pl.id DESC
-    LIMIT 1
-) AS promo_record_id,
-    (SELECT COUNT(*) FROM dt_post WHERE author_id = s.id) AS blog_posts_count
-FROM dt_specialist s
-LEFT JOIN dt_classification c ON s.classification_id = c.id
-LEFT JOIN dt_city ci           ON s.city_id = ci.id
-LEFT JOIN dt_company co        ON s.company_id = co.id
-LEFT JOIN dt_metro cm          ON cm.id = (
-    SELECT metro 
-      FROM dt_specialist_contacts 
-     WHERE specialist_id = s.id
-)
-WHERE (
-    /* фильтр по специализациям или активному промо */
-    (SELECT MAX(service_id)
-       FROM dt_specialist_specialization
-      WHERE specialist_id = s.id
-        AND service_id IN ($service_ids_str)
     )
-    OR EXISTS(
-       SELECT 1
-         FROM dt_promo_list pl2
-         LEFT JOIN dt_service se3 ON pl2.service_slug = se3.slug
-        WHERE pl2.specialist_id = s.id
-          AND CURRENT_TIMESTAMP >= pl2.date_start
-        AND DATE(pl2.date_expires) >= CURRENT_DATE
-          AND (se3.id IN ($service_ids_str))
+    WHERE (
+        /* фильтр по специализациям или активному промо */
+        (SELECT MAX(service_id)
+           FROM dt_specialist_specialization
+          WHERE specialist_id = s.id
+            AND service_id IN ($service_ids_str)
+        )
+        OR EXISTS(
+           SELECT 1
+             FROM dt_promo_list pl2
+             LEFT JOIN dt_service se3 ON pl2.service_slug = se3.slug
+            WHERE pl2.specialist_id = s.id
+              AND CURRENT_TIMESTAMP >= pl2.date_start
+              AND DATE(pl2.date_expires) >= CURRENT_DATE
+              AND moderation = 0
+              AND (se3.id IN ($service_ids_str))
+        )
     )
-)
-  AND {$whereClause}
-  AND s.city_id = ?
-  {$andFilter}
-GROUP BY s.id
-ORDER BY
-    CASE 
-        WHEN promo_sort = 1 THEN 0
-        WHEN promo_sort = 2 THEN 1
-        ELSE 2
-    END,
-    promo_record_id DESC,  -- последние подключившие промо сверху
-    max_tariff DESC,
-    computed_rating DESC
-LIMIT $start, $limit
-";
+      AND {$whereClause}
+      AND s.city_id = ?
+      AND s.deleted = 0
+      {$andFilter}
+    GROUP BY s.id
+    ORDER BY
+        CASE 
+            WHEN promo_sort = 1 THEN 0
+            WHEN promo_sort = 2 THEN 1
+            ELSE 2
+        END,
+        promo_record_id DESC,
+        promo_record_id IS NULL,
+        max_tariff DESC,
+        computed_rating DESC
+    LIMIT $start, $limit
+    ";
 
     return $data_base->selectAll($sql, $params);
 }
@@ -2775,7 +2923,7 @@ function get_occupied_entries_by_block_and_service($block_id, $service_slug, $so
     return array_map(fn($e) => [
         'date_start'   => $e['date_start'],
         'date_expires' => $e['date_expires'],
-        'specialist_id'=> $e['specialist_id'],
+        'specialist_id' => $e['specialist_id'],
         'sort'         => $e['sort'],
     ], $valid);
 }
@@ -3032,7 +3180,7 @@ function get_promo_list(string $service_slug, int $limit = 8)
                 LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
                 LEFT JOIN dt_metro cm ON cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)
                 LEFT JOIN dt_company co ON s.company_id = co.id
-                WHERE pl.service_slug = ? AND s.city_id = 365
+                WHERE pl.service_slug = ? AND s.city_id = 365 AND s.deleted = 0
                 AND CURRENT_TIMESTAMP >= pl.date_start
                 AND DATE(pl.date_expires) >= CURRENT_DATE";
 
@@ -3549,17 +3697,41 @@ function account_has_email(int $id)
 }
 
 // Проверяет существует ли название компании
-function check_сompany(string $company)
+function check_company_registration(string $company)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT * FROM dt_company WHERE title = ? LIMIT 2", [$company]);
+
+    // Проверяем саму компанию в dt_company
+    $company_row = $data_base->selectAll("SELECT * FROM dt_company WHERE title = ? LIMIT 1", [$company]);
+
+    if (!$company_row) {
+        return [];
+    }
+
+    $company_id = $company_row[0]['id'] ?? null;
+
+    if (!$company_id) {
+        return [];
+    }
+
+    // Проверяем, есть ли специалисты с этой company_id и не удалённые
+    $specialists = $data_base->selectAll(
+        "SELECT * FROM dt_specialist WHERE company_id = ? AND deleted = 0 LIMIT 5",
+        [$company_id]
+    );
+
+    if (!$specialists) {
+        return [];
+    }
+
+    return $company_row;
 }
 
 // Проверяет существует ли имя пользователя
 function check_user_name(string $name, string $lastname)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT * FROM dt_specialist WHERE name = ? AND lastname = ? AND active = ? AND company_id IS NULL  LIMIT 5", [$name, $lastname, 1]);
+    return $data_base->selectAll("SELECT * FROM dt_specialist WHERE name = ? AND lastname = ? AND active = ? AND deleted = 0 AND company_id IS NULL  LIMIT 5", [$name, $lastname, 1]);
 }
 
 // Проверяет, проходит ли регистрация пользователя
@@ -3589,7 +3761,8 @@ function registration(array $data)
         ? (int) $data['city_id']
         : (int) $_SESSION['city']['id'];
 
-    return $data_base->add(
+    // Сначала добавляем специалиста (без slug)
+    $specialist_id = $data_base->add(
         "INSERT INTO dt_specialist 
             (name, lastname, email, password, hash, classification_id, city_id, company_id, active)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
@@ -3604,13 +3777,57 @@ function registration(array $data)
             $data['company_id']
         ]
     );
+
+    // Определяем основу slug
+    if (!empty($data['company_id'])) {
+        $company = $data_base->selectRow("SELECT title FROM dt_company WHERE id = ?", [$data['company_id']]);
+        $base_slug = generateAlias($company['title']);
+    } else {
+        $full_name = trim($data['name'] . ' ' . $data['lastname']);
+        $base_slug = generateAlias($full_name);
+    }
+
+    // Добавляем ID в slug
+    $slug = $base_slug . '-' . $specialist_id;
+
+    // Обновляем запись с готовым slug
+    $data_base->update("UPDATE dt_specialist SET slug = ? WHERE id = ?", [$slug, $specialist_id]);
+
+    return $specialist_id;
+}
+
+/**
+ * Очищает email у пользователя, если он помечен как удалённый (deleted = 1)
+ * и совпадает с указанным email.
+ * Возвращает true, если что-то было изменено.
+ */
+function clear_deleted_user_email_by_email(string $email): bool
+{
+    global $data_base;
+
+    // Проверяем, есть ли пользователь с таким email и статусом deleted = 1
+    $user = $data_base->selectRow(
+        "SELECT id FROM dt_specialist WHERE email = ? AND deleted = 1 LIMIT 1",
+        [$email]
+    );
+
+    if ($user) {
+        // Обнуляем email, чтобы новый пользователь мог зарегистрироваться
+        $data_base->update(
+            "UPDATE dt_specialist SET email = '' WHERE id = ?",
+            [$user['id']]
+        );
+        return true;
+    }
+
+    return false;
 }
 
 // Выводит id последнего пользователя
 function last_user_id()
 {
     global $data_base;
-    return $data_base->selectRow("SELECT * FROM dt_specialist ORDER BY id DESC LIMIT 1")['id'];
+    return $data_base->selectRow("SELECT * FROM dt_specialist WHERE s.deleted = 0 ORDER BY id DESC LIMIT 1")['id'];
 }
 
 // Проверяет hash пользователя
@@ -3624,7 +3841,7 @@ function check_hash(string $hash, int $user_id)
 function activate_user(string $hash, int $user_id)
 {
     global $data_base;
-    return $data_base->update("UPDATE dt_specialist SET hash = ?, active = 1 WHERE id = ?", [$hash, $user_id]);
+    return $data_base->update("UPDATE dt_specialist SET hash = ?, active = 1, registered_at = NOW()  WHERE id = ?", [$hash, $user_id]);
 }
 
 // Обновление аватара пользователя
@@ -3686,6 +3903,13 @@ function get_user_by_email(string $email)
 {
     global $data_base;
     return $data_base->selectRow("SELECT * FROM dt_specialist WHERE email = ?", [$email]);
+}
+
+// Возвращает пользователя по email
+function get_user_by_email_reg(string $email)
+{
+    global $data_base;
+    return $data_base->selectRow("SELECT * FROM dt_specialist WHERE email = ? AND deleted = 0", [$email]);
 }
 
 // Возвращает пользователя по id
@@ -3967,7 +4191,7 @@ function get_blocks(): array
 function fillNewsList()
 {
     global $data_base;
-    return $data_base->selectAll("SELECT alias, title FROM dt_post WHERE post_type='news' ORDER BY id DESC LIMIT 4");
+    return $data_base->selectAll("SELECT alias, title, post_type FROM dt_post WHERE post_type='news' ORDER BY id DESC LIMIT 4");
 }
 
 /**
@@ -4001,3 +4225,39 @@ function get_last_payment(int $specialist_id): ?array
 
     return $row ?: null; // если false, вернуть null
 }
+
+/**
+ * Получает дату последнего изменения сайта.
+ */
+function get_last_modified(): ?array
+{
+    global $data_base;
+
+    $row = $data_base->selectRow(
+        "SELECT last_modified 
+         FROM dt_last_update 
+         WHERE id = 1"
+    );
+
+    return $row ?: null; // если записи нет — вернёт null
+}
+
+/**
+ * Обновляет дату последнего изменения сайта (last_modified).
+ */
+function update_last_modified(): bool
+{
+    global $data_base;
+
+    // Текущее время в формате SQL DATETIME
+    $now = date('Y-m-d H:i:s');
+
+    // Обновляем строку с id = 1
+    return $data_base->update(
+        "UPDATE dt_last_update SET last_modified = ? WHERE id = 1",
+        [$now]
+    );
+}
+
+
+

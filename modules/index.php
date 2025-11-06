@@ -5,18 +5,22 @@ $data = [];
 // Обрабатываем список актуальных разделов
 $data = get_actual_services();
 
-// Обрабатываем список юристов и адвокатов
-$lawyers = get_specialists_by_classification_n_block([1, 2, 5, 6, 7], 8);
+$lastModifiedBlockRow = get_last_modified();
+$lastModifiedBlock = $lastModifiedBlockRow ? strtotime($lastModifiedBlockRow['last_modified']) : time();
+
+$lawyers = getCachedData('specialists_lawyers_' . $lastModifiedBlock, 600, function() {
+    return get_specialists_by_classification_n_block([1, 2, 5, 6, 7], 8);
+});
 $data['index_lawyers'] = block($lawyers);
 
-
-// Обрабатываем список экспертов
-$experts = get_specialists_by_classification_n_block([3, 8], 8);
+$experts = getCachedData('specialists_experts_' . $lastModifiedBlock, 600, function() {
+    return get_specialists_by_classification_n_block([3, 8], 8);
+});
 $data['index_experts'] = block($experts);
 
-
-// Обрабатываем список нотариусов
-$notaries = get_specialists_by_classification_n_block([4], 8);
+$notaries = getCachedData('specialists_notaries_' . $lastModifiedBlock, 600, function() {
+    return get_specialists_by_classification_n_block([4], 8);
+});
 $data['index_notaries'] = block($notaries);
 
 $cityGenitive = $cityGenitive ?: ($_SESSION['city_genitive'] ?? 'Москвы');
@@ -40,7 +44,7 @@ foreach ($topLinks as $key => $slug) {
     $service = get_service_parent_catalog($slug);
     if ($service) {
         $title = htmlspecialchars($service['title']);
-        $data[$key] = '<div class="top-block-link"><a href="/' . $slug . '">' . $title . ' ' .$cityGenitive . '</a></div>';
+        $data[$key] = '<div class="top-block-link"><a href="/' . $slug . '">' . $title . ' ' . $cityGenitive . '</a></div>';
     }
 }
 
@@ -51,10 +55,10 @@ foreach ($h2TopLinks as $key => $slug) {
         $title = htmlspecialchars($service['title']);
         $tag = ($slug === 'yuristy-i-advokaty') ? 'h1' : 'h2';
 
-        $data[$key] = '<' . $tag . ' class="dn top-block-link-h2"><a href="/' . $slug . '">' . 
-                      mb_strtoupper($title, 'UTF-8') . ' ' . 
-                      mb_strtoupper($cityGenitive, 'UTF-8') . 
-                      '</a></' . $tag . '>';
+        $data[$key] = '<' . $tag . ' class="dn top-block-link-h2"><a href="/' . $slug . '">' .
+            mb_strtoupper($title, 'UTF-8') . ' ' .
+            mb_strtoupper($cityGenitive, 'UTF-8') .
+            '</a></' . $tag . '>';
     }
 }
 
@@ -361,7 +365,7 @@ foreach ($fifth_banner as $slide) {
 
     // Создаем HTML для каждого слайда
     $data['fifth_banner'] .= '
-        <div class="top-banner">
+        <div class="top-banner lazy-bg" data-bg="../assets/img/' . htmlspecialchars($image) . '">
 				<span class="name">
 					' . $title . '
 				</span>
@@ -372,6 +376,38 @@ foreach ($fifth_banner as $slide) {
                 </span>
 				<a href="' . $button_link . '">' . $button_text . '</a>
 			</div>';
+}
+
+$sixth_banner = get_banner(6);
+
+foreach ($sixth_banner as $slide) {
+    $title = htmlspecialchars_decode($slide['title']);
+    $subtitle = htmlspecialchars_decode($slide['subtitle']);
+    $button_text = htmlspecialchars_decode($slide['button_text']);
+    $link = htmlspecialchars_decode($slide['link']);
+    $description = json_decode($slide['description'], true);
+    $image = $slide['image'];
+
+    $data['sixth_banner'] .= '
+        <a href="' . $link . '" class="banner-sidebar">
+            <div class="sticky">
+                <div class="banner lazy-bg" data-bg="../assets/img/' . htmlspecialchars($image) . '">
+                    <div class="name">
+                        ' . $title . '
+                    </div>
+                    <p>' . $subtitle . '</p>
+                    <ul>
+                        <li>' . $description['line1'] . '</li>
+                        <li>' . $description['line2'] . '</li>
+                        <li>' . $description['line3'] . '</li>
+                        <li>' . $description['line4'] . '</li>
+                    </ul>
+                    <div class="button">
+                        <span>' . $button_text . '</span>
+                    </div>
+                </div>
+            </div>
+        </a>';
 }
 
 //Список новостей
@@ -472,8 +508,270 @@ function get_actual_services(): array
     return $code;
 }
 
+/**
+ * Генерация JSON-LD для публикаций на главной странице (новости + статьи) с тегами
+ *
+ * @param array $news Новости (4 последних)
+ * @param array $articles Статьи (4 последних)
+ * @return string
+ */
+function generateHomePagePublicationsJsonLdWithTags(array $news, array $articles): array
+{
+    global $data_base;
+
+    $posts = array_merge($news, $articles);
+    $publicationCount = count($posts);
+
+    $workExamples = array_map(function ($post) use ($data_base) {
+
+        $articleType = ($post['post_type'] === 'news') ? 'NewsArticle' : 'Article';
+
+        // Получаем теги для поста
+        $tags = $data_base->selectAll(
+            "
+            SELECT t.title
+            FROM dt_post_tags pt
+            LEFT JOIN dt_tags t ON pt.tag_id = t.id
+            WHERE pt.article_id = " . intval($post['id'])
+        );
+        $keywords = array_column($tags, 'title');
+
+        // Автор
+        if ($post['post_type'] === 'blogs') {
+            $authorData = get_specialist($post['author_id']);
+            $authorType = !empty($authorData['company']) ? "Organization" : "Person";
+            $authorName = !empty($authorData['company'])
+                ? $authorData['company']
+                : trim(($authorData['name'] ?? '') . ' ' . ($authorData['lastname'] ?? ''));
+        } else {
+            $authorType = "Organization";
+            $authorName = "ЮРФАК";
+        }
+
+        return [
+            "@type" => $articleType,
+            "url" => full_url('/journal/' . ($post['alias'] ?? '')),
+            "datePublished" => date('Y-m-d', strtotime($post['date'] ?? 'now')),
+            "articleSection" => $post['service_title'] ?? '',
+            "headline" => strip_tags(htmlspecialchars_decode($post['title'] ?? '')),
+            "description" => strip_tags(htmlspecialchars_decode($post['content'] ?? '')),
+            "keywords" => $keywords,
+            "image" => !empty($post['photo']) ? full_url('/uploads/articles/' . $post['photo']) : '',
+            "author" => [
+                "@type" => $authorType,
+                "name" => $authorName
+            ]
+        ];
+    }, $posts);
+
+    return [
+        "@context" => "https://schema.org",
+        "@type" => "CreativeWorkSeries",
+        "name" => "Публикации журнала на главной странице сайта",
+        "description" => "Все публикации журнала на главной странице сайта ({$publicationCount})",
+        "workExample" => $workExamples
+    ];
+}
+
+$latestNews = get_actual_posts('news', 0, 0, 4);
+$latestArticles = get_actual_posts('articles', 0, 0, 4);
+
+if (empty($url_parts) || empty($url_parts[0])) {
+    $homeJsonLd = generateHomePagePublicationsJsonLdWithTags($latestNews, $latestArticles);
+
+    $homeJsonLdJson = json_encode(
+        $homeJsonLd,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+    );
+}
+
+function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?string $city = null): array
+{
+    // Объединяем всех специалистов в один массив
+    $allSpecialists = [];
+    $specialistCount = 0;
+    foreach ($specialistsBlocks as $block) {
+        $allSpecialists = array_merge($allSpecialists, $block);
+        $specialistCount += count($block);
+    }
+
+    // Формируем title, например "Юристы и адвокаты, эксперты, нотариусы Москва"
+    $types = [];
+    foreach ($specialistsBlocks as $blockName => $block) {
+        if (!empty($block)) {
+            switch ($blockName) {
+                case 'lawyers':
+                    $types[] = 'Юристы и адвокаты';
+                    break;
+                case 'experts':
+                    $types[] = 'эксперты';
+                    break;
+                case 'notaries':
+                    $types[] = 'нотариусы';
+                    break;
+            }
+        }
+    }
+    $categoryTitle = implode(', ', $types);
+    if ($city) {
+        $categoryTitle .= ' ' . $city;
+    }
+
+    // Формируем элементы ItemList
+    $itemListElements = [];
+    foreach ($allSpecialists as $i => $spec) {
+        $knowsAbout = '';
+        if (!empty($spec['specialization'])) {
+            if (!empty($spec['specialization_count']) && $spec['specialization_count'] > 1) {
+                $knowsAbout = mb_strimwidth($spec['specialization'], 0, 21, '...', 'UTF-8');
+                $specializationText = num_decline($spec['specialization_count'] - 1, 'специализация, специализации, специализаций');
+                $knowsAbout .= " и ещё {$specializationText}";
+            } else {
+                $knowsAbout = mb_strimwidth($spec['specialization'], 0, 42, '...', 'UTF-8');
+            }
+        }
+
+        $address = [
+            "@type" => "PostalAddress",
+            "addressLocality" => $spec['city_name'] ?? ''
+        ];
+
+        if (!empty($spec['metro_name'])) {
+            $address["streetAddress"] = 'м. ' . $spec['metro_name'];
+        }
+
+        $name = !empty($spec['company_name'])
+            ? $spec['company_name']
+            : trim(($spec['name'] ?? '') . ' ' . ($spec['lastname'] ?? ''));
+
+        $itemListElements[] = [
+            "@type" => "ListItem",
+            "position" => $i + 1,
+            "item" => [
+                "@type" => "LegalService",
+                "url" => full_url('specialist/id' . ($spec['id'] ?? '')),
+                "image" => full_url('/uploads/avatars/' . ($spec['photo'] ?? '')),
+                "name" => $name,
+                "additionalType" => $spec['classification_title'] ?? '',
+                "knowsAbout" => $knowsAbout,
+                "address" => $address
+            ]
+        ];
+    }
+
+    return [
+        "@context" => "https://schema.org",
+        "@type" => "ItemList",
+        "name" => $categoryTitle ?: "Специалисты",
+        "numberOfItems" => $specialistCount,
+        "itemListElement" => $itemListElements
+    ];
+}
+
+function generateHomePageWebSiteJsonLd(): string
+{
+    // Год для copyright
+    $year = date('Y');
+
+    // Социальные сети
+    $socialLinks = get_all_social(); // предполагаемая функция
+    $sameAs = [];
+    foreach ($socialLinks as $social) {
+        if (!empty($social['link'])) {
+            $sameAs[] = $social['link'];
+        }
+    }
+
+    // Формируем JSON-LD
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "WebSite",
+        "url" => "https://urfaq.ru",
+        "name" => "ЮРФАК.РУ - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов",
+        "inLanguage" => "ru-RU",
+        "copyrightYear" => $year,
+        "license" => "https://urfaq.ru/o-proekte",
+        "publisher" => [
+            "@type" => "Organization",
+            "name" => "ЮРФАК.РУ (URFAQ.RU)",
+            "url" => "https://urfaq.ru",
+            "address" => [
+                "@type" => "PostalAddress",
+                "addressCountry" => "RU",
+                "addressRegion" => "Россия",
+                "addressLocality" => "Москва"
+            ],
+            "contactPoint" => [
+                "@type" => "ContactPoint",
+                "email" => "info@urfaq.ru",
+                "availableLanguage" => "Russian"
+            ],
+        ],
+        "copyrightHolder" => [
+            "@type" => "Organization",
+            "name" => "ЮРФАК.РУ (URFAQ.RU)",
+            "url" => "https://urfaq.ru"
+        ],
+        "sameAs" => $sameAs,
+        "potentialAction" => [
+            "@type" => "SearchAction",
+            "name" => "Поиск по сайту",
+            "target" => [
+                "@type" => "EntryPoint",
+                "urlTemplate" => "https://urfaq.ru/search?text={search_term_string}"
+            ],
+            "query-input" => "required name=search_term_string"
+        ]
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
+if (empty($url_parts) || empty($url_parts[0])) {
+    $HTML = str_replace('<!--webSiteJsonLd-->', generateHomePageWebSiteJsonLd(), $HTML);
+}
+
+// Получаем топ-специалистов
+$specialists_top_json = get_promo_list('block_top_specialists');
+
+// Объединяем их в массив для генерации ItemList
+$specialistsBlocks = [
+    'top'     => $specialists_top_json,
+    'lawyers' => $lawyers,
+    'experts' => $experts,
+    'notaries' => $notaries
+];
+
+if (empty($url_parts) || empty($url_parts[0])) {
+    $homeSpecialistsJsonLd = generateHomePageSpecialistsItemListJsonLd($specialistsBlocks, $cityGenitive);
+}
+
 $HTML = str_replace(
     '<!--data:city_genitive--><!--data:city_genitive-->',
     '<!--data:city_genitive-->' . $data['city_genitive'] . '<!--data:city_genitive-->',
     $HTML
 );
+
+$HTML = str_replace(
+    '<!--data:city_genitive--><!--data:city_genitive-->',
+    '<!--data:city_genitive-->' . $data['city_genitive'] . '<!--data:city_genitive-->',
+    $HTML
+);
+
+if (empty($url_parts) || empty($url_parts[0])) {
+    $HTML = str_replace(
+        '<!--homeJsonLd-->',
+        '<script type="application/ld+json">' . PHP_EOL . $homeJsonLdJson . PHP_EOL . '</script>',
+        $HTML
+    );
+
+    $HTML = str_replace(
+        '<!--homeSpecialistsJsonLd-->',
+        '<script type="application/ld+json">' . PHP_EOL .
+            json_encode($homeSpecialistsJsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+            PHP_EOL . '</script>',
+        $HTML
+    );
+}

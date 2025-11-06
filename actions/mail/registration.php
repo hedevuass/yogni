@@ -58,7 +58,12 @@ $social_html .= '</tr>';
 
 if (isset($_POST['email'])) {
     $email = clean_elem_form($_POST['email']);
-    $name = clean_elem_form($_POST['name']);
+    $company = clean_elem_form($_POST['company']);
+    if ($company && !empty($company)) {
+      $name = $company;
+    } else {
+      $name = clean_elem_form($_POST['name']);
+    }
     $user = get_user_by_email($email);
 
     if ($user && isset($user['id'])) {
@@ -231,7 +236,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на urfaq.ru Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
                          <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>

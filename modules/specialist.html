@@ -25,6 +25,31 @@
     }
   }
 </style>
+<script type="text/javascript">
+	(function(m,e,t,r,i,k,a){
+		m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+		m[i].l=1*new Date();
+		for (var j = 0; j < document.scripts.length; j++) {
+			if (document.scripts[j].src === r) return;
+		}
+		k=e.createElement(t),a=e.getElementsByTagName(t)[0];
+		k.async=1;k.src=r;a.parentNode.insertBefore(k,a);
+	})(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=104107457', 'ym');
+
+	ym(104107457, 'init', {
+		ssr: true,
+		webvisor: true,
+		clickmap: true,
+		ecommerce: "dataLayer",
+		accurateTrackBounce: true,
+		trackLinks: true
+	});
+</script>
+<noscript>
+	<div>
+		<img src="https://mc.yandex.ru/watch/104107457" style="position:absolute; left:-9999px;" alt="">
+	</div>
+</noscript>
 <div class="navi">
   <div class="wrap">
     <a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
@@ -106,6 +131,7 @@
             <textarea class="inp" name="review" placeholder="Текст отзыва (не более 850 символов)" maxlength="850"></textarea>
             <div class="invalid-feedback"></div>
           </div>
+          <!--data:captcha_review--><!--data:captcha_review-->
           <div class="button">
             <p>
               Нажимая “Отправить”, я принимаю изложенное в документах,
@@ -130,39 +156,10 @@
 </div>
 
 <!--data:mail--><!--data:mail-->
-<div class="popup confirmation__popup">
-  <div class="bg"></div>
-  <div class="window">
-    <div class="close"></div>
-    <div class="reg">
-      <div class="name">Подтверждение прав</div>
-      <div class="form">
-        <div class="field">
-          <input type="text" name="email" placeholder="Email*" class="inp" />
-          <input type="hidden" name="user_id" id="user_id_input" placeholder="User_id*" value="" class="inp" />
-          <div class="invalid-feedback"></div>
-        </div>
-        <div class="button">
-          <p>
-            Нажимая “Подтвердить права”, я принимаю изложенное в документах,
-            представленных в разделе сайта “О проекте”.
-          </p>
-          <button class="popup-btn send-confirmation">Подтвердить права</button>
-        </div>
-        <div class="bottom-links flex">
-          <div>
-            <a class="login">Войти</a>
-            <a class="reg">Зарегистрироваться</a>
-          </div>
-          <a class="feedback">Контакты</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!--data:confirmation_popup--><!--data:confirmation_popup-->
 <div class="popup confirmation__popup2">
   <div class="bg"></div>
-  <div class="window">
+  <div class="window middle">
     <div class="close"></div>
     <div class="reg">
       <div class="name">Подтверждение прав</div>

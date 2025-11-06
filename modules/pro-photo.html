@@ -51,7 +51,7 @@
       </div>
     </div>
     <div class="top-back">
-      <img src="/assets/img/cabinet/pro-photo-back.png" />
+      <img src="/assets/img/cabinet/pro-photo-back.webp" />
     </div>
   </div>
   <div class="section-pro-photo" id="formati">
@@ -94,6 +94,11 @@
         <div class="card__text">
           <!--data:description1--><!--data:description1-->
         </div>
+        <div class="popup-description hidden">
+          <ul>
+            <!--data:popup_description_li1--><!--data:popup_description_li1-->
+          </ul>
+        </div>
       </div>
       
 
@@ -126,14 +131,15 @@
               </li>
             </ul>
             <a class="card__buy-btn">Заказать</a>
-            <div class="card__postscr">
-              <!-- Общий текст скидки -->
-              <!--data:discount_text2--><!--data:discount_text2-->
-            </div>
           </div>
         </div>
         <div class="card__text">
           <!--data:description2--><!--data:description2-->
+        </div>
+        <div class="popup-description hidden">
+          <ul>
+            <!--data:popup_description_li2--><!--data:popup_description_li2-->
+          </ul>
         </div>
       </div>
       
@@ -166,14 +172,15 @@
               </li>
             </ul>
             <a class="card__buy-btn">Заказать</a>
-            <div class="card__postscr">
-              <!-- Показываем текст скидки только если скидка активна -->
-              <!--data:discount_text3--><!--data:discount_text3-->
-            </div>
           </div>
         </div>
         <div class="card__text">
           <!--data:description3--><!--data:description3-->
+        </div>
+        <div class="popup-description hidden">
+          <ul>
+            <!--data:popup_description_li3--><!--data:popup_description_li3-->
+          </ul>
         </div>
       </div>      
 
@@ -187,6 +194,10 @@
                   <div class="title"><!--data:mob_title1--><!--data:mob_title1--></div>
                 </div>
                 <div class="card__price-block">
+                  <div class="card__price old">
+                    <span class="price crossed bold"><!--data:mob_price_old1--><!--data:mob_price_old1--></span>
+                    <span class="currency"></span>
+                  </div>
                   <div class="card__price">
                     <span class="price"><!--data:mob_price1--><!--data:mob_price1-->
                     <span style="font-weight: 300; color: #6A6A6A;"> ₽</span></span>
@@ -208,8 +219,12 @@
                 </div>
               </div>
               <div class="card__text">
-                <!-- Для мобильного описания, если требуется динамика, можно подставить: -->
                 <!--data:mob_description1--><!--data:mob_description1-->
+              </div>
+              <div class="popup-description hidden">
+                <ul>
+                  <!--data:mob_popup_description_li1--><!--data:mob_popup_description_li1-->
+                </ul>
               </div>
             </div>
           </div>
@@ -246,14 +261,15 @@
                     </li>
                   </ul>                  
                   <a class="card__buy-btn">Заказать</a>
-                  <div class="card__postscr">
-                    <!-- Динамический текст скидки -->
-                    <!--data:mob_discount_text2--><!--data:mob_discount_text2-->
-                  </div>
                 </div>
               </div>
               <div class="card__text">
                 <!--data:mob_description2--><!--data:mob_description2-->
+              </div>
+              <div class="popup-description hidden">
+                <ul>
+                  <!--data:mob_popup_description_li2--><!--data:mob_popup_description_li2-->
+                </ul>
               </div>
             </div>
           </div>
@@ -291,13 +307,15 @@
                   </ul>                  
                   </ul>
                   <a class="card__buy-btn">Заказать</a>
-                  <div class="card__postscr">
-                    <!--data:mob_discount_text3--><!--data:mob_discount_text3-->
-                  </div>
                 </div>
               </div>
               <div class="card__text">
                 <!--data:mob_description3--><!--data:mob_description3-->
+              </div>
+              <div class="popup-description hidden">
+                <ul>
+                  <!--data:mob_popup_description_li3--><!--data:mob_popup_description_li3-->
+                </ul>
               </div>
             </div>
           </div>
@@ -338,7 +356,7 @@
           <div class="promo__example-card">
             <div class="promo__example"></div>
             <div class="promo__example-text">
-              Пример удачного стиля для фотосессии
+              Пример удачного делового стиля для фотосессии
             </div>
           </div>
         </div>
@@ -346,7 +364,7 @@
           <div class="promo__example-card">
             <div class="promo__example promo__example2"></div>
             <div class="promo__example-text">
-              Пример неудачного стиля для фотосессии
+              Пример неудачного делового стиля для фотосессии
             </div>
           </div>
         </div>
@@ -357,13 +375,13 @@
     <div class="promo__example-card hidden-comp">
       <div class="promo__example"></div>
       <div class="promo__example-text">
-        Пример удачного стиля для фотосессии
+        Пример удачного делового стиля для фотосессии
       </div>
     </div>
     <div class="promo__example-card hidden-comp">
       <div class="promo__example promo__example2"></div>
       <div class="promo__example-text">
-        Пример неудачного стиля для фотосессии
+        Пример неудачного делового стиля для фотосессии
       </div>
     </div>
 
@@ -380,12 +398,12 @@
     <div class="pro-photo__how three-quarters" id="how-it-works">
       <div class="how__title">Как это работает?</div>
       <div class="how__text text">
-        Съёмка не требует специальной подготовки и займёт не более 15 минут
+        Съёмка не требует специальной подготовки и займет совсем немного времени.
       </div>
       <div class="how__list">
-        <li class="text">Вы оставляете заявку</li>
-        <li class="text">Мы согласуем дату съёмки</li>
-        <li class="text">Фото будут готовы в течение 3 дней после съемки</li>
+        <li class="text">Вы оставляете заявку.</li>
+        <li class="text">Мы согласуем дату съёмки.</li>
+        <li class="text">Фото будут готовы в течение нескольких дней после съёмки.</li>
       </div>
     </div>
     <div class="quarter-block">
@@ -405,7 +423,7 @@
           alt="Image 3"
           class="circle-image"
         /> -->
-        <img src="../assets/img/cabinet/order-photo-images.png" alt="Image 1">
+        <img src="../assets/img/cabinet/selection-rule-photo.webp" alt="Image 1">
       </div>
       <!--data:faq_page--><!--data:faq_page-->
     </div>
@@ -508,6 +526,8 @@
     </div>
   </div>
 </div>
+
+<div class="hidden"><!--data:popup_description_li4--><!--data:popup_description_li4--></div>
 
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

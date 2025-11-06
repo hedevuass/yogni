@@ -33,8 +33,7 @@ if (preg_match('/^id(\d+)$/', $post_type, $m)) {
         [$blog_id]
     );
     $total_posts = (int)$row['cnt'];
-}
-elseif ($svc = $data_base->selectRow(
+} elseif ($svc = $data_base->selectRow(
     "SELECT id FROM dt_service WHERE slug = ? LIMIT 1",
     [$post_type]
 )) {
@@ -45,8 +44,7 @@ elseif ($svc = $data_base->selectRow(
         [$theme_id]
     );
     $total_posts = (int)$row['cnt'];
-}
-elseif ($tag = $data_base->selectRow(
+} elseif ($tag = $data_base->selectRow(
     "SELECT id FROM dt_tags WHERE alias = ? LIMIT 1",
     [$post_type]
 )) {
@@ -60,16 +58,14 @@ elseif ($tag = $data_base->selectRow(
         [$tag_id]
     );
     $total_posts = (int)$row['cnt'];
-}
-elseif (in_array($post_type, ['news','blogs','articles'], true)) {
+} elseif (in_array($post_type, ['news', 'blogs', 'articles'], true)) {
     $queryMode = 'type';
     $row = $data_base->selectRow(
         "SELECT COUNT(*) AS cnt FROM dt_post WHERE post_type=? AND moderation=0",
         [$post_type]
     );
     $total_posts = (int)$row['cnt'];
-}
-else {
+} else {
     $row = $data_base->selectRow(
         "SELECT date FROM dt_post WHERE alias=? LIMIT 1",
         [$post_type]
@@ -105,17 +101,13 @@ if ($queryMode === 'blog') {
         $total_posts = (int)$total_all['cnt'];
         $start = $new_start;
     }
-}
-elseif ($queryMode === 'alias') {
+} elseif ($queryMode === 'alias') {
     $posts = get_actual_posts('', 0, 0, $limit, $start, 0, $max_date);
-}
-elseif ($queryMode === 'theme') {
+} elseif ($queryMode === 'theme') {
     $posts = get_actual_posts('', $theme_id, 0, $limit, $start, 0, '');
-}
-elseif ($queryMode === 'tag') {
+} elseif ($queryMode === 'tag') {
     $posts = get_actual_posts('', 0, $tag_id, $limit, $start, 0, '');
-}
-else {
+} else {
     $posts = get_actual_posts($post_type, 0, 0, $limit, $start, 0, '');
 }
 
@@ -144,13 +136,28 @@ foreach ($posts as $post) {
     $data .= '</div>';
     $data .= '<a href="' . $post_alias . '" class="name">' . strip_tags(html_entity_decode($post['title'])) . '</a>';
     if ($post['photo'] != '' && !is_null($post['photo'])) {
-        $data .= '<a href="' . $post_alias . '" class="image" style="background-image: url(/uploads/articles/' . $post['photo'] . ');"></a>';
+        $data .= '<a href="' . $post_alias . '" class="image lazy-bg" data-bg="/uploads/articles/' . $post['photo'] . '"></a>';
     }
     if ($post['post_type'] == 'blogs') {
-        $data .= '<a class="content cut-text-blogs" href="' . $post_alias . '">' . strip_tags(html_entity_decode($post['content'])) . '</a>';
+        $content = html_entity_decode($post['content'], ENT_QUOTES, 'UTF-8');
+        // Меняем переносы и блочные теги на пробел
+        $content = preg_replace('/<\s*br\s*\/?>/i', ' ', $content);
+        // Убираем остальные HTML-теги
+        $content = strip_tags($content);
+        // Сжимаем лишние пробелы
+        $content = preg_replace('/\s{2,}/u', ' ', trim($content));
+
+        $data .= '<a class="content cut-text-blogs" href="' . $post_alias . '">' . $content . '</a>';
     } else {
-        $data .= '<a class="content cut-text" href="' . $post_alias . '">' . strip_tags(html_entity_decode($post['content'])) . '</a>';
+        $content = html_entity_decode($post['content'], ENT_QUOTES, 'UTF-8');
+        $content = preg_replace('/<\s*br\s*\/?>/i', ' ', $content);
+        $content = preg_replace('/<\/(p|div|li|h[1-6])>/i', ' ', $content);
+        $content = strip_tags($content);
+        $content = preg_replace('/\s{2,}/u', ' ', trim($content));
+
+        $data .= '<a class="content cut-text" href="' . $post_alias . '">' . $content . '</a>';
     }
+
 
     if ($author_blog_link && $author_name) {
         $data .= '<a href="' . $author_blog_link . '" class="author">' . htmlspecialchars($author_name) . '</a>';

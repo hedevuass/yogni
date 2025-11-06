@@ -5,6 +5,57 @@ $data = [];
 
 if (!isset($_GET['reg']) && !isset($_GET['confirmation'])) responseRedirect('/');
 
+//Социальные сети
+$socials = get_all_social();
+$social_html = '<tr style="border-collapse:collapse">';
+foreach ($socials as $social) {
+    if (!empty($social['link'])) {
+        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+        $height = 24; 
+        $width = 30;
+        
+        switch ($social['alt']) {
+          case 'Youtube':
+              $image_src .= $social['image'];
+              $height = 24;
+              $width = 30;
+              break;
+          case 'Telegram':
+              $image_src .= $social['image'];
+              $height = 24;
+              $width = 24;
+              break;
+          case 'Vk':
+              $image_src .= $social['image'];
+              $height = 24;
+              $width = 24;
+              break;
+          case 'Yandex':
+              $image_src .= $social['image'];
+              $height = 24;
+              $width = 24;
+              break;
+          default:
+              $image_src .= $social['image'];
+              break;
+      }
+        
+        $social_html .= '
+            <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
+                <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
+                   style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px">
+                    <img src="' . $image_src . '" 
+                         alt="' . htmlspecialchars($social['alt']) . '" 
+                         title="' . ucfirst(htmlspecialchars($social['alt'])) . '" 
+                         height="' . $height . '" 
+                         width="' . $width . '" 
+                         style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic">
+                </a>
+            </td>';
+    }
+}
+
+$social_html .= '</tr>';
 
 if (isset($_GET['reg'])) {
     $data['title'] = 'Завершение регистрации';
@@ -20,7 +71,7 @@ if (isset($_GET['reg'])) {
 
         if ($activate) {
             $mail_title = 'ЮРФАК - успешная регистрация';
-            $mail_name = $specialist['name'] . ' ' . $specialist['lastname'];
+            $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
             $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
             $link_url .= '/cabinet?confirmation&user_id=' . $user_id.'&hash='.$hash;
             $mail_body = <<<EOF
@@ -160,12 +211,7 @@ if (isset($_GET['reg'])) {
                                  <tbody><tr style="border-collapse:collapse">
                                  <td align="center" class="es-m-p0t" style="padding:0;Margin:0;padding-top:20px;padding-bottom:40px;font-size:0">
                                  <table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
-                                     <tbody><tr style="border-collapse:collapse">
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_1.png" alt="Yt" title="Youtube" height="24" width="30" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_2.png" alt="Telegram" title="Telegram" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/cib_vk.png" alt="Vk" title="Vkontakte" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/brandico_yandexrect.png" alt="Ya" title="Yandex" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     </tr>
+                                     <tbody>{$social_html}
                                      </tbody></table></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
@@ -178,7 +224,7 @@ if (isset($_GET['reg'])) {
                                      <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
                                      <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
@@ -213,7 +259,7 @@ if (isset($_GET['confirmation'])) {
     $email = clean_elem_form($_GET['email']);
     $specialist = get_specialist($user_id);
     $hash = $specialist['hash'];
-    $mail_name = $specialist['name'] . ' ' . $specialist['lastname'];
+    $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
     $link_url = $site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
     $link_url .= '/cabinet?confirmation&user_id=' . $user_id.'&hash='.$hash;
     $mail_body = <<<EOF
@@ -353,12 +399,7 @@ if (isset($_GET['confirmation'])) {
                                  <tbody><tr style="border-collapse:collapse">
                                  <td align="center" class="es-m-p0t" style="padding:0;Margin:0;padding-top:20px;padding-bottom:40px;font-size:0">
                                  <table cellpadding="0" cellspacing="0" class="es-table-not-adapt es-social" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
-                                     <tbody><tr style="border-collapse:collapse">
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_1.png" alt="Yt" title="Youtube" height="24" width="30" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/vector_2.png" alt="Telegram" title="Telegram" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/cib_vk.png" alt="Vk" title="Vkontakte" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     <td align="center" valign="top" style="padding:0;Margin:0"><a target="_blank" href="https://www.google.com/" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/brandico_yandexrect.png" alt="Ya" title="Yandex" height="24" width="24" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic"></a></td>
-                                     </tr>
+                                     <tbody>{$social_html}
                                      </tbody></table></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
@@ -371,7 +412,7 @@ if (isset($_GET['confirmation'])) {
                                      <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
                                      <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>

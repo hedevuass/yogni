@@ -1,6 +1,12 @@
 <?php
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
+require_once __DIR__ . '/vendor/autoload.php';
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 $time_now = time();
 $time_now_Y = date( 'Y' , $time_now );
 $time_now_m = date( 'm' , $time_now );
@@ -24,20 +30,20 @@ else
 	$ip_current_user = '0.0.0.0';
 
 // Email's
-const EMAIL_FEEDBACK = 'info@urfaq.ru';
+define('EMAIL_FEEDBACK', $_ENV['EMAIL_FEEDBACK']);
 
 // Урл сайта
-const SITE_URL = 'yrfak/';
+define('SITE_URL', $_ENV['SITE_URL']);
 
 // База данных
 
 // Показ ошибок: ERRMODE_SILENT - не показывать ошибки, ERRMODE_EXCEPTION - показывать ошибки
 const ERRMODE_SET = PDO::ERRMODE_EXCEPTION;
 
-const DB_HOSTNAME = 'MySQL-8.0';
-const DB_DATABASE = 'urfac';
-const DB_USERNAME = 'root';
-const DB_PASSWORD = '';
+define('DB_HOSTNAME', $_ENV['DB_HOST']);
+define('DB_DATABASE', $_ENV['DB_DATABASE']);
+define('DB_USERNAME', $_ENV['DB_USERNAME']);
+define('DB_PASSWORD', $_ENV['DB_PASSWORD']);
 
 // Город по умолчанию
 if (!isset($_SESSION['city'])) $_SESSION['city'] = [
@@ -47,9 +53,7 @@ if (!isset($_SESSION['city'])) $_SESSION['city'] = [
 
 // Админская часть приложения
 $settings = [
-    /* 'login' => 'admin',
-    'password' => 'password1', */
-    'admin_href' => '/admin-dt/',
+    'admin_href' => '/dicfacducfer1113/',
 	'favicon' => '/uploads/fav-icon/favicon.png',
 ];
 

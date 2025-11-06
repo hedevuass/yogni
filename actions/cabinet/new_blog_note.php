@@ -7,6 +7,24 @@ $forbidden_words = getForbiddenWords();
 
 $specialist = get_specialist($_SESSION['user']['id']);
 
+function textarea_to_html_entities_preserve($text) {
+    // 1. Убираем лишние пробелы и переносы в начале/конце
+    $text = trim($text);
+
+    // 2. Кодируем спецсимволы (<, >, &, " и т.д.)
+    $text = htmlspecialchars($text, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+
+    // 3. Заменяем переносы строк на <br> (в виде сущностей)
+    $text = str_replace("\n", '&lt;br&gt;', $text);
+
+    // 4. Убираем любые реальные переводы строк (чтобы всё в 1 строке)
+    $text = str_replace(["\r", "\n"], '', $text);
+
+    // 5. Оборачиваем всё в <div> (в виде сущностей)
+    return '&lt;div&gt;' . $text . '&lt;/div&gt;';
+}
+
+
 if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
     foreach ($_POST as $key => $value) {
         $data[$key] = clean_elem_form($value);
@@ -59,6 +77,10 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
         // $data['keywords'] = implode(', ', $keywords);
         $data['keywords'] = '';
 
+        $original_content = $data['content'];
+
+        $data['content'] = textarea_to_html_entities_preserve($data['content']);
+
         if ($data['is_edit'] == 'false') {
             $article_id = intval(create_article($data));
         } else {
@@ -72,8 +94,8 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
             'date'  => date('d.m.Y'),
             'name'  => !empty($specialist['company']) ? $specialist['company'] : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? '')),
             'title' => $data['title'],
-            'link'  => 'https://urfaq.ru/admin-dt/posts ',
-            'text'  => $data['content']
+            'link'  => 'https://urfaq.ru/dicfacducfer1113/posts ',
+            'text'  => $original_content
         ];
         
         $opts = [

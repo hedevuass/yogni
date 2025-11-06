@@ -4,15 +4,17 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
+require_once __DIR__ . '/../../libs/securimage/securimage.php';
+
 //Социальные сети
 $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
     if (!empty($social['link'])) {
         $image_src = 'https://urfaq.ru/assets/img/login-parol/';
-        $height = 24; 
+        $height = 24;
         $width = 30;
-        
+
         switch ($social['alt']) {
             case 'Youtube':
                 $image_src .= $social['image'];
@@ -38,7 +40,7 @@ foreach ($socials as $social) {
                 $image_src .= $social['image'];
                 break;
         }
-        
+
         $social_html .= '
             <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
                 <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
@@ -58,19 +60,38 @@ $social_html .= '</tr>';
 
 if (isset($_POST['email'])) {
     $email = clean_elem_form($_POST['email']);
+    $captchaCode = $_POST['captcha_code'] ?? '';
+    $captchaId = $_POST['captcha_id'] ?? null;
 
+    // Проверка email
     if (!$email) $json['error']['email'] = 'Укажите email';
-
-    if ($email) {
-        if (!filter_var($email, FILTER_SANITIZE_EMAIL)) $json['error']['email'] = 'Некорректный email';
-        if (!$specialist = get_user_by_email($email)) $json['error']['email'] = 'Email не зарегистрирован';
+    elseif (!filter_var($email, FILTER_SANITIZE_EMAIL)) $json['error']['email'] = 'Некорректный email';
+    elseif (!$specialist = get_user_by_email($email)) $json['error']['email'] = 'Email не зарегистрирован';
+    elseif ($specialist['deleted'] == 1 && !is_null($specialist['deleted_at'])) {
+        $deletedTs = strtotime($specialist['deleted_at']);
+        if (time() - $deletedTs > 30 * 24 * 60 * 60) {
+            $json['error']['email'] = 'Email не зарегистрирован';
+        }
     }
 
-    if (isset($json['error'])) responseJson($json);
+    // Проверка капчи
+    if ($captchaId) {
+        $securimage = new Securimage();
+        if (!$captchaCode) {
+            $json['error']['captcha_error'] = 'Введите код с картинки.';
+        } elseif (!$securimage->check($captchaCode, $captchaId)) {
+            $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
+        }
+    }
+
+    // Если есть хоть одна ошибка — возвращаем JSON
+    if (!empty($json['error'])) responseJson($json);
+
+    // Если ошибок нет — продолжаем восстановление
     $hash = $specialist['hash'];
     $id = $specialist['id'];
-    $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-    $link_url .= '/cabinet/login-i-parol?recovery&hash='.$hash.'&user_id='.$id;
+    $site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+    $link_url = $site_url . '/cabinet/login-i-parol?recovery&hash=' . $hash . '&user_id=' . $id;
     $title = 'ЮРФАК - восстановление пароля';
     'Для восстановления пароля перейдите по ссылке: ' . ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/cabinet/login-i-parol?recovery&hash=' . $specialist['hash'] . '&id=' . $specialist['id'];
     $body = <<<EOF
@@ -228,7 +249,7 @@ mso-hide:all;
                 <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                 </tr>
                 <tr style="border-collapse:collapse">
-                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                 </tr>
                 <tr style="border-collapse:collapse">
                 <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>

@@ -9,7 +9,7 @@ if(isset($_POST['start'])) {
     $blog = get_specialist_blog($_SESSION['user']['id']);
     if ($blog) {
         $blog_id = $blog['id'];
-        $articles = get_blog_articles($blog_id, 0, 5, $start, [0, 1]);
+        $articles = get_blog_articles($blog_id, 0, 5, $start, [0, 1, 2]);
         $json['articles'] = block_articles_cabinet($articles, false);
         if (count($articles) < 5) {
             $json['no_more'] = true;

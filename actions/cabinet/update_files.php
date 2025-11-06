@@ -32,7 +32,12 @@ if (isset($_POST['name'])) {
 
             // — если пришёл новый файл, заменяем
             if (isset($_FILES[$key]) && $_FILES[$key]['error'] === UPLOAD_ERR_OK) {
-                $image = load_image($_FILES[$key], 'documents');
+                if ($_FILES[$key]['size'] > 5 * 1024 * 1024) {
+                    $json['error'][$key] = 'Файл слишком большой (максимальный размер - до 5 МБ).';
+                    continue;
+                }
+
+                $image = load_image_webp($_FILES[$key], 'documents');
                 if (isset($image['error'])) {
                     $json['error'][$key] = $image['error'];
                     continue;
@@ -63,7 +68,7 @@ if (isset($_POST['name'])) {
         }
 
         // загружаем файл
-        $image = load_image($_FILES[$key], 'documents');
+        $image = load_image_webp($_FILES[$key], 'documents');
         if (isset($image['error'])) {
             $json['error'][$key] = $image['error'];
             continue;

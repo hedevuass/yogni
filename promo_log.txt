@@ -1,4 +1,0 @@
-Entry: {"date_start":"2025-07-14 00:00:00","date_expires":"2025-07-20 00:00:00","moderation":"3","connected_at":"2025-07-07 21:03:20","qrcId":null}
-Moderation=3, passed: {"date_start":"2025-07-14 00:00:00","date_expires":"2025-07-20 00:00:00","moderation":"3","connected_at":"2025-07-07 21:03:20","qrcId":null}
-Entry: {"date_start":"2025-07-14 00:00:00","date_expires":"2025-07-20 00:00:00","moderation":"3","connected_at":"2025-07-07 21:03:20","qrcId":null}
-Moderation=3, passed: {"date_start":"2025-07-14 00:00:00","date_expires":"2025-07-20 00:00:00","moderation":"3","connected_at":"2025-07-07 21:03:20","qrcId":null}

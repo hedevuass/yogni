@@ -43,18 +43,33 @@ if (($user['classification_id'] == 4) && $menu_page['id'] == 6) responseRedirect
 
 $hasPhoto = !empty($user['photo']);
 
-$user['photo'] = $hasPhoto ? '/uploads/avatars/' . $user['photo'] : '/assets/img/cabinet/no-photo.svg';
+// Проверяем миниатюру, потом оригинал, потом дефолт
+if ($hasPhoto && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/thumb_' . $user['photo'])) {
+    $user['photo'] = '/uploads/avatars/thumb_' . $user['photo'];
+} elseif ($hasPhoto && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/' . $user['photo'])) {
+    $user['photo'] = '/uploads/avatars/' . $user['photo'];
+} else {
+    $user['photo'] = '/assets/img/cabinet/no-photo.svg';
+    $hasPhoto = false; // обновляем флаг
+}
+
 $user['class'] = $hasPhoto ? 'filled' : '';
 $userNameDisplay = ($user['company'] ? " {$user['company']}" : " {$user['name']}");
 
 $data['user_header'] = <<<EOF
 <i><img class="{$user['class']}" src="{$user['photo']}"></i><img class="arrow-down" src="/assets/img/cabinet/arrow-down.svg">
-    <div class="dropdown-content">
-        <div class="img-user-dropdown"><i><img class="{$user['class']}" src={$user['photo']}></i> <div class="header-column"><p class="user-name">$userNameDisplay</p><a href="/redaktirovat-informatsiyu">Редактировать страницу</a></div></div>
-		<a href="../specialist/id{$user['id']}"><img src="/assets/img/cabinet/cabinet-dropdown.svg"> Перейти на страницу</a>
-        <a href="../faq"><img src="/assets/img/cabinet/faq-dropdown.svg"> Частые вопросы</a>
-        <a href="/actions/account/logout.php"><img src="/assets/img/cabinet/exit-dropdown.svg"> Выйти</a>
+<div class="dropdown-content">
+    <div class="img-user-dropdown">
+        <i><img class="{$user['class']}" src="{$user['photo']}"></i>
+        <div class="header-column">
+            <p class="user-name">$userNameDisplay</p>
+            <a href="/redaktirovat-informatsiyu">Редактировать страницу</a>
+        </div>
     </div>
+    <a href="../specialist/id{$user['id']}"><img src="/assets/img/cabinet/cabinet-dropdown.svg"> Перейти на страницу</a>
+    <a href="../faq"><img src="/assets/img/cabinet/faq-dropdown.svg"> Частые вопросы</a>
+    <a href="/actions/account/logout.php"><img src="/assets/img/cabinet/exit-dropdown.svg"> Выйти</a>
+</div>
 EOF;
 
 // Меню для страниц редактирования личной информации
@@ -245,33 +260,43 @@ function generate_tariff_status($tariffs, $connected_tariffs_map) {
 
 function generate_pro_photo_status($pro_photo_records, $registered_at)
 {
-    // По умолчанию статус – "Не проведена"
+    // По умолчанию
     $status = 'Не проведена';
     $status_class = 'red-dot';
+    $show_discount = false;
 
-    // Если найдена хоть одна запись, где moderation равен 0 – статус "Проведена"
+    // Проверяем, есть ли хотя бы одна запись с moderation = 0
     foreach ($pro_photo_records as $record) {
         if ($record['moderation'] == 0) {
             $status = 'Проведена';
             $status_class = 'blue-dot';
-            return ['status' => $status, 'class' => $status_class];
+            return [
+                'status' => $status,
+                'class' => $status_class,
+                'show_discount' => false
+            ];
         }
     }
 
-    // Если не было подходящих записей, проверим дату регистрации
+    // Если записей нет — проверяем 2 недели
     if (!empty($registered_at)) {
         $registered_at_ts = strtotime($registered_at);
         $now = time();
         $diff = $now - $registered_at_ts;
 
-        if ($diff >= 14 * 24 * 60 * 60) { // 14 дней в секундах
-            $status = 'Проведена';
-            $status_class = 'blue-dot';
+        if ($diff < 14 * 24 * 60 * 60) {
+            // прошло меньше 2 недель — показываем скидку
+            $show_discount = true;
         }
     }
 
-    return ['status' => $status, 'class' => $status_class];
+    return [
+        'status' => $status,
+        'class' => $status_class,
+        'show_discount' => $show_discount
+    ];
 }
+
 
 function generate_option_status($connected_options_map, $connected_tariffs_map)
 {
@@ -344,7 +369,7 @@ $top_cards = '
 </div>
     <div class="card">
       <div class="card-topline"><h4>PRO-фото <span class="status-dot"></span></h4><img src="../assets/img/cabinet/card-photo.svg" alt=""></div>
-        <p>Скидка 50% до 17.04.24</p>
+        <p>Скидка 50% в первые две недели</p>
         <div class="card-status">
             <span>Не проведена</span>
             <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>

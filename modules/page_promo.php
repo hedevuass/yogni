@@ -415,6 +415,9 @@ function generate_tariff_html($tariff, $class, $specialist_id, $connected_tariff
   $options = json_decode($tariff['options'], true);
   $options_html = '';
   foreach ($options as $option) {
+    
+    if ($option['image'] === 'tariff-paint.svg') continue;
+    
     $text = $option['text'];
 
     if ($text == "Всё, что в БАЗОВОМ") {
@@ -423,7 +426,12 @@ function generate_tariff_html($tariff, $class, $specialist_id, $connected_tariff
       $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'ПРО\'</span></span>';
     }
 
-    $options_html .= '<li><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . strip_tags($text) . '">' . $text . '</li>';
+    $li_style = ($option['image'] === 'tariff-up.svg') ? ' style="margin-left: -1px;"' : '';
+
+    $options_html .= '<li' . $li_style . '>
+        <img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . strip_tags($text) . '">
+        ' . $text . '
+    </li>';
   }
 
   $button_html = '';
@@ -456,6 +464,9 @@ function generate_mobile_tariff_html($tariff, $class, $specialist_id, $connected
   $options = json_decode($tariff['options'], true);
   $options_html = '';
   foreach ($options as $option) {
+
+    if ($option['image'] === 'tariff-paint.svg') continue;
+
     $text = $option['text'];
 
     if ($text == "Всё, что в БАЗОВОМ") {
@@ -542,10 +553,10 @@ function generate_option_html($option, $connected_options_map, $specialist_id, $
 
   if ($included_in_tariff) {
     // Если опция включена в тариф basic
-    $option_html .= 'Включено в тариф';
+    $option_html .= '<div class="option-220">Включено в тариф</div>';
   } elseif ($is_connected) {
     // Если опция подключена отдельно
-    $option_html .= 'Подключено до ' . htmlspecialchars($end_date);
+    $option_html .= '<div class="option-220">Подключено до ' . htmlspecialchars($end_date) .'</div>';
   } else {
     // Если опция не подключена
     $option_html .= '<button class="connect-button connect-button-option" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">Подключить за ' . htmlspecialchars($option['price']) . ' ₽</button>';
@@ -1272,7 +1283,7 @@ $option_status_data = generate_option_status($connected_options_map, $connected_
 $promo_status_data = generate_promo_status($connected_promo_map);
 $pro_photo_records = get_pro_photo_records($specialist['id']);
 // Генерируем статус фотосъемки
-$pro_photo_status = generate_pro_photo_status($pro_photo_records, $specialist['registered_at']);
+$pro_photo_status = generate_pro_photo_status($pro_photo_records, $specialist['activated_at']);
 
 $discount = 0;
 if (isset($connected_tariffs_map[1])) {
@@ -1329,7 +1340,7 @@ $top_cards = '
         <h4>PRO-фото <span class="status-dot ' . $pro_photo_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-photo.svg" alt="">
     </div>
-    ' . ($pro_photo_status['status'] !== 'Проведена' ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% до 17.04.24</p>' : '') . '
+    ' . ($pro_photo_status['show_discount'] ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% в первые две недели</p>' : '') . '
     <div class="card-status">
         <span>' . $pro_photo_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
@@ -1376,7 +1387,7 @@ $top_cards_mobile = '
         <h4>PRO-фото <span class="status-dot ' . $pro_photo_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-photo.svg" alt="">
     </div>
-    ' . ($pro_photo_status['status'] !== 'Проведена' ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% до 17.04.24</p>' : '') . '
+    ' . ($pro_photo_status['show_discount'] ? '<div class="circle-pro-photo">-50%</div><p>Скидка 50% в первые две недели</p>' : '') . '
     <div class="card-status">
         <span>' . $pro_photo_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt=""></span>
@@ -1391,7 +1402,7 @@ $swiper_banner = '';
 $tariff_slides = [
   'group_1' => [
     'tariff' => [
-      '../assets/img/cabinet/tariff-slide1.png',
+      '../assets/img/cabinet/tariff-slide1.webp',
       /* '../assets/img/cabinet/tariff-slide2.png',
       '../assets/img/cabinet/tariff-slide3.png',
       '../assets/img/cabinet/tariff-slide4.png',

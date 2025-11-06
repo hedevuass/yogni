@@ -1,5 +1,5 @@
 <?php
-file_put_contents('/var/www/html/actions/payment_error_log.txt', date('Y-m-d H:i:s') . " Крон вызвал скрипт проверки счетов\n", FILE_APPEND);
+/* file_put_contents('/var/www/html/actions/payment_error_log.txt', date('Y-m-d H:i:s') . " Крон вызвал скрипт проверки счетов\n", FILE_APPEND); */
 
 include '/var/www/html/actions/database/functions.php';
 /* include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php'; */

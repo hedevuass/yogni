@@ -1581,7 +1581,7 @@ a.blue-link :hover {
   max-width: 1020px;
   height: 480px;
   margin-bottom: 32px;
-  background-image: url(../img/o-proekte.png);
+  background-image: url(../img/o-proekte.webp);
   text-align: center;
 }
 
@@ -1679,7 +1679,7 @@ a.blue-link :hover {
   margin-bottom: 15px;
 }
 
-.index-catalog-block:last-of-type {
+.index-catalog-block:last-of-type:not(:only-child) {
   padding-bottom: 62px;
 }
 
@@ -2233,7 +2233,7 @@ input[type="checkbox"][data-checked="true"] {
   box-sizing: border-box;
   padding: 0 15px 0 33px;
   color: #fff;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 16px;
   line-height: 19px;
 }
@@ -2303,7 +2303,7 @@ input[type="checkbox"][data-checked="true"] {
 .site-menu .name {
   display: block;
   width: fit-content;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
   font-weight: 700;
   font-size: 24px;
   line-height: 28px;
@@ -3108,10 +3108,15 @@ input[type="checkbox"][data-checked="true"] {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  font-weight: 400;
-  font-size: 14px;
+  font-weight: 300;
+  font-size: 16px;
   line-height: 16px;
   margin-bottom: 16px;
+}
+
+.articles .item2 .post-data {
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .popup .window .prices .price-item .price-name {
@@ -3265,11 +3270,25 @@ input[type="checkbox"][data-checked="true"] {
   text-align: center;
 }
 
-.popup .window .reg .invalid-feedback, .popup .window .reg .captcha-error {
+.popup .window .reg .invalid-feedback,
+.popup .window .reg .captcha-error {
   color: #AE000E;
   font-size: 12px;
   line-height: 14px;
   margin-top: 3px;
+}
+
+.popup .window .reg .deleted-account-feedback {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 16px;
+  color: #000;
+}
+
+.popup .window .reg .deleted-account-feedback .show-registration-popup {
+  color: #4F77B4;
+  text-decoration: underline;
 }
 
 .popup .window .reg .field .invalid-feedback.black {
@@ -3941,6 +3960,8 @@ ul.menu-links-mobile li {
 ul.menu-links-mobile-specialist li {
   padding-left: 0 !important;
   padding-right: 0 !important;
+  font-weight: 300;
+  font-size: 16px;
 }
 
 ul.menu-links-mobile li {
@@ -4294,15 +4315,17 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 .wrapper_404 {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: left;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-image: url('../img/enot.png');
+  background-image: url('../img/enot.webp');
   width: 100%;
   padding-top: 90px;
-  min-height: 400px;
-  height: calc(100vh + 400px);
+  height: 806px;
+  margin-bottom: -52px;
 }
 
 .wrapper_404+footer {
@@ -4310,30 +4333,41 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 
 .wrapper_404+footer .footer__body {
-  margin-top: 0;
+  margin-top: 27px;
 }
 
 .wrapper_404 .title_404 {
-  font-size: 24px;
+  font-size: 36px;
   font-weight: 500;
   color: #fff;
-  margin-bottom: 70px;
+  margin-bottom: 32px;
+}
+
+.wrapper_404 .block_404 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: rgba(88, 88, 88, 0.7);
+  padding: 49px;
+  border-radius: 8px;
+  max-width: 530px;
 }
 
 .wrapper_404 .desc_404 {
   font-size: 18px;
   font-weight: 400;
   color: #fff;
-  margin-bottom: 85px;
+  margin-bottom: 48px;
 }
 
 .wrapper_404 .btn_404 {
-  height: 40px;
+  height: 48px;
   border-radius: 48px;
   width: min-content;
   padding: 0 30px;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .mobile-filter-block {
@@ -4570,7 +4604,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 
 .content .reviews>.rating .show-reviews {
-  font-weight: 400;
+  font-weight: 300;
   font-size: 16px;
   text-decoration: underline;
 }
@@ -4597,7 +4631,27 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 
 .reviews .name+p {
+  font-size: 16px;
+  font-weight: 300;
   margin-bottom: 26px;
+}
+
+.ui-autocomplete {
+  border-radius: 0 0 8px 8px !important;
+  overflow: hidden;
+  border: 1px solid #C4C4C4;
+  margin-top: -1px !important;
+}
+
+.popup .window .select-block input[type='text'] {
+  border-radius: 8px;
+  transition: border-radius 0.15s ease;
+}
+
+/* Когда открыт autocomplete — нижние углы убираем */
+.popup .window .select-block input[type='text'].ui-autocomplete-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .reviews .item {
@@ -5053,7 +5107,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 }
 
 .company-page .top-info .rating a {
-  font-weight: 400;
+  font-weight: 300;
   font-size: 16px;
   line-height: 19px;
   text-decoration: underline;
@@ -5125,14 +5179,21 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 .company-page .top-info .education,
 .company-page .top-info .year {
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 16px;
+  font-weight: 300;
+}
+
+.company-page .top-info .city a,
+.company-page .top-info .education a,
+.company-page .top-info .year a {
+  font-weight: 400;
 }
 
 .company-page .top-info .city span,
 .company-page .top-info .education span,
 .company-page .top-info .year span {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .company-page .top-info .specialist-description {
@@ -5191,9 +5252,9 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   text-decoration: none;
   display: inline-block;
   white-space: nowrap;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 14px;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 18px;
   padding: 7px 14px;
   background: #EDF0F1;
   border-radius: 24px;
@@ -5248,8 +5309,9 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .company-page .prices table tr td {
   padding: 8px 0;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 16px;
+  font-weight: 300;
 }
 
 .company-page .prices table tr td:last-child {
@@ -5299,18 +5361,18 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .company-page .days .item .time.day-off {
   color: #AE000E;
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .company-page .days .item .day {
-  font-weight: 500;
+  font-weight: 400;
   width: 27px;
   display: inline-block;
 }
 
 .company-page .days .item .time {
   display: inline-block;
-  font-weight: 400;
+  font-weight: 300;
   width: 132px;
 }
 
@@ -5337,7 +5399,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   -o-transition: all 200ms ease;
   transition: all 200ms ease;
   margin-bottom: 7px;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 300;
   line-height: 16px;
   padding: 5px 28px 5px 0;
   background: url('../img/copy.svg') no-repeat right;
@@ -5356,14 +5419,14 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .company-page .map p {
   font-weight: 300;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 16px;
 }
 
 .company-page .map p.grey {
   font-weight: 400;
   font-size: 16px;
-  color: #6F6F6F;
+  color: #000;
   margin-bottom: 15px;
 }
 
@@ -5435,6 +5498,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .articles .empty-blog {
   margin-top: 16px;
+  font-size: 16px;
+  font-weight: 300;
 }
 
 .articles_filters {
@@ -5721,7 +5786,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .staff-block .item span {
   display: block;
-  font-weight: 500;
+  font-weight: 400;
+  font-size: 16px;
   margin-bottom: 3px;
 }
 
@@ -5758,8 +5824,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .docs-block .list .item .img-block {
   width: 100%;
-  height: 272px;
-  margin-bottom: 18px;
+  height: 312px;
+  margin-bottom: 0;
   border-radius: 8px;
   background-position: center;
   background-repeat: no-repeat;
@@ -5773,6 +5839,16 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 
 .docs-block .list .slick-list.draggable {
   padding: 0 10% 0 0 !important;
+}
+
+@media (min-width: 991px) {
+  .docs-block .list .slick-list.draggable {
+    padding: 0 0 0 0 !important;
+  }
+
+  .docs-block .list .item:last-child {
+    margin-right: 0;
+  }
 }
 
 .popup-contacts {
@@ -6557,6 +6633,10 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     margin-top: 24px;
   }
 
+  .confirmation-sticky {
+    margin-top: 4px !important;
+  }
+
   .index-catalog-block .item .image {
     top: 20px;
     width: 76px;
@@ -6976,23 +7056,38 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .wrapper_404 {
     align-items: center;
     text-align: center;
+    background-image: url(../img/enot-mob.webp);
     height: calc(100vh - 280px);
     padding-top: 30px;
     padding-bottom: 65px;
+    margin-top: 4px;
+    padding-top: 65%;
+    gap: 24px;
+    padding: 0 12px;
+    justify-content: flex-center;
+    margin-bottom: -25px;
+  }
+
+  .block_404 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 30px 20px !important;
+    gap: 24px;
   }
 
   .wrapper_404 .title_404 {
-    font-size: 16px;
-    margin-bottom: 14px;
+    font-size: 18px;
+    margin-bottom: 0;
   }
 
   .wrapper_404 .desc_404 {
-    font-size: 12px;
-    margin-bottom: 24px;
+    font-size: 14px;
+    margin-bottom: 0;
   }
 
   .wrapper_404 .btn_404 {
-    margin-top: auto;
+    margin-top: 0;
     border-radius: 24px;
     font-size: 14px;
   }
@@ -7347,7 +7442,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .company-page .top-info .rating a {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 16px;
     margin-left: 10px;
   }
@@ -7371,13 +7466,13 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .company-page .top-info .city,
   .company-page .top-info .education {
     margin-bottom: 16px;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 16px;
   }
 
   .company-page .top-info .year {
     margin-bottom: 24px;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 16px;
   }
 
@@ -7432,7 +7527,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .company-page .ways .flex {
-    max-height: 220px;
+    max-height: 234px;
     overflow: hidden;
   }
 
@@ -7493,10 +7588,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .popup .window .reviews .name .rating {
-    font-size: 14px;
-  }
-
-  .content .reviews>.rating .show-reviews {
     font-size: 14px;
   }
 
@@ -7569,7 +7660,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .company-page .days .item {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 16px;
   }
 
@@ -7590,8 +7681,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     display: block;
     width: fit-content;
     padding: 8px 27px 5px 0;
-    font-weight: 400;
-    font-size: 14px;
+    font-weight: 300;
+    font-size: 16px;
     line-height: 14px;
   }
 

@@ -6,9 +6,9 @@ include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
 $recipient_by_type = [
-    'post' => ['hedevuass@gmail.com', 'ignat94140@gmail.com'],
-    'photo' => ['hedevuass@gmail.com'],
-    'banner' => ['hedevuass@gmail.com'],
+    'post' => ['ignat94140@gmail.com'],
+    'photo' => ['ignat94140@gmail.com'],
+    'banner' => ['ignat94140@gmail.com'],
 ];
 
 // Данные из POST
@@ -48,7 +48,7 @@ switch ($type) {
 
 ob_start();
 ?>
-<html>
+<html lang="ru">
 <?php if ($type === 'post'): ?>
 
     <head>
@@ -57,8 +57,8 @@ ob_start();
     </head>
 
     <body style="font-family: Arial, sans-serif; line-height: 1.6;"></body>
-    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/admin-dt/posts"
-            target="_blank">https://urfaq.ru/admin-dt/posts</a>
+    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/dicfacducfer1113/posts"
+            target="_blank">https://urfaq.ru/dicfacducfer1113/posts</a>
     <p><strong>Дата:</strong> <?= $date ?></p>
     <p><strong>Имя автора:</strong> <?= htmlspecialchars($name) ?></p>
     <p><strong>Заголовок:</strong> <?= htmlspecialchars($title) ?></p>
@@ -73,8 +73,8 @@ ob_start();
     </head>
 
     <body style="font-family: Arial, sans-serif; line-height: 1.6;"></body>
-    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/admin-dt/photo"
-            target="_blank">https://urfaq.ru/admin-dt/photo</a>
+    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/dicfacducfer1113/photo"
+            target="_blank">https://urfaq.ru/dicfacducfer1113/photo</a>
     <p><strong>Дата:</strong> <?= $date ?></p>
     <p><strong>Имя:</strong> <?= htmlspecialchars($name) ?></p>
     <p><strong>Почта:</strong> <?= htmlspecialchars($user_email) ?></p>
@@ -92,8 +92,8 @@ ob_start();
     </head>
 
     <body style="font-family: Arial, sans-serif; line-height: 1.6;"></body>
-    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/admin-dt/banners"
-            target="_blank">https://urfaq.ru/admin-dt/banners</a>
+    <p><strong>Перейти в административную панель:</strong> <a href="https://urfaq.ru/dicfacducfer1113/banners"
+            target="_blank">https://urfaq.ru/dicfacducfer1113/banners</a>
     <p><strong>Дата:</strong> <?= $date ?></p>
     <p><strong>Имя:</strong> <?= htmlspecialchars($name) ?></p>
     <p><strong>Текст:</strong><br><?= nl2br(htmlspecialchars($text)) ?></p>
@@ -110,6 +110,7 @@ $body = ob_get_clean();
 $all_success = true;
 foreach ($recipients as $recipient_email) {
     $success = send_mail_notification($recipient_email, $email_subject, $body);
+    error_log("Send mail to $recipient_email => " . ($success ? "OK" : "FAIL"));
     if (!$success) {
         $all_success = false;
     }

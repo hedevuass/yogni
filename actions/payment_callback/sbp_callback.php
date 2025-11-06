@@ -62,7 +62,7 @@ function processPaymentStatus($qrcId, $data_base) {
                 );
                 
                 if (!$result) {
-                    file_put_contents('/var/www/html/actions/sbp_error_log.txt', "qrcId $qrcId не найден в dt_payments\n", FILE_APPEND);
+                    /* file_put_contents('/var/www/html/actions/sbp_error_log.txt', "qrcId $qrcId не найден в dt_payments\n", FILE_APPEND); */
                 } else {
                     $orderId = $result['orderId'];
                     $tableType = $result['tableType'];
@@ -88,11 +88,11 @@ function processPaymentStatus($qrcId, $data_base) {
                             ['payment_paid', $qrcId]
                         );
                     } else {
-                        file_put_contents('/var/www/html/actions/sbp_error_log.txt', "Недопустимый tableType: $tableType для qrcId $qrcId\n", FILE_APPEND);
+                        /* file_put_contents('/var/www/html/actions/sbp_error_log.txt', "Недопустимый tableType: $tableType для qrcId $qrcId\n", FILE_APPEND); */
                     }
                 }
             } catch (Exception $e) {
-                file_put_contents('/var/www/html/actions/sbp_error_log.txt', "Ошибка обновления moderation для qrcId $qrcId: " . $e->getMessage() . "\n", FILE_APPEND);
+                /* file_put_contents('/var/www/html/actions/sbp_error_log.txt', "Ошибка обновления moderation для qrcId $qrcId: " . $e->getMessage() . "\n", FILE_APPEND); */
             }
         }
         return $response;

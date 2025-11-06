@@ -95,33 +95,25 @@ $HTML = html_explode($data, $HTML);
  */
 function select_times(string $select_name, string $time, bool $empty = false): string
 {
-	$flag = false;
-	$hours = 0;
+    $code = "<select name='{$select_name}' class='sel'>";
 
-	$code = "<select name='{$select_name}' class='sel'>";
+    if ($empty) {
+        $code .= '<option value="0" class="hidden">' . $time . '</option>';
+    }
 
-	if ($empty) {
-		$code .= '<option value="0" class="hidden">' . $time . '</option>';
-	}
+    for ($hours = 0; $hours < 24; $hours++) {
+        for ($minutes = 0; $minutes < 60; $minutes += 15) {
+            $value = sprintf("%02d:%02d", $hours, $minutes);
+            $selected = ($value == $time && !$empty) ? 'selected' : '';
+            $code .= "<option {$selected}>{$value}</option>";
+        }
+    }
 
-	for ($i = 0; $hours < 24; $i++) {
-		$minutes = $flag ? '30' : '00';
+    $code .= "</select>";
 
-		$value = sprintf("%02d", $hours) . ":" . $minutes;
-
-		$selected = ($value == $time && !$empty) ? 'selected' : '';
-
-		$code .= "<option {$selected}>{$value}</option>";
-
-		if ($flag) $hours++;
-
-		$flag = !$flag;
-	}
-
-	$code .= "</select>";
-
-	return $code;
+    return $code;
 }
+
 
 /**
  * @param string $shedulle

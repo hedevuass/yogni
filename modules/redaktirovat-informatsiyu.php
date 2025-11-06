@@ -20,14 +20,17 @@ $lastnameLabel = $user['company'] ? 'Фамилия контактного ли�
 $namePlaceholder = $user['company'] ? 'Имя контактного лица' : 'Ваше имя';
 $lastnamePlaceholder = $user['company'] ? 'Фамилия контактного лица' : 'Ваша фамилия';
 
+// Если у пользователя есть компания (контактное лицо) — поля редактируемые
+$readonlyAttr = $user['company'] ? '' : 'readonly';
+
 $data['main_info'] .= <<<EOF
     <div class="item">
         <p>{$nameLabel}</p>
-        <input type="text" name="name" placeholder="{$namePlaceholder}" value="{$user['name']}">
+        <input type="text" name="name" placeholder="{$namePlaceholder}" value="{$user['name']}" {$readonlyAttr}>
     </div>
     <div class="item">
         <p>{$lastnameLabel}</p>
-        <input type="text" name="lastname" placeholder="{$lastnamePlaceholder}" value="{$user['lastname']}">
+        <input type="text" name="lastname" placeholder="{$lastnamePlaceholder}" value="{$user['lastname']}" {$readonlyAttr}>
     </div>
 EOF;
 
@@ -108,7 +111,7 @@ function input_photo(array $user)
     }
     $code = <<<EOF
         <div class="item photo__item">
-            <p class="photo__title">Фото профиля</p>
+            <p class="photo__title">Фото профиля (jpeg, png)</p>
             <div style="justify-content: center;" class="flex photo__wrapper">
                 <div style="padding: 8px 0 16px;  min-width: 0; min-height: 0;" class="photo__block">
                     <div class="photo__image {$class}" style="background-image: url('{$photo}')"></div>
@@ -134,7 +137,7 @@ function input_company(array $user)
             <div class="item">
                 <p>Название компании</p>
                 <input type="hidden" name="company_id" value="{$user['company_id']}">
-                <input type="text" name="company" placeholder="Название компании" value="{$user['company']}">
+                <input type="text" name="company" placeholder="Название компании" value="{$user['company']}" readonly>
             </div>
         EOF;
 

@@ -3,7 +3,7 @@ $logPath = __DIR__ . '/paykeeper_callback.log';
 $input   = file_get_contents('php://input');
 $time    = date('Y-m-d H:i:s');
 
-file_put_contents($logPath, "[$time] Received callback:\n$input\n\n", FILE_APPEND|LOCK_EX);
+/* file_put_contents($logPath, "[$time] Received callback:\n$input\n\n", FILE_APPEND|LOCK_EX); */
 
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
@@ -27,7 +27,7 @@ function log_payment(string $orderId): void {
 function update_tariff_moderation(string $orderId): int {
     global $data_base, $logPath;
     $time = date('Y-m-d H:i:s');
-    file_put_contents($logPath, "[$time] update_tariff_moderation for orderId=$orderId\n", FILE_APPEND|LOCK_EX);
+    /* file_put_contents($logPath, "[$time] update_tariff_moderation for orderId=$orderId\n", FILE_APPEND|LOCK_EX); */
 
     $tariff = $data_base->selectRow(
         "SELECT specialist_id FROM dt_tariff_list WHERE orderId = ?",
@@ -99,7 +99,7 @@ function update_promo_moderation(string $orderId): int {
 function update_options_moderation(string $orderId): int {
     global $data_base, $logPath;
     $time = date('Y-m-d H:i:s');
-    file_put_contents($logPath, "[$time] update_options_moderation for orderId=$orderId\n", FILE_APPEND|LOCK_EX);
+    /* file_put_contents($logPath, "[$time] update_options_moderation for orderId=$orderId\n", FILE_APPEND|LOCK_EX); */
 
     $row = $data_base->selectRow("SELECT id, specialist_id FROM dt_options_list WHERE orderId = ?", [$orderId]);
     if (!$row) return 0;
@@ -126,8 +126,8 @@ if ($orderId) {
     if (!$result) $result = update_options_moderation($orderId);
 }
 
-file_put_contents($logPath, "[$time] Final result: $result\n", FILE_APPEND|LOCK_EX);
-file_put_contents($logPath, "Parsed data: " . print_r($data, true) . "\n", FILE_APPEND|LOCK_EX);
+/* file_put_contents($logPath, "[$time] Final result: $result\n", FILE_APPEND|LOCK_EX);
+file_put_contents($logPath, "Parsed data: " . print_r($data, true) . "\n", FILE_APPEND|LOCK_EX); */
 
 // Проверка подписи
 $signature = $data['key'] ?? '';

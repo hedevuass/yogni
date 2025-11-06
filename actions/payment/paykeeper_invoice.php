@@ -1,6 +1,13 @@
 <?php
 session_start(); // Запускаем сессию
 
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
+
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
@@ -25,9 +32,9 @@ $service_name = $_POST['service_name'] ?? 'Test Service';
 $orderId      = $_POST['orderId'] ?? '';
 
 // Данные для авторизации в Paykeeper
-$user             = 'dev';
-$password         = 'Devfaq1';
-$server_paykeeper = 'https://urfaq.server.paykeeper.ru'; // Рабочий сервер
+$user = $_ENV['PAYKEEPER_USER'];
+$password = $_ENV['PAYKEEPER_PASSWORD'];
+$server_paykeeper = $_ENV['PAYKEEPER_SERVER'];
 
 // Определяем tableType на основе service_name
 $serviceToTable = [

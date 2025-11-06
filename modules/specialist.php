@@ -17,16 +17,32 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/NounDeclension.php';
 
 use Morphos\Russian\GeographicalNamesInflection;
 
-$uri = trim($_SERVER['REQUEST_URI'], '/');
+$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'); // убираем query string
 $parts = explode('/', $uri);
 $lastPart = end($parts);
+
+// Проверяем GET-параметры, разрешаем Метрику
+$isYandexMetrics = false;
+if (!empty($_GET)) {
+    foreach ($_GET as $k => $v) {
+        if (strpos($k, '_ym') === 0) {
+            $isYandexMetrics = true;
+            break;
+        }
+    }
+}
+
+$specialist = null;
+$specialist_id = null;
 
 if (strpos($lastPart, 'id') === 0) {
     $specialist_id = intval(str_replace('id', '', $lastPart));
     $specialist = get_specialist($specialist_id);
-    if (!$specialist) {
-        responseRedirect('/');
+
+    if (!$specialist && !$isYandexMetrics) {
+        responseRedirect('/404');
     }
+
     if (!empty($specialist['slug'])) {
         $slugUrl = '/specialist/' . $specialist['slug'];
         responseRedirect($slugUrl);
@@ -34,14 +50,18 @@ if (strpos($lastPart, 'id') === 0) {
 } else {
     $slug = $lastPart;
     $specialist = get_specialist_by_slug($slug);
-    if (!$specialist) {
-        responseRedirect('/');
+
+    if (!$specialist && !$isYandexMetrics) {
+        responseRedirect('/404');
     }
-    $specialist_id = $specialist['id'];
+
+    if ($specialist) {
+        $specialist_id = $specialist['id'];
+    }
 }
 
 // Если специалиста нет делаем редирект на главную
-if (!$specialist) responseRedirect('/');
+/* if (!$specialist) responseRedirect('/404'); */
 
 // Если компания
 if ($specialist['company']) {
@@ -83,10 +103,13 @@ if (!$specialist['company']) {
         $title_blog = "нотариуса";
     }
 
-    $name_reviews = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'предложный');
+    $lastname_spec = str_replace(' ', '', $specialist['lastname']);
+    $name_spec = str_replace(' ', '', $specialist['name']);
+
+    $name_reviews = morphos\Russian\inflectName($lastname_spec . ' ' . $name_spec, 'предложный');
     $name_reviews = implode(' ', array_reverse(explode(' ', $name_reviews)));
 
-    $name_blog = morphos\Russian\inflectName($specialist['lastname'] . ' ' . $specialist['name'], 'родительный');
+    $name_blog = morphos\Russian\inflectName($lastname_spec . ' ' . $name_spec, 'родительный');
     $name_blog = implode(' ', array_reverse(explode(' ', $name_blog)));
 }
 
@@ -101,9 +124,13 @@ if ($specialist['classification_id'] == 1 || $specialist['classification_id'] ==
 $data['breadcrumbs'] .= '<span class="curr-page">' . $specialist['classification'] . ' ' . $name . '</span>';
 
 
-$connected_tariffs = get_connected_tariffs($specialist['id']);
-
-$connected_options = get_connected_options($specialist['id']);
+if ($specialist_id) {
+    $connected_tariffs = get_connected_tariffs($specialist_id);
+    $connected_options = get_connected_options($specialist_id);
+} else {
+    $connected_tariffs = [];
+    $connected_options = [];
+}
 $connected_option_ids = array_column($connected_options, 'option_id');
 
 $other = json_decode($specialist['other'], true);
@@ -140,16 +167,16 @@ if (!empty($connected_tariffs)) {
         }
 
         if ($other['site']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '" rel="nofollow"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
         }
         if ($other['tg']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '" rel="nofollow"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
         }
         if ($other['vk']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '" rel="nofollow"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
         }
         if ($other['dzen']) {
-            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
+            $inner_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '" rel="nofollow"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
         }
     }
 } elseif (!empty($connected_option_ids)) {
@@ -173,16 +200,16 @@ if (!empty($connected_tariffs)) {
 
     if (in_array(3, $connected_option_ids) && ($other['site'] || $other['tg'] || $other['vk'] || $other['dzen'])) {
         if ($other['site']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['site'] . '" rel="nofollow"><img src="/assets/img/contacts3.svg"> <span>Сайт</span></a></li>';
         }
         if ($other['tg']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['tg'] . '" rel="nofollow"><img src="/assets/img/contacts4.svg"> Телеграм</a></li>';
         }
         if ($other['vk']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['vk'] . '" rel="nofollow"><img src="/assets/img/contacts5.svg"> Вконтакте</a></li>';
         }
         if ($other['dzen']) {
-            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
+            $opt_contacts .= '<li class="no-sticky"><a href="' . $other['dzen'] . '" rel="nofollow"><img src="/assets/img/contacts6.svg"> Яндекс.Дзен</a></li>';
         }
     }
 
@@ -240,7 +267,7 @@ EOF;
 // Аватарка
 $specialist['photo'] = !empty($specialist['photo'])
     ? $specialist['photo']
-    : (!empty($specialist['company_id']) ? '022.jpg' : '02.jpg');
+    : (!empty($specialist['company_id']) ? '022.webp' : '02.webp');
 
 //Избранное
 $fav_class = '';
@@ -274,7 +301,7 @@ $data['specialist'] .= <<<EOF
                 <input type="hidden" id="favorite_id" value="{$specialist_id}">
             </i>
 		</div>
-        <div class="image" style="background: url('/uploads/avatars/{$specialist['photo']}') center/cover;"><div class="rocket" style="$rocketStyle"></div></div>
+        <div class="image lazy-bg" data-bg="/uploads/avatars/{$specialist['photo']}"><div class="rocket" style="$rocketStyle"></div></div>
         <div class="company-name">
             <span class="specialist-name">$name</span>
             <span class="classification-name">{$specialist['classification']}</span>
@@ -296,18 +323,14 @@ $data['specialist'] .= <<<EOF
                     <div class="invalid-feedback"></div>
                 </div>
               <div class="field">
-                  <input
-                      type="text"
-                      class="phone-input-reg"
-                      placeholder="Номер вашего телефона для связи"
-                  />
+                  <input type="text" class="phone-input-reg" name="contactInfo" placeholder="Номер вашего телефона для связи" />
+                  <div class="invalid-feedback"></div>
                   <input type="hidden" id="specialist_mail" value="{$email}">
+                  <input type="hidden" name="specialist_id" value="{$specialist_id}">
               </div>
               <div class="field">
-                  <textarea
-                      placeholder="Сообщение"
-                      class="popup-textarea"
-                  ></textarea>
+                  <textarea class="popup-textarea" name="message" placeholder="Сообщение"></textarea>
+                  <div class="invalid-feedback"></div>
               </div>
               <div class="field captcha-field">
                 <div class="captcha-row">
@@ -342,6 +365,87 @@ $data['specialist'] .= <<<EOF
   </div>
 </div>
 EOF;
+
+$data['confirmation_popup'] = '
+<div class="popup confirmation__popup">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="name">Подтверждение прав</div>
+      <div class="form">
+        <div class="field">
+          <input type="text" name="email" placeholder="Email*" class="inp" />
+          <input type="hidden" name="user_id" id="user_id_input" placeholder="User_id*" value="' . $specialist_id . '" class="inp" />
+          <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Капча -->
+        <div class="field captcha-field">
+          <div class="captcha-row">
+            <div class="captcha-left">
+              <img id="captcha_conf" src="/libs/securimage/securimage_show.php?id=' . $randId . '" alt="CAPTCHA" aria-hidden="false" />
+              <button type="button" id="captcha_refresh_conf" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="captcha-right">
+              <label class="captcha-label" for="captcha_code_conf">Подтвердите, что вы не робот</label>
+              <input class="captcha-input" id="captcha_code_conf" name="captcha_code_conf" type="text" placeholder="Введите код" autocomplete="off" />
+              <input type="hidden" id="captcha_captcha_id_conf" name="captcha_id_conf" value="' . $randId . '" />
+            </div>
+          </div>
+          <div class="captcha-error"></div>
+        </div>
+        <!-- Конец капчи -->
+
+        <div class="button">
+          <p>
+            Нажимая “Подтвердить права”, я принимаю изложенное в документах,
+            представленных в разделе сайта “О проекте”.
+          </p>
+          <button class="popup-btn send-confirmation">Подтвердить права</button>
+        </div>
+        <div class="bottom-links flex">
+          <div>
+            <a class="login">Войти</a>
+            <a class="reg">Зарегистрироваться</a>
+          </div>
+          <a class="feedback">Контакты</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>';
+
+$data['captcha_review'] = '
+<div class="field captcha-field">
+    <div class="captcha-row">
+        <div class="captcha-left">
+            <img id="captcha_review" src="/libs/securimage/securimage_show.php?id=' . $randId . '" alt="CAPTCHA" aria-hidden="false" />
+            <button type="button" id="captcha_refresh_review" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="captcha-right">
+            <label class="captcha-label" for="captcha_code_review">Подтвердите, что вы не робот</label>
+            <input class="captcha-input" id="captcha_code_review" name="captcha_code_review" type="text" placeholder="Введите код" autocomplete="off" />
+            <input type="hidden" id="captcha_captcha_id_review" name="captcha_id_review" value="' . $randId . '" />
+        </div>
+    </div>
+    <div class="captcha-error"></div>
+</div>
+';
+$HTML_ = explode('<!--data:captcha_review-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:captcha_review-->{$data['captcha_review']}<!--data:captcha_review-->" . $HTML_[2];
+
 
 $data['h1_hidden_title'] = '<h1 class="dn">' . $name . '</h1>';
 
@@ -438,7 +542,7 @@ if (
 if (!is_null($specialist['description']) && $specialist['description']) {
     $description = html_entity_decode(string: htmlspecialchars_decode($specialist['description']));
     $data['specialist'] .= <<<EOF
-        <div class="specialist-description">{$description}</div>
+        <div class="specialist-description"><noindex>{$description}</noindex></div>
     EOF;
 }
 $data['specialist'] .= <<<EOF
@@ -592,7 +696,7 @@ $recommended_title_experts = match ($specialist['classification_id']) {
 
 // Кнопки блока Экспертов
 $recommended_button_experts = match ($specialist['classification_id']) {
-    1, 2, 4, 5, 6, 8 => 'Найти эксперта',
+    1, 2, 4, 5, 6 => 'Найти эксперта',
     3, 8 => 'Посмотреть других специалистов',
     default => 'Не передано значение'
 };
@@ -718,10 +822,10 @@ foreach ($block_order as $block) {
 $page_meta = get_specialist_meta($specialist_id);
 
 // Устанавливаем title и description
-$HTML = html_replace([
+/* $HTML = html_replace([
     'title' => !empty($page_meta['title']) ? $page_meta['title'] : $name,
     'description' => !empty($page_meta['description']) ? $page_meta['description'] : ''
-], $HTML);
+], $HTML); */
 
 $HTML = html_explode($data, $HTML);
 
@@ -801,7 +905,7 @@ function block_ways(array $specialist, array $specializations): array
         'mobile'  => ''
     ];
 
-    if ($specialist['classification_id'] != 4 && $specialist['classification_id'] != 8 && $specializations) {
+    if ($specialist['classification_id'] != 4 && $specializations) {
         $class_link = get_classification_link($specialist['classification_id']);
 
         // Фильтруем только родительские специализации
@@ -811,7 +915,24 @@ function block_ways(array $specialist, array $specializations): array
 
         // Сортируем по title (алфавитно)
         usort($parent_specializations, function ($a, $b) {
-            return mb_strtolower($a['title']) <=> mb_strtolower($b['title']);
+            // Нормализуем строки
+            $titleA = mb_strtolower(trim($a['title']));
+            $titleB = mb_strtolower(trim($b['title']));
+        
+            // Убираем точки и двойные пробелы
+            $titleA = preg_replace('/[.\s]+/u', ' ', $titleA);
+            $titleB = preg_replace('/[.\s]+/u', ' ', $titleB);
+        
+            // Проверяем "прочие"
+            $isOtherA = ($a['id'] == 97) || preg_match('/^проч/i', $titleA);
+            $isOtherB = ($b['id'] == 97) || preg_match('/^проч/i', $titleB);
+        
+            // Если одна из записей "Прочие" — она идёт последней
+            if ($isOtherA && !$isOtherB) return 1;
+            if (!$isOtherA && $isOtherB) return -1;
+        
+            // Иначе обычная сортировка по алфавиту
+            return $titleA <=> $titleB;
         });
 
         $list = '';
@@ -1002,7 +1123,7 @@ function block_reviews(array $specialist, string $title, string $name): array
         EOF;
 
         $show_reviews_btn = '';
-        if (count($reviews) > 2) {
+        if (count($reviews) >= 1) {
             $show_reviews_btn = '<button class="show-reviews">Посмотреть все отзывы</button>';
         }
 
@@ -1017,7 +1138,7 @@ function block_reviews(array $specialist, string $title, string $name): array
             <h2 class="name">
                 Отзывы $title $name
             </h2>
-            <p>Отзывов пока нет</p>
+            <p>Отзывов пока нет.</p>
             <div class="buttons">
                 <button class="write-review">Написать отзыв</button>
             </div>
@@ -1181,14 +1302,14 @@ function block_employees(array $specialist): string
 
         $code = <<<EOF
             <div class="staff-block">
-                <h2 class="block-name">Сотрудники организации</h2>
+                <h2 class="block-name">Команда</h2>
                 <div class="staff__grid">
         EOF;
 
         foreach ($employees as $employee) {
             $code .= <<<EOF
                 <div class="item">
-                    <div class="img__wrapper" style="background-image: url(/uploads/employee/{$employee['photo']})"></div>
+                    <div class="img__wrapper lazy-bg" data-bg="/uploads/employee/{$employee['photo']}"></div>
                     <div>
                         <span>{$employee['name']} {$employee['lastname']}</span>
                         {$employee['post']}
@@ -1234,11 +1355,11 @@ function block_blog(array $specialist, string $title, string $name): string
                     <div class="date">' . date('d.m.Y', strtotime($article['date'])) . '</div>
                 </div>
                 <a href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '" class="name">' . strip_tags(html_entity_decode($article['title'])) . '</a>';
-                if ($article['photo'] != '' && !is_null($article['photo'])) {
+                /* if ($article['photo'] != '' && !is_null($article['photo'])) {
                     $code .= '<a href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '" class="image">
                     <img src="/uploads/articles/' . $article['photo'] . '">
                 </a>';
-                }
+                } */
                 $code .= '<a class="content cut-text-blogs" href="/journal/id' . $article['blog_id'] . '/' . $article['alias'] . '">' . strip_tags(html_entity_decode($article['content'])) . '</a>';
                 $author_name = $specialist['company'] ? $specialist['company'] : $specialist['name'] . ' ' . $specialist['lastname'];
                 $code .= '<a href="/journal/id' . $article['blog_id'] . '" class="author">' . $author_name . '</a>
@@ -1253,7 +1374,7 @@ function block_blog(array $specialist, string $title, string $name): string
             $code .= <<<EOF
                 <div class="articles">
                     <h2 class="name"><a href="/journal/id{$blog['id']}">Блог $title $name</a></h2>
-                    <p class="empty-blog">В данном блоге еще нет записей.</p>
+                    <p class="empty-blog">В блоге еще нет записей.</p>
                 </div>
             EOF;
         }
@@ -1292,8 +1413,7 @@ function block_documents(string $documents): string
         foreach ($documents as $document) {
             $code .= <<<EOF
                 <div class="item">
-                    <div class="img-block" style="background-image: url('/uploads/documents/{$document['file']}');"></div>
-                    <p>{$document['name']}</p>
+                    <div class="img-block lazy-bg" data-bg="/uploads/documents/{$document['file']}"></div>
                 </div>
             EOF;
         }
@@ -1360,6 +1480,10 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
         $sameAs[] = $other['dzen'];
     }
 
+    $ratingValue = isset($specialist['rating'])
+        ? number_format((float)$specialist['rating'], 1, '.', '')
+        : 0.0;
+
     // Основной объект
     $jsonLd = [
         "@context" => "https://schema.org",
@@ -1385,7 +1509,7 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
         ],
         "aggregateRating" => isset($specialist['rating'], $specialist['count_rating']) ? [
             "@type" => "AggregateRating",
-            "ratingValue" => $specialist['rating'],
+            "ratingValue" => $ratingValue,
             "reviewCount" => $specialist['count_rating']
         ] : null,
         "knowsAbout" => $knowsAbout,
@@ -1576,24 +1700,6 @@ function generateSpecialistBreadcrumbJsonLd(array $specialist): string
 }
 
 /**
- * Возвращает абсолютный URL по относительному пути или возвращает уже абсолютный URL.
- *
- * @param string|null $path
- * @return string|null
- */
-function full_url(?string $path): ?string
-{
-    if (empty($path)) return null;
-    $path = trim($path);
-    if (preg_match('#^https?://#i', $path)) return $path;
-
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
-    $path = '/' . ltrim($path, '/');
-    return $scheme . '://' . $host . $path;
-}
-
-/**
  * Генерация JSON-LD для всех отзывов специалиста как один объект Review
  *
  * @param array $specialist
@@ -1625,6 +1731,9 @@ function generateSpecialistReviewsJsonLd(array $specialist): string
         ];
     }
 
+    $ratingValue = isset($specialist['rating'])
+        ? number_format((float)$specialist['rating'], 1, '.', '')
+        : 0.0;
     // Один главный объект Review, внутри массив reviews
     $jsonLd = [
         "@context" => "https://schema.org",
@@ -1632,7 +1741,7 @@ function generateSpecialistReviewsJsonLd(array $specialist): string
         "name" => $specialist['company'] ?? trim(($specialist['lastname'] ?? '') . ' ' . ($specialist['name'] ?? '')),
         "reviewRating" => [
             "@type" => "AggregateRating",
-            "ratingValue" => $specialist['rating'] ?? 0,
+            "ratingValue" => $ratingValue,
             "reviewCount" => $specialist['count_rating'] ?? 0,
         ],
         "reviews" => $nestedReviews
@@ -1661,6 +1770,54 @@ function generateSpecialistImageJsonLd(array $specialist): string
         PHP_EOL . '</script>';
 }
 
+$blog = get_specialist_blog($specialist['id']);
+$posts = $blog ? get_blog_articles($blog['id'], 0, 2) : [];
+
+/**
+ * Генерация JSON-LD для публикаций автора (CreativeWorkSeries) с workExample
+ *
+ * @param array $posts Статьи на странице (максимум 2)
+ * @param array $specialist Информация об авторе
+ * @return string
+ */
+function generateAuthorPublicationsJsonLd(array $posts, array $specialist): string
+{
+    $publicationCount = count($posts);
+    $authorName = $specialist['company'] ?? trim($specialist['name'] . ' ' . $specialist['lastname']);
+
+    $workExamples = array_map(function ($post) use ($specialist) {
+        $authorType = !empty($specialist['company']) ? "Organization" : "Person";
+        $authorName = !empty($specialist['company'])
+            ? $specialist['company']
+            : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? ''));
+
+        return [
+            "@type" => "Article",
+            "url" => full_url($post['url'] ?? ''),
+            "datePublished" => date('Y-m-d', strtotime($post['date'] ?? 'now')),
+            "articleSection" => $post['service_title'] ?? '',
+            "headline" => strip_tags(htmlspecialchars_decode($post['title']) ?? ''),
+            "description" => strip_tags(htmlspecialchars_decode($post['content']) ?? ''),
+            "author" => [
+                "@type" => $authorType,
+                "name" => $authorName
+            ]
+        ];
+    }, $posts);
+
+    $jsonLd = [
+        "@context" => "https://schema.org",
+        "@type" => "CreativeWorkSeries",
+        "name" => "Публикации на странице автора",
+        "description" => "Опубликованные статьи на странице автора ({$publicationCount})",
+        "workExample" => $workExamples
+    ];
+
+    return '<script type="application/ld+json">' . PHP_EOL .
+        json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+        PHP_EOL . '</script>';
+}
+
 // Пример использования
 $specialist_jsonld = generateSpecialistJsonLd($specialist, $other);
 $specialist_breadcrumb_jsonld = generateSpecialistBreadcrumbJsonLd($specialist);
@@ -1668,6 +1825,7 @@ $specialist_review_jsonld = generateSpecialistReviewsJsonLd($specialist);
 echo $specialist_breadcrumb_jsonld;
 echo $specialist_review_jsonld;
 echo generateSpecialistImageJsonLd($specialist);
+echo generateAuthorPublicationsJsonLd($posts, $specialist);
 
 // Для вставки в страницу
 echo '<script type="application/ld+json">' . json_encode($specialist_jsonld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '</script>';

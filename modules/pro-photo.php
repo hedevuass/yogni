@@ -3,7 +3,7 @@
 //получаем специалиста
 $specialist = get_specialist($_SESSION['user']['id']);
 
-$data['specialist_id_input'] = '<input type="hidden" name="photo_specialist_id" id="photo-specialist-id" value="' . $specialist['id']. '" />';
+$data['specialist_id_input'] = '<input type="hidden" name="photo_specialist_id" id="photo-specialist-id" value="' . $specialist['id'] . '" />';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $specialist_id_popup = $_POST['specialist_id'] ?? 0;
@@ -64,64 +64,88 @@ $pro_photo_for_employee = get_pro_photo_by_id(4);
 $faq_pro_photo_array = get_faq_pro_photo();
 
 $faq_page = get_faq_page_by_id(22);
-$data['faq_page'] = '<a href="/cabinet/faq/'.$faq_page.'" class="order-photo-btn">Правила выбора фото</a>';
+$data['faq_page'] = '<a href="/cabinet/faq/' . $faq_page . '" class="order-photo-btn">Правила выбора фото</a>';
 
 //вывод информации для специалиста
 $phone = $specialist['phone'] ? str_replace('+7 ', '', format_phone($specialist['phone'])) : '';
 $data['popup_tel_field'] = '<span class="phone-mask">+7</span>
 <input type="text" name="phone" class="phone-input" placeholder="(926) 000-00-00" value="' . $phone . '">';
 
-$pro_photo_status = generate_pro_photo_status($pro_photo_records, $specialist['registered_at']);
-$hide_discount = ($pro_photo_status['status'] === 'Проведена'); // Проверяем статус
+$pro_photo_status = generate_pro_photo_status($pro_photo_records, $specialist['activated_at']);
+$show_discount = $pro_photo_status['show_discount']; // Берём флаг из функции
 
 foreach ([$pro_photo1, $pro_photo2, $pro_photo3] as $index => $photo) {
     $i = $index + 1;
-    
-    // Если существует старая цена – используем её, иначе текущую цену
-    $price = isset($photo['price_old']) ? $photo['price_old'] : $photo['price'];
-    $price_old = isset($photo['price_old']) ? $photo['price_old'] : ''; // Если старой цены нет, оставляем пустую строку
-    
-    if ($hide_discount) {
-        // Если скидка не активна – формируем данные без скидки для десктопа
-        $data["price$i"] = htmlspecialchars_decode($price);
+
+    $price = $photo['price'] ?? '';
+    $price_old = $photo['price_old'] ?? '';
+
+    if ($pro_photo_status['status'] === 'Проведена' || !$show_discount || empty($price)) {
+        // либо скидка не показывается,
+        // либо нет новой цены → показываем price_old как обычную цену
+        $final_price = $price_old;
+
+        $data["price$i"] = htmlspecialchars_decode($final_price);
         $data["price_old$i"] = '';
-        $data["show_discount$i"] = '0'; // Флаг, что скидку не показываем
-        $data["discount_text$i"] = ''; // Убираем текст скидки
-        $data["discount_block$i"] = ''; // Убираем блок скидки
-        
-        // То же самое для мобильной версии с префиксом mob_
-        $data["mob_price$i"] = htmlspecialchars_decode($price);
+        $data["show_discount$i"] = '0';
+        $data["discount_text$i"] = '';
+        $data["discount_block$i"] = '';
+
+        $data["mob_price$i"] = htmlspecialchars_decode($final_price);
         $data["mob_price_old$i"] = '';
         $data["mob_show_discount$i"] = '0';
         $data["mob_discount_text$i"] = '';
         $data["mob_discount_block$i"] = '';
     } else {
-        // Если скидка активна – показываем старую и текущую цену для десктопа
-        $data["price$i"] = htmlspecialchars_decode($photo['price']);
+        // скидка активна, и есть обе цены
+        $data["price$i"] = htmlspecialchars_decode($price);
         $data["price_old$i"] = htmlspecialchars_decode($price_old);
-        $data["show_discount$i"] = '1'; // Показываем скидку
-        $data["discount_text$i"] = 'Скидка действует первые две недели после регистрации';
+        $data["show_discount$i"] = '1';
+        $data["discount_text$i"] = '';
         $data["discount_block$i"] = '<div class="action-less">-50%</div>';
-        
-        // И аналогичные данные для мобильной версии с префиксом mob_
-        $data["mob_price$i"] = htmlspecialchars_decode($photo['price']);
+
+        $data["mob_price$i"] = htmlspecialchars_decode($price);
         $data["mob_price_old$i"] = htmlspecialchars_decode($price_old);
         $data["mob_show_discount$i"] = '1';
-        $data["mob_discount_text$i"] = 'Скидка действует первые две недели после регистрации';
+        $data["mob_discount_text$i"] = '';
         $data["mob_discount_block$i"] = '<div class="action-less">-50%</div>';
     }
-    
-    // Десктопные данные: заголовок, описание, время, номер
+
+
+    // Общие данные (без изменений)
     $data["title$i"]       = htmlspecialchars_decode($photo['title']);
     $data["description$i"] = htmlspecialchars_decode($photo['description']);
     $data["time$i"]        = htmlspecialchars_decode($photo['time']);
     $data["number$i"]      = htmlspecialchars_decode($photo['number']);
-    
-    // Для мобильной версии добавляем аналогичные данные с префиксом mob_
+
     $data["mob_title$i"]       = htmlspecialchars_decode($photo['title']);
     $data["mob_description$i"] = htmlspecialchars_decode($photo['description']);
     $data["mob_time$i"]        = htmlspecialchars_decode($photo['time']);
     $data["mob_number$i"]      = htmlspecialchars_decode($photo['number']);
+
+    $data["popup_description_li$i"] = '';
+    $data["mob_popup_description_li$i"] = '';
+    if (!empty($photo['popup_description'])) {
+        $popup_desc = json_decode($photo['popup_description'], true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($popup_desc)) {
+            foreach ($popup_desc as $line) {
+                $line_text = htmlspecialchars(strip_tags($line));
+                $data["popup_description_li$i"] .= '<li>' . $line_text . '</li>';
+                $data["mob_popup_description_li$i"] .= '<li>' . $line_text . '</li>';
+            }
+        }
+    }
+}
+
+$data["popup_description_li4"] = '';
+if (!empty($pro_photo_for_employee['popup_description'])) {
+    $popup_desc = json_decode($pro_photo_for_employee['popup_description'], true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($popup_desc)) {
+        foreach ($popup_desc as $line) {
+            $line_text = htmlspecialchars(strip_tags($line));
+            $data["popup_description_li4"] .= '<li>' . $line_text . '</li>';
+        }
+    }
 }
 
 $price_employee = htmlspecialchars_decode($pro_photo_for_employee['price']);
@@ -140,32 +164,30 @@ $data['price1_2'] = '2990';
 
 $data['employee_photo'] = $photo_title_class = $data['add_photo_emp'] = $data['add_company_photo'] = $data['company_photo_select'] = '';
 
-$data['popup_description_li'] = 'Профессиональная портретная бизнес-фотосессия';
 $data['popup_title'] = '<div class="title pro-photo-title"></div>';
 
 //вывод информации для компании
 if (!is_null($specialist['company_id'])) {
-    $data['popup_description_li'] = 'Съёмка групповых портретов, а также общих планов';
     $photo_title_class = 'company';
     $data['employee_photo'] = '<div class="pro-photo__employee hidden-comp">
         <div class="employee__wrapper">
             <div class="employee__photos">
-                <img src="/assets/img/cabinet/employees-photos.png">
+                <img src="/assets/img/cabinet/employees-photos.webp">
             </div>
             <div class="employee__text-block">
                 <div class="employee__pre-title"></div>
-                <div class="employee__title">'. $title_employee .'</span></div>
-                <div class="employee__text">'. $description_employee .'</span></div>
+                <div class="employee__title">' . $title_employee . '</span></div>
+                <div class="employee__text">' . $description_employee . '</span></div>
                 <ul class="employee__descr">
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-watch.svg);">
-                        '. $time_employee .'
+                        ' . $time_employee . '
                     </li>
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-pic.svg);">
-                        '. $number_employee .'
+                        ' . $number_employee . '
                     </li>
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-user.svg);">
                     <div class="employee__price-block">
-                    '. $price_employee .'</span>
+                    ' . $price_employee . '</span>
                     </div>
                     </li>
                 </ul>
@@ -177,48 +199,66 @@ if (!is_null($specialist['company_id'])) {
         <div class="employee__wrapper">
             <div class="employee__text-block">
                 <div class="employee__pre-title"></div>
-                <div class="employee__title">'. $title_employee .'</div>
-                <div class="employee__text">'. $description_employee .'</div>
+                <div class="employee__title">' . $title_employee . '</div>
+                <div class="employee__text">' . $description_employee . '</div>
                 <ul class="employee__descr">
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-watch.svg);">
-                        '. $time_employee .'
+                        ' . $time_employee . '
                     </li>
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-pic.svg);">
-                        '. $number_employee .'
+                        ' . $number_employee . '
                     </li>
                     <li style="background-image: url(/assets/img/cabinet/pro-photo-user.svg);">
                         <div class="employee__price-block">
-                            '. $price_employee .'
+                            ' . $price_employee . '
                         </div>
                     </li>
                 </ul>
                 <div class="employee__photos">
-                    <img src="/assets/img/cabinet/employees-photos.png">
+                    <img src="/assets/img/cabinet/employees-photos.webp">
                     <a class="employee__bottom-btn">Заказать</a>
                 </div>
             </div>
         </div>
     </div>';
+
+    $popup_description_li4 =  $data['popup_description_li4'];
     $data['popup_employee_photo'] = '<div class="title-emp">Съёмка сотрудников</div>
             <ul>
-              <li>Индивидуальная фотосессия для сотрудников</li>
-               <li>'. $number_employee .'</li>
+              <li>' . $popup_description_li4 . '</li>
+               
             </ul>
-            <div class="photo-time-emp">'. $time_employee .'</div>
+            <div class="photo-time-emp">' . $time_employee . '</div>
            <div class="price" style="display: inline-flex; gap: 5px;">
-              Цена: <div class="photo-price-emp"'. $price_employee .' </div>
+              Цена: <div class="photo-price-emp">' . $price_employee . ' </div>
             </div>';
 
 
     $data['add_photo_emp'] = '<div class="add-photo-emp">Добавить съемку сотрудников</div>';
     $data['add_company_photo'] = '<div class="add-company-photo">Добавить съемку компании</div>';
+    $pro_photos = [
+        '4_1' => $pro_photo1,
+        '4_2' => $pro_photo2,
+        '4_3' => $pro_photo3
+    ];
+
+    $options_html = '<option value="4" class="hidden">Выбрать формат</option>';
+
+
+    foreach ($pro_photos as $value => $photo) {
+        $title_raw = $photo['title'];
+
+        $title_decoded = html_entity_decode($title_raw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        $title_clean = strip_tags($title_decoded);
+
+        $options_html .= '<option value="' . $value . '">' . htmlspecialchars($title_clean) . '</option>';
+    }
+
     $data['company_photo_select'] = '
         <div class="photo-select__wrapper">
             <select class="sel" id="company-photo-select">
-                <option value="4" class="hidden">Выбрать формат</option>
-                <option value="4_1">Про-фото</option>
-                <option value="4_2">Экспресс-фото</option>
-                <option value="4_3">Фотосессия</option>
+                ' . $options_html . '
             </select>
             <span class="delete-photo-select">Удалить</span>
         </div>';
@@ -245,7 +285,7 @@ if (!empty($faq_pro_photo_array)) {
                     <p>' . $answer . '</p>
                 </div>
             </div>';
-            $data['faq_pro_photo_data_mob'] .= '
+        $data['faq_pro_photo_data_mob'] .= '
             <div class="faq-item">
                 <button class="faq-question">
                     <div>' . $question . '</div>
@@ -262,15 +302,66 @@ if (is_array($data['user'])) {
     $data['user'] = '';
 }
 $keys = [
-    'show_discount1', 'discount_text1', 'discount_block1', 'mob_price_old1', 'mob_show_discount1', 'mob_discount_text1', 'mob_discount_block1',
-    'price1_2', 'price_old1_2', 'show_discount1_2', 'discount_text1_2', 'discount_block1_2', 'mob_price1_2', 'mob_price_old1_2', 'mob_show_discount1_2', 'mob_discount_text1_2', 'mob_discount_block1_2',
-    'price2_2', 'price_old2_2', 'show_discount2_2', 'discount_text2_2', 'discount_block2_2', 'mob_price2_2', 'mob_price_old2_2', 'mob_show_discount2_2', 'mob_discount_text2_2', 'mob_discount_block2_2',
-    'price3_2', 'price_old3_2', 'show_discount3_2', 'discount_text3_2', 'discount_block3_2', 'mob_price3_2', 'mob_price_old3_2', 'mob_show_discount3_2', 'mob_discount_text3_2', 'mob_discount_block3_2',
-    'mob_show_discount3', 'mob_show_discount2', 'mob_show_discount1', 'show_discount3', 'show_discount2'
+    'show_discount1',
+    'discount_text1',
+    'discount_block1',
+    'mob_show_discount1',
+    'mob_discount_text1',
+    'mob_discount_block1',
+    'price1_2',
+    'price_old1_2',
+    'show_discount1_2',
+    'discount_text1_2',
+    'discount_block1_2',
+    'mob_price1_2',
+    'mob_price_old1_2',
+    'mob_show_discount1_2',
+    'mob_discount_text1_2',
+    'mob_discount_block1_2',
+    'price2_2',
+    'price_old2_2',
+    'show_discount2_2',
+    'discount_text2_2',
+    'discount_block2_2',
+    'mob_price2_2',
+    'mob_price_old2_2',
+    'mob_show_discount2_2',
+    'mob_discount_text2_2',
+    'mob_discount_block2_2',
+    'price3_2',
+    'price_old3_2',
+    'show_discount3_2',
+    'discount_text3_2',
+    'discount_block3_2',
+    'mob_price3_2',
+    'mob_price_old3_2',
+    'mob_show_discount3_2',
+    'mob_discount_text3_2',
+    'mob_discount_block3_2',
+    'mob_show_discount3',
+    'mob_show_discount2',
+    'mob_show_discount1',
+    'show_discount3',
+    'show_discount2',
+    'popup_description_li1',
+    'popup_description_li2',
+    'popup_description_li3',
+    'mob_popup_description_li1',
+    'mob_popup_description_li2',
+    'mob_popup_description_li3'    
 ];
 
 // Проходим по всем ключам и очищаем те, что не являются массивами
 foreach ($keys as $key) {
+
+    if (strpos($key, 'popup_description_li') === 0) {
+        continue;
+    }
+
+    if (strpos($key, 'mob_popup_description_li') === 0) {
+        continue;
+    }
+
     if (!is_array($data[$key])) {
         // Для ключей с префиксом mob_ оборачиваем в <div class="mobile-only">
         if (strpos($key, 'mob_') === 0) {

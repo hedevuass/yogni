@@ -2,6 +2,8 @@
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/functions.php';
+
+update_last_modified();
 /* if (isset($_POST['favorite'])) {
     session_start();
     $_SESSION['favorite'] = json_decode($_POST['favorite']);

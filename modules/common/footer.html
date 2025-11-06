@@ -111,35 +111,7 @@
 		</div>
 	</div>
 </div>
-<div class="popup pass">
-	<div class="bg"></div>
-	<div class="window">
-		<div class="close"></div>
-		<div class="reg">
-			<form method="POST" id="recovery-password-popup">
-				<div class="name">
-					Восстановление пароля
-				</div>
-				<div class="form2">
-					<div class="field">
-						<input type="text" name="email" placeholder="Email, указанный при регистрации" class="inp">
-						<div class="invalid-feedback"></div>
-					</div>
-					<div class="button other">
-						<button type="submit" class="popup-btn">Восстановить</button>
-					</div>
-				</div>
-			</form>
-			<div class="bottom-links flex">
-				<div>
-					<a class="login">Войти</a>
-					<a class="reg">Зарегистрироваться</a>
-				</div>
-				<a class="feedback">Контакты</a>
-			</div>
-		</div>
-	</div>
-</div>
+<!--data:recovery_popup--><!--data:recovery_popup-->
 <div class="popup recovery-password__popup2">
 	<div class="bg"></div>
 	<div class="window middle">
@@ -344,10 +316,11 @@
 					</div>
 					<div class="field">
 						<input type="password" name="password" placeholder="Пароль*" id="pass2" class="inp"
-							oninput='this.value=this.value.replace(/[^\w\d]*/gi,"");'>
+							oninput='this.value = this.value.replace(/[^\p{L}\p{N}_]/gu,"");'>
 						<a class="show-pass" id="show2">Показать</a>
 						<div class="invalid-feedback"></div>
 					</div>
+					<!--data:captcha_registration_company--><!--data:captcha_registration_company-->
 					<div class="button">
 						<p>Нажимая “Зарегистрироваться”, я принимаю изложенное в документах, представленных в разделе
 							сайта

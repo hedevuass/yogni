@@ -1,3 +1,28 @@
+<script type="text/javascript">
+	(function(m,e,t,r,i,k,a){
+		m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+		m[i].l=1*new Date();
+		for (var j = 0; j < document.scripts.length; j++) {
+			if (document.scripts[j].src === r) return;
+		}
+		k=e.createElement(t),a=e.getElementsByTagName(t)[0];
+		k.async=1;k.src=r;a.parentNode.insertBefore(k,a);
+	})(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=104107457', 'ym');
+
+	ym(104107457, 'init', {
+		ssr: true,
+		webvisor: true,
+		clickmap: true,
+		ecommerce: "dataLayer",
+		accurateTrackBounce: true,
+		trackLinks: true
+	});
+</script>
+<noscript>
+	<div>
+		<img src="https://mc.yandex.ru/watch/104107457" style="position:absolute; left:-9999px;" alt="">
+	</div>
+</noscript>
 <!--data:h1_hidden_title--><!--data:h1_hidden_title-->
 <div class="navi">
 	<div class="wrap">
@@ -88,6 +113,33 @@
 
 			// Условие: trigger в зоне [viewportHeight - 800, viewportHeight + 200]
 			if (triggerTop <= viewportHeight + 800 && triggerTop >= viewportHeight - 800) {
+				const lazyBgs = document.querySelectorAll('.lazy-bg');
+
+                if ('IntersectionObserver' in window) {
+                    const observer = new IntersectionObserver((entries, obs) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const el = entry.target;
+                                const bg = el.dataset.bg;
+                                if (bg) {
+                                    el.style.backgroundImage = `url('${bg}')`;
+                                    obs.unobserve(el);
+                                }
+                            }
+                        });
+                    }, {
+                        rootMargin: "0px 0px 200px 0px"
+                    });
+
+                    lazyBgs.forEach(el => observer.observe(el));
+                } else {
+                    // fallback: сразу подставляем фоновое изображение
+                    lazyBgs.forEach(el => {
+                        const bg = el.dataset.bg;
+                        if (bg) el.style.backgroundImage = `url('${bg}')`;
+                    });
+                }
+				
 				loading = true;
 
 				$.ajax({
@@ -113,7 +165,7 @@
 					error: function () {
 						hadError = true;
 						$(window).off('scroll', onScrollHandler);
-						alert('Ошибка загрузки, проверьте подключение к интернету.');
+						/* alert('Ошибка загрузки, проверьте подключение к интернету.'); */
 						loading = false;
 					}
 				});

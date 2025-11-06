@@ -11,7 +11,7 @@ $serviceName  = isset($_POST['service_name']) ? trim($_POST['service_name']) : n
 $orderId      = trim($_POST['orderId']);
 
 $serviceId  = $_POST['service_id']  ?? null;
-$dateStart  = $_POST['date_start']  ?? null; 
+$dateStart  = $_POST['date_start']  ?? null;
 $dateEnd    = $_POST['date_end']    ?? null;
 
 // Флаг из запроса: если установлен, НЕ менять moderation (оставить 0)
@@ -218,23 +218,25 @@ if ($documentId) {
         }
 
         // 4) Вставляем платёж вместе с датами
-        $data_base->add(
-            "INSERT INTO dt_payments 
+        if (!$dontChangeModeration) {
+            $data_base->add(
+                "INSERT INTO dt_payments 
                 (documentId, orderId, tableType, paymentType, status, serviceName, amount, specialist_id, date_start, date_end) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-                $documentId,
-                $orderId,
-                $tableType,
-                'invoice',
-                'Pending',
-                $displayName,
-                $formattedPrice,
-                $specialist_id,
-                $dateStart,
-                $dateEnd
-            ]
-        );
+                [
+                    $documentId,
+                    $orderId,
+                    $tableType,
+                    'invoice',
+                    'Pending',
+                    $displayName,
+                    $formattedPrice,
+                    $specialist_id,
+                    $dateStart,
+                    $dateEnd
+                ]
+            );
+        }
     }
 
     // 5) Скачиваем PDF счёта

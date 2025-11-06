@@ -28,7 +28,7 @@ if (isset($_POST['company_id'])) {
             continue;
         }
         if (!isset($_FILES[$key]) && !isset($employees[$key])) {
-            $json['error'][$key] = 'Загрузите изображение';
+            $json['error'][$key] = 'Файл слишком большой (максимальный размер - до 5 МБ).';
             continue;
         } else if (!isset($_FILES[$key]) && isset($employees[$key])) {
             $img_name = $employees[$key]['photo'];
@@ -39,7 +39,7 @@ if (isset($_POST['company_id'])) {
                 }
             } else {
                 $uniq = uniqid();
-                $image = load_image(
+                $image = load_image_webp(
                     $_FILES[$key],
                     'employee',
                     "employee_{$_SESSION['user']['id']}_{$uniq}"

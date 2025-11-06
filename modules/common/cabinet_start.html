@@ -1,19 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
+
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!--homeJsonLd-->
+	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><!--url_title--></title>
-    <meta name="description" content="<!--description-->">
-    <meta name="keywords" content="<!--keywords-->">
+	<title><!--url_title--></title>
+	<meta name="description" content="<!--description-->">
+	<meta name="keywords" content="<!--keywords-->">
 	<link rel="icon" href="<!--favicon-->" type="image/x-icon">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spinkit/1.2.5/spinkit.min.css"/>
-	<link rel="stylesheet" href="/assets/css/cabinet.css">
-	<link rel="stylesheet" href="/assets/css/slick.css">
-	<link rel="stylesheet" href="/assets/swiper/swiper-bundle.min.css">
-	<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-	<link href="/assets/css/jquery.formstyler.css" rel="stylesheet" />
+
+	<!-- основной стиль синхронно -->
+	<link rel="stylesheet" href="/assets/build/cabinet.min.css">
+
+	<!-- второстепенные стили асинхронно -->
+	<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/spinkit/1.2.5/spinkit.min.css" as="style"
+		onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="preload" href="/assets/css/slick.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="preload" href="/assets/swiper/swiper-bundle.min.css" as="style"
+		onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="preload" href="/assets/css/jquery-ui.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="preload" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" as="style"
+		onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="preload" href="/assets/build/jquery.formstyler.min.css" as="style"
+		onload="this.onload=null;this.rel='stylesheet'">
+
+	<!-- fallback для пользователей с отключенным JS -->
+	<noscript>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spinkit/1.2.5/spinkit.min.css" />
+		<link rel="stylesheet" href="/assets/css/slick.css">
+		<link rel="stylesheet" href="/assets/swiper/swiper-bundle.min.css">
+		<link rel="stylesheet" href="/assets/css/jquery-ui.min.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="/assets/build/jquery.formstyler.min.css">
+	</noscript>
+
+
 </head>
+
 <body class="cabinet">
-    <div class="cabinet-page">
+	<div class="cabinet-page">

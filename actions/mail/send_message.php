@@ -64,13 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $captchaCode = $_POST['captcha_code'] ?? '';
     $captchaId   = $_POST['captcha_id'] ?? null;
 
-    // Инициализируем массив ошибок
     $errors = [];
 
     // Проверка капчи
     if (!$captchaCode) {
         $errors['captcha_error'] = 'Введите код с картинки.';
-    } elseif (!$securimage->check($captchaCode, $captchaId)) {
+    } elseif (!$captchaId || !$securimage->check($captchaCode, $captchaId)) {
         $errors['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
     }
 
@@ -101,6 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'error' => $errors]);
         exit;
     }
+
+    $result = add_user_request(
+        (int) $_POST['specialist_id'],
+        $_POST['name'],
+        $_POST['contactInfo'],
+        $_POST['message']
+    );
 
     // Определяем, email или телефон
     if (filter_var($contactInfo, FILTER_VALIDATE_EMAIL)) {
@@ -270,7 +276,7 @@ mso-hide:all;
                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
-                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                 </tr>
                     <tr style="border-collapse:collapse">
                     <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>

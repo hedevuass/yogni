@@ -19,11 +19,10 @@ if (isset($_GET['page'])) {
 
     $start = ($data['page'] - 1) * $data['limit'];
 
-    // decode favorites safely
+    // декодирование
     $favorite = isset($data['favorite']) ? json_decode($data['favorite'], true) : [];
     if (!is_array($favorite)) $favorite = [];
 
-    // specialization может быть строкой 'lawyers' или 'lawyers,experts'
     $spec_input = $data['specialization'] ?? 'lawyers';
 
     // если пришла строка с запятыми — разобрать в массив
@@ -35,17 +34,25 @@ if (isset($_GET['page'])) {
         $specs = [$spec_input];
     }
 
-    // Собираем все id для запрошенных специализаций в порядке, в каком они идут в localStorage
-    $all_ids = [];
-    foreach ($specs as $s) {
-        if (!isset($favorite[$s]) || !is_array($favorite[$s])) continue;
-        foreach ($favorite[$s] as $id) {
-            $all_ids[] = intval($id);
+    if (isset($favorite['all']) && is_array($favorite['all'])) {
+        $all_ids = array_map('intval', $favorite['all']);
+    } else {
+        // fallback: собрать из переданных спецов
+        $all_ids = [];
+        foreach ($specs as $s) {
+            if (!isset($favorite[$s]) || !is_array($favorite[$s])) continue;
+            foreach ($favorite[$s] as $id) {
+                $all_ids[] = intval($id);
+            }
         }
     }
 
     // Убираем дубли, сохраняя порядок
-    $all_ids = array_values(array_unique($all_ids));
+    $all_ids = array_map('intval', $all_ids);
+    $all_ids = array_unique($all_ids);
+    $all_ids = array_values($all_ids);
+    $all_ids = array_reverse($all_ids);
+    
     $total_count = count($all_ids);
 
     // Получаем нужную "страницу" id
@@ -65,7 +72,6 @@ if (isset($_GET['page'])) {
 
     // пагинация (считаем по общему количеству id в выбранных специализациях)
     if ($total_count > $start + count($ids)) {
-        // передаём в block_pagination_fav строку специализаций так, как это требуется в шаблоне
         $json['pagination'] = block_pagination_fav($total_count, $data['limit'], $data['page'], implode(',', $specs));
     } else {
         $json['pagination'] = false;

@@ -60,23 +60,27 @@ $social_html .= '</tr>';
 if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['password'])) {
   $securimage = new Securimage();
 
-  $captchaCode = $_POST['captcha_code'] ?? '';
-  $captchaId = $_POST['captcha_id'] ?? null;
+  // Определяем, какая форма — специалист или компания
+  $classification = intval($_POST['classification']);
+  if ($classification <= 4) { // специалист
+    $captchaCode = $_POST['captcha_code'] ?? '';
+    $captchaId = $_POST['captcha_id2'] ?? null;
+  } else { // компания
+    $captchaCode = $_POST['captcha_code_registration_company'] ?? '';
+    $captchaId = $_POST['captcha_id_registration_company'] ?? null;
+  }
 
   // собираем данные из формы
   foreach ($_POST as $key => $value) {
     $data[$key] = clean_elem_form($value);
   }
 
-  // массив ошибок
   $json = ['error' => []];
 
   // проверка капчи
   if (!$captchaCode) {
     $json['error']['captcha_error'] = 'Введите код с картинки.';
-  }
-
-  if (!$securimage->check($captchaCode, $captchaId)) {
+  } elseif (!$securimage->check($captchaCode, $captchaId)) {
     $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
   }
 
@@ -92,20 +96,34 @@ if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['p
   } else $json['error']['phone'] = 'Укажите номер телефона';
 
   if ($data['email']) {
-    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $json['error']['email'] = 'Некорректный email';
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+      $json['error']['email'] = 'Некорректный email';
+    }
 
     $email_check = check_email($data['email']);
-    if ($email_check !== false) {
-      if ($email_check === 2) $json['error']['email'] = '<span class="basic_text">Страница с такой почтой уже существует.</span>
-                <span class="basic_text">Для получения доступа к странице <a class="recovery_popup_call">восстановите пароль</a>.</span>';
-      else if ($email_check === 1) $json['error']['email_resend'] = true;
-    }
-  } else $json['error']['email'] = 'Укажите email';
 
-  if (strlen($data['password']) < 6) $json['error']['password'] = 'Минимальная длина пароля 6 символов';
+    if ($email_check !== false) {
+      if ($email_check == 2) {
+        // Пробуем очистить email у удалённого пользователя
+        if (!clear_deleted_user_email_by_email($data['email'])) {
+          $json['error']['email'] = '
+                    <span class="basic_text">Страница с такой почтой уже существует.</span>
+                    <span class="basic_text">Для получения доступа <a class="recovery_popup_call">восстановите пароль</a>.</span>';
+        }
+      } elseif ($email_check == 1) {
+        $json['error']['email'] = '
+                <span class="basic_text">На данную почту уже отправлено письмо со ссылкой для подтверждения электронного адреса.</span>
+                <span class="basic_text">Обратитесь в поддержку, если вы не получили письмо.</span>';
+      }
+    }
+  } else {
+    $json['error']['email'] = 'Укажите email';
+  }
+
+  if (mb_strlen($data['password'], 'UTF-8') < 6) $json['error']['password'] = 'Минимальная длина пароля 6 символов';
   if ($data['password']) $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
-  if (isset($data['company']) && !$data['company']) $json['error']['company'] = 'Укажите название компании';
+  if ($classification > 4 && isset($data['company']) && !$data['company']) $json['error']['company'] = 'Укажите название компании';
 
   // если есть хоть одна ошибка, возвращаем JSON с ними всеми
   if (!empty($json['error'])) {
@@ -129,7 +147,11 @@ if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['p
   } else {
     if (set_specialist_description($user_id) && set_specialist_contacts($user_id, $data['phone']) && set_specialist_blog($user_id)) {
       $title = 'ЮРФАК - регистрация';
-      $email_name = $data['name'] . ' ' . $data['lastname'];
+      if (!empty($data['company'])) {
+        $email_name = $data['company'];
+      } else {
+        $email_name = $data['name'] . ' ' . $data['lastname'];
+      }
       $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
       $link_url .= '/action?reg&user_id=' . $user_id . '&hash=' . $data['hash'];
       $body = <<<EOF
@@ -286,7 +308,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
                          <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
@@ -321,7 +343,7 @@ EOF;
   }
   if ($data['type'] == 'resend-confirmation') {
 
-    $user = get_user_by_email($data['email']);
+    $user = get_user_by_email_reg($data['email']);
 
     if (!$user) {
       $json['fatal_error'] = 'Регистрация временно недоступна';
@@ -486,7 +508,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2023 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                         <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
                          <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
@@ -520,7 +542,7 @@ EOF;
   }
 
   if ($data['spec_type'] == 'company') {
-    $companies = check_сompany($data['spec_name']);
+    $companies = check_company_registration($data['spec_name']);
     if ($companies) {
       $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
       foreach ($companies as $company) {

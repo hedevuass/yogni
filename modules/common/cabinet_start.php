@@ -1,4 +1,9 @@
 <?php
+header_remove('Last-Modified');
+header_remove('ETag');
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 $uploadDirIcon = $_SERVER['DOCUMENT_ROOT'] . '/uploads/fav-icon/';
 $faviconPath = '';

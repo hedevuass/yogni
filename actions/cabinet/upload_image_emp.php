@@ -38,8 +38,8 @@ if (!isset($_FILES['photo_file'])) {
 			$json['error'] = 'Загрузите файл в форме jpeg, jpg, png или heic.';
 		} elseif (!empty($deny) && in_array(strtolower($ext), $deny)) {
 			$json['error'] = 'Загрузите файл в форме jpeg, jpg, png или heic.';
-		} elseif (intval($file['size']) > 3 * 1024 * 1024) {
-			$json['error'] = 'Файл слишком большой. Выберите файл размером менее 3мб.';
+		} elseif (intval($file['size']) > 5 * 1024 * 1024) {
+			$json['error'] = 'Файл слишком большой (максимальный размер - до 5 МБ).';
         } elseif (intval(getimagesize($file['tmp_name'])[0]) < 250 || intval(getimagesize($file['tmp_name'])[1]) < 250) {
 			$json['error'] = 'Ширина или высота изображения слишком маленькое.';
 		} else {

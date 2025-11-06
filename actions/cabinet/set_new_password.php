@@ -5,7 +5,7 @@ session_start();
 
 if (isset($_POST['new_password'])) {
     $data['password'] = clean_elem_form($_POST['new_password']);
-    if (strlen($data['password']) < 6) {
+    if (mb_strlen($data['password'], 'UTF-8') < 6) {
         $json['error'] = 'Минимальная длина пароля 6 символов';
         responseJson($json);
     } else {

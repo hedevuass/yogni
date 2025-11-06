@@ -121,52 +121,55 @@ $(document).ready(function () {
 });
 
 // City Autocomplete
-$("#select-city").on("keydown", function (event) {
-    if (event.keyCode === $.ui.keyCode.TAB &&
-        $(this).autocomplete("instance").menu.active) {
-        event.preventDefault()
-    }
-})
-    .autocomplete({
-        source: function (request, response) {
-            $.getJSON("/actions/location/get_cities.php", {
-                term: request.term
-            }, response)
-        },
-        search: function () {
-            let term = this.value
-            if (term.length < 2) return false
-        },
-        select: function (event, ui) {
-            let id = ui.item.id,
-                name = ui.item.name
+const $cityInputs = $("#select-city, input[name=city]");
 
-            $.post("/actions/location/set_city.php", { id: id, name: name }).done(function () {
-                localStorage.setItem('popup', '.mobile-filter-block')
-                location.reload()
-            })
-        }
+// Добавляем/убираем класс при открытии списка
+$cityInputs
+    .on("autocompleteopen", function () {
+        $(this).addClass("ui-autocomplete-open");
+    })
+    .on("autocompleteclose", function () {
+        $(this).removeClass("ui-autocomplete-open");
     });
 
-// City Autocomplete
-$("input[name=city]")
+// Настройка автокомплита для выбора города (popup)
+$("#select-city")
     .on("keydown", function (event) {
-        if (
-            event.keyCode === $.ui.keyCode.TAB &&
-            $(this).autocomplete("instance").menu.active
-        ) {
+        if (event.keyCode === $.ui.keyCode.TAB &&
+            $(this).autocomplete("instance").menu.active) {
             event.preventDefault();
         }
     })
     .autocomplete({
         source: function (request, response) {
-            $.getJSON(
-                "/actions/location/get_cities.php",
-                {
-                    term: request.term,
-                },
-                response
-            );
+            $.getJSON("/actions/location/get_cities.php", { term: request.term }, response);
+        },
+        search: function () {
+            let term = this.value;
+            if (term.length < 2) return false;
+        },
+        select: function (event, ui) {
+            let id = ui.item.id,
+                name = ui.item.name;
+
+            $.post("/actions/location/set_city.php", { id: id, name: name }).done(function () {
+                localStorage.setItem('popup', '.mobile-filter-block');
+                location.reload();
+            });
+        }
+    });
+
+// Настройка автокомплита для формы с city_id
+$("input[name=city]")
+    .on("keydown", function (event) {
+        if (event.keyCode === $.ui.keyCode.TAB &&
+            $(this).autocomplete("instance").menu.active) {
+            event.preventDefault();
+        }
+    })
+    .autocomplete({
+        source: function (request, response) {
+            $.getJSON("/actions/location/get_cities.php", { term: request.term }, response);
         },
         search: function () {
             let term = this.value;
@@ -176,7 +179,7 @@ $("input[name=city]")
             let id = ui.item.id,
                 name = ui.item.name;
             $("input[name=city_id]").val(id);
-        },
+        }
     });
 
 // City Radio Select
@@ -337,36 +340,66 @@ $('.catalog-checkbox-mobile .checkbox').on('click', function () {
 });
 
 // Metro Autocomplete
-$("#select-metro, #mobile-select-metro").on("keydown", function (event) {
-    if (event.keyCode === $.ui.keyCode.TAB &&
-        $(this).autocomplete("instance").menu.active) {
-        event.preventDefault()
-    }
-})
+const $metroInputs = $("#select-metro, #mobile-select-metro");
+
+// Добавляем/убираем класс при открытии и закрытии списка
+$metroInputs
+    .on("autocompleteopen", function () {
+        $(this).addClass("ui-autocomplete-open");
+    })
+    .on("autocompleteclose", function () {
+        $(this).removeClass("ui-autocomplete-open");
+    });
+
+// Инициализация autocomplete
+$metroInputs
+    .on("keydown", function (event) {
+        if (event.keyCode === $.ui.keyCode.TAB &&
+            $(this).autocomplete("instance").menu.active) {
+            event.preventDefault();
+        }
+    })
     .autocomplete({
         source: function (request, response) {
             $.getJSON("/actions/location/get_metro.php", {
                 term: request.term
-            }, response)
+            }, response);
         },
         search: function () {
-            let term = this.value
-            if (term.length < 2) return false
+            let term = this.value;
+            if (term.length < 2) return false;
         },
         select: function (event, ui) {
             let id = ui.item.id,
-                name = ui.item.name
+                name = ui.item.name;
 
             if (!$(`#metro-${id}`).length) {
                 $('#metro-list, #mobile-metro-list').prepend(`
-                <input type="checkbox" class="checkbox" id="metro-${id}" name="metro-${id}" data-id="${id}" checked>
-                <label for="metro-${id}">${name}</label>`)
+                    <input type="checkbox" class="checkbox" id="metro-${id}" name="metro-${id}" data-id="${id}" checked>
+                    <label for="metro-${id}">${name}</label>
+                `);
             }
 
-            $(this).val('')
-            return false
+            $(this).val('');
+            return false;
         }
-    })
+    });
+
+    $metroInputs.on("autocompleteopen", function () {
+        // убираем нижнюю границу у поля (чтобы не было двойной линии)
+        $(this).css("border-bottom-color", "transparent");
+    
+        // подгоняем меню, чтобы убрать микрозазор
+        $(".ui-autocomplete").css({
+            "margin-top": "-0.1px",
+            "position": "absolute"
+        });
+    });
+    
+    $metroInputs.on("autocompleteclose", function () {
+        // возвращаем границу
+        $(this).css("border-bottom-color", "");
+    });
 
 function updateMetroLinkText() {
     let checked = $('#popup-metro input:checkbox:checked');
@@ -403,7 +436,7 @@ if (isDesktop) {
         })
 
         $.post("/actions/location/set_metro.php", { metro: metro }).done(function () {
-            window.location.href = '/notariusy'
+           window.location.href = '/notariusy?nocache=' + new Date().getTime();
         })
     })
 } else {
@@ -414,7 +447,7 @@ if (isDesktop) {
         })
 
         $.post("/actions/location/set_metro.php", { metro: metro }).done(function () {
-            window.location.href = '/notariusy'
+           window.location.href = '/notariusy?nocache=' + new Date().getTime();
         })
     })
 }
@@ -478,26 +511,41 @@ $("#registration-popup .form4 input[name='lastname'], #registration-popup .form5
     });
 });
 
-// Registration + Captcha refresh
 $(function () {
     const $formWrap = $('#registration-popup');
 
     $formWrap.on('click', 'button[type=submit]', function (e) {
         e.preventDefault();
 
-        $formWrap.find('input').removeClass('error');
-        $formWrap.find('.invalid-feedback').html('');
-        $formWrap.find('.captcha-error').hide().text('');
+        const $btn = $(this);
 
+        // Определяем форму по классификации
         const type = $formWrap.find('input[name=classification]:checked').val();
         const popupSelector = (type <= 4) ? '#registration-specialist' : '#registration-company';
         const $popup = $(popupSelector);
 
-        const $captchaField = $popup.find('.captcha-field');
-        const $captchaInput = $captchaField.find('input[name="captcha_code"]');
-        const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
-        const $captchaError = $captchaField.find('.captcha-error');
+        // Очистка ошибок
+        $popup.find('input').removeClass('error');
+        $popup.find('.invalid-feedback').html('');
+        $popup.find('.captcha-error').hide().text('');
 
+        // Определяем имена полей капчи для каждой формы
+        let captchaCodeName, captchaIdName, captchaImgId;
+        if ($popup.is('#registration-specialist')) {
+            captchaCodeName = 'captcha_code';          // <input name="captcha_code">
+            captchaIdName = 'captcha_id2';             // <input name="captcha_id2"> ← важно!
+            captchaImgId = 'captcha2';
+        } else {
+            captchaCodeName = 'captcha_code_registration_company';
+            captchaIdName = 'captcha_id_registration_company';
+            captchaImgId = 'captcha_registration_company';
+        }
+
+        const $captchaInput = $popup.find(`input[name="${captchaCodeName}"]`);
+        const $captchaIdHidden = $popup.find(`input[name="${captchaIdName}"]`);
+        const $captchaError = $popup.find('.captcha-error');
+
+        // Собираем данные формы
         const formData = $popup.find('input[type=text], input[type=password], input[type=hidden]').serializeArray().reduce((obj, item) => {
             obj[item.name] = item.value;
             return obj;
@@ -505,10 +553,12 @@ $(function () {
         $formWrap.find('input[type=radio]:checked').each(function () {
             formData[this.name] = this.value;
         });
-        formData.captcha_code = $captchaInput.val();
-        formData.captcha_id = $captchaIdHidden.val();
 
-        const $btn = $(this);
+        // Добавляем капчу вручную, чтобы имена совпадали
+        formData[captchaCodeName] = $captchaInput.val();
+        formData[captchaIdName] = $captchaIdHidden.val();
+
+        // Отправка
         $btn.prop('disabled', true).text('Отправка...');
 
         $.ajax({
@@ -521,19 +571,19 @@ $(function () {
                     $('.popup.reg').fadeOut();
                     $('.popup.reg2').fadeIn();
                 } else {
-                    // Сначала очищаем все предыдущие ошибки
+                    // Очистка ошибок перед выводом
                     $popup.find('input').removeClass('error');
                     $popup.find('.invalid-feedback').html('');
                     $captchaError.hide().text('');
 
-                    // Перебираем все ошибки
+                    // Вывод ошибок
                     if (res.error) {
                         $.each(res.error, function (key, value) {
                             if (key === 'captcha_error') {
                                 $captchaError.text(value).show();
-                                // обновляем капчу с новым ID
+                                // обновляем капчу
                                 const newId = Date.now();
-                                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                                $popup.find(`img#${captchaImgId}`).attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
                                 $captchaIdHidden.val(newId);
                                 $captchaInput.focus();
                             } else {
@@ -544,7 +594,7 @@ $(function () {
                         });
                     }
 
-                    // Показываем фатальные ошибки
+                    // Фатальные ошибки
                     if (res.fatal_error) {
                         $('.popup.error.activate').html(res.fatal_error);
                         $('.popup.error').fadeIn();
@@ -555,33 +605,31 @@ $(function () {
             },
             error: function () {
                 $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
-
                 const newId = Date.now();
-                $('#captcha2').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                $popup.find(`img#${captchaImgId}`).attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
                 $captchaIdHidden.val(newId);
-
-                $btn.prop('disabled', false).text('Отправить');
                 $captchaInput.focus();
+                $btn.prop('disabled', false).text('Отправить');
             }
-
         });
     });
 
-    // Обновление капчи кнопкой
-    $formWrap.on('click', '#captcha_refresh2', function (e) {
+    // Обновление капчи кнопкой для обеих форм
+    $formWrap.on('click', 'button.captcha-refresh', function (e) {
         e.preventDefault();
         const $captchaField = $(this).closest('.captcha-field');
-        const $captchaInput = $captchaField.find('input[name="captcha_code2"]');
-        const $captchaIdHidden2 = $captchaField.find('input[name="captcha_id2"]');
-        const $captchaImg = $captchaField.find('img#captcha2');
+        const $captchaInput = $captchaField.find('input[type=text]');
+        const $captchaIdHidden = $captchaField.find('input[type=hidden]');
+        const $captchaImg = $captchaField.find('img');
 
-        const newId = Date.now(); // новый ID для капчи
+        const newId = Date.now();
         $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
-        $captchaIdHidden2.val(newId);
+        $captchaIdHidden.val(newId);
         $captchaInput.val('').focus();
         $captchaField.find('.captcha-error').hide().text('');
     });
 });
+
 $('#login-popup-resend').on('submit', function (e) {
     e.preventDefault();
 
@@ -662,6 +710,28 @@ $('#login-popup').on('click', 'button', function (e) {
                     }, 2000);
                 }
 
+                if (json['error']['deleted_account']) {
+                    const $popup = $('#login-popup');
+                    const $input = $popup.find('input[name="password"]');
+                    const $field = $input.closest('.field'); // находим контейнер
+                    const errorHtml = `<div class="invalid-feedback deleted-account-feedback">${json['error']['deleted_account']}</div>`;
+                
+                    // Подсветка поля
+                    $input.addClass('error');
+                
+                    $popup.find('.deleted-account-feedback').remove();
+                
+                    $field.after(errorHtml);
+
+                    $popup.find('.show-registration-popup').on('click', function (e) {
+                        e.preventDefault();
+                        const email = $popup.find('input[name="email"]').val();
+                        $('#registration-popup input[name="email"]').val(email);
+                        $('.popup').fadeOut();
+                        $('#registration-popup').fadeIn();
+                    });
+                }
+
                 if (!json['error']['auth']) {
                     $.each(json['error'], function (key, value) {
                         if (key == 'email_resend') {
@@ -709,33 +779,95 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('user_id_input').value = userId;
     }
 });
-$('.send-confirmation').click(function (e) {
-    e.preventDefault();
-    var email = $('input[name="email"]').val();
-    var user_id = $('input[name="user_id"]').val();
+$(function () {
+    // Отправка формы подтверждения
+    $('.send-confirmation').click(function (e) {
+        e.preventDefault();
 
-    // Очищаем предыдущие сообщения об ошибках
-    $('.confirmation__popup input[name="email"]').removeClass('error');
-    $('.confirmation__popup .invalid-feedback').html('');
+        const $popup = $('.confirmation__popup');
+        const $btn = $(this);
 
-    $.ajax({
-        type: 'POST',
-        url: '/actions/mail/rights_confirmation.php',
-        dataType: 'json',
-        data: { email: email, user_id: user_id },
-        success: function (json) {
-            if (json['error']) {
-                $('.confirmation__popup input[name="email"]').addClass('error');
-                $('.confirmation__popup .invalid-feedback').html(json['error']);
-            } else if (json['success']) {
-                $(".confirmation__popup").fadeOut();
-                $(".confirmation__popup2").fadeIn();
-                $("body").addClass("hid");
+        const $emailInput = $popup.find('input[name="email"]');
+        const $userIdInput = $popup.find('input[name="user_id"]');
+
+        const $captchaInput = $popup.find('input[name="captcha_code_conf"]');
+        const $captchaIdHidden = $popup.find('input[name="captcha_id_conf"]');
+        const $captchaError = $popup.find('.captcha-error');
+
+        // Очищаем предыдущие ошибки
+        $popup.find('input').removeClass('error');
+        $popup.find('.invalid-feedback').html('');
+        $captchaError.hide().text('');
+
+        // Данные для отправки
+        const formData = {
+            email: $emailInput.val(),
+            user_id: $userIdInput.val(),
+            captcha_code: $captchaInput.val(),
+            captcha_id: $captchaIdHidden.val()
+        };
+
+        $btn.prop('disabled', true).text('Отправка...');
+
+        $.ajax({
+            type: 'POST',
+            url: '/actions/mail/rights_confirmation.php',
+            dataType: 'json',
+            data: formData,
+            success: function (res) {
+                if (res.success) {
+                    $popup.fadeOut();
+                    $(".confirmation__popup2").fadeIn();
+                    $("body").addClass("hid");
+                } else {
+                    // Перебираем ошибки
+                    if (res.error) {
+                        $.each(res.error, function (key, value) {
+                            if (key === 'captcha_error') {
+                                $captchaError.text(value).show();
+
+                                // обновляем капчу
+                                const newId = Date.now();
+                                $popup.find('img#captcha_conf').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                                $captchaIdHidden.val(newId);
+                                $captchaInput.focus();
+                            } else if (key === 'email') {
+                                $emailInput.addClass('error');
+                                $emailInput.siblings('.invalid-feedback').html(value);
+                            }
+                        });
+                    }
+
+                    $btn.prop('disabled', false).text('Подтвердить права');
+                }
+            },
+            error: function () {
+                $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
+
+                const newId = Date.now();
+                $popup.find('img#captcha_conf').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                $captchaIdHidden.val(newId);
+                $captchaInput.focus();
+
+                $btn.prop('disabled', false).text('Подтвердить права');
             }
-        },
-        error: function () {
-            $('.confirmation__popup .invalid-feedback').html('Что-то пошло не так. Повторите попытку позже.');
-        }
+        });
+    });
+
+    // Обновление капчи кнопкой
+    $('.confirmation__popup').on('click', '#captcha_refresh_conf', function (e) {
+        e.preventDefault();
+
+        const $captchaField = $(this).closest('.captcha-field');
+        const $captchaInput = $captchaField.find('input[name="captcha_code_conf"]');
+        const $captchaIdHidden = $captchaField.find('input[name="captcha_id_conf"]');
+        const $captchaImg = $captchaField.find('img#captcha_conf');
+
+        const newId = Date.now(); // новый ID капчи
+        $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+        $captchaIdHidden.val(newId);
+        $captchaInput.val('').focus();
+        $captchaField.find('.captcha-error').hide().text('');
     });
 });
 
@@ -745,42 +877,36 @@ $(function () {
     $formWrap.on('click', '#send_message_to_specialist', function (e) {
         e.preventDefault();
 
-        const email = $('#specialist_mail').val();
-        const name = $formWrap.find('input[name="name"]').val();
-        const contactInfo = $formWrap.find('input.phone-input-reg').val();
-        const message = $formWrap.find('textarea').val();
+        const $btn = $(this);
         const $captchaField = $formWrap.find('.captcha-field');
         const $captchaInput = $captchaField.find('input[name="captcha_code"]');
         const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
         const $captchaError = $captchaField.find('.captcha-error');
 
-        // Очищаем все предыдущие ошибки
-        $formWrap.find('input').removeClass('error');
+        // Очистка предыдущих ошибок
+        $formWrap.find('input, textarea').removeClass('error');
         $formWrap.find('.invalid-feedback').html('');
         $captchaError.hide().text('');
 
-        if (name.trim() === '' || contactInfo.trim() === '' || message.trim() === '') {
-            alert('Заполните все поля.');
-            return;
-        }
+        const data = {
+            email: $('#specialist_mail').val(),
+            name: $formWrap.find('input[name="name"]').val(),
+            specialist_id: $formWrap.find('input[name="specialist_id"]').val(),
+            contactInfo: $formWrap.find('input.phone-input-reg').val(),
+            message: $formWrap.find('textarea').val(),
+            captcha_code: $captchaInput.val(),
+            captcha_id: $captchaIdHidden.val()
+        };
 
-        const $btn = $(this);
         $btn.prop('disabled', true).text('Отправка...');
 
         $.ajax({
             type: 'POST',
             url: '/actions/mail/send_message.php',
             dataType: 'json',
-            data: {
-                email: email,
-                name: name,
-                contactInfo: contactInfo,
-                message: message,
-                captcha_code: $captchaInput.val(),
-                captcha_id: $captchaIdHidden.val()
-            },
+            data: data,
             success: function (res) {
-                if (res && res.success) {
+                if (res.success) {
                     $formWrap.find('.form').html(`
                         <div style="text-align: center;" class="middle-text">
                             Сообщение успешно отправлено!<br>
@@ -788,50 +914,46 @@ $(function () {
                         </div>
                     `);
                 } else {
-                    // Показываем ошибки капчи и полей одновременно
+                    // Выводим ошибки всех полей
                     if (res.error) {
                         $.each(res.error, function (key, value) {
                             if (key === 'captcha_error') {
                                 $captchaError.text(value).show();
                                 // обновляем капчу
-                                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?rand=' + Date.now());
-                                $captchaIdHidden.val(Date.now());
+                                const newId = Date.now();
+                                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                                $captchaIdHidden.val(newId);
+                                $captchaInput.val('').focus();
                             } else {
-                                const $input = $formWrap.find(`input[name=${key}]`);
+                                const $input = $formWrap.find(`input[name=${key}], textarea[name=${key}]`);
                                 $input.addClass('error');
                                 $input.siblings('.invalid-feedback').html(value);
                             }
                         });
                     }
-
-                    // Фатальные ошибки
-                    if (res.fatal_error) {
-                        $('.popup.error.activate').html(res.fatal_error);
-                        $('.popup.error').fadeIn();
-                    }
-
                     $btn.prop('disabled', false).text('Отправить');
-                    $captchaInput.focus();
                 }
             },
             error: function () {
                 $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
-                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?rand=' + Date.now());
-                $captchaIdHidden.val(Date.now());
+                const newId = Date.now();
+                $('#captcha').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                $captchaIdHidden.val(newId);
+                $captchaInput.val('').focus();
                 $btn.prop('disabled', false).text('Отправить');
-                $captchaInput.focus();
             }
         });
     });
 
-    $formWrap.on('click', '#captcha_refresh2', function (e) {
+    // Обновление капчи кнопкой
+    $formWrap.on('click', '#captcha_refresh', function (e) {
         e.preventDefault();
         const $captchaField = $(this).closest('.captcha-field');
         const $captchaInput = $captchaField.find('input[name="captcha_code"]');
         const $captchaIdHidden = $captchaField.find('input[name="captcha_id"]');
         const $captchaImg = $captchaField.find('img#captcha');
 
-        const newId = Date.now(); // новый ID для капчи
+        const newId = Date.now();
         $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
         $captchaIdHidden.val(newId);
         $captchaInput.val('').focus();
@@ -839,41 +961,88 @@ $(function () {
     });
 });
 
-// Recovery Password
-$('#recovery-password-popup').on('click', 'button', function (e) {
+
+// Recovery Password with Captcha
+$('#recovery-password-popup').on('click', '.popup-btn', function (e) {
     e.preventDefault();
 
-    $('input').removeClass('error');
-    $('.invalid-feedback').html('');
+    const $form = $('#recovery-password-popup');
+    const $btn = $(this);
+
+    // Inputs
+    const $emailInput = $form.find('input[name="email"]');
+    const $captchaInput = $form.find('input[name="captcha_code_recovery"]');
+    const $captchaIdHidden = $form.find('input[name="captcha_id_recovery"]');
+    const $captchaError = $form.find('.captcha-error');
+
+    // Очищаем ошибки
+    $form.find('input').removeClass('error');
+    $form.find('.invalid-feedback').html('');
+    $captchaError.hide().text('');
+
+    // Данные для отправки
+    const formData = {
+        email: $emailInput.val(),
+        captcha_code: $captchaInput.val(),
+        captcha_id: $captchaIdHidden.val()
+    };
+
+    $btn.prop('disabled', true).text('Отправка...');
 
     $.ajax({
         type: "POST",
         url: "/actions/mail/recovery_password.php",
         dataType: 'json',
-        data: $('#recovery-password-popup input[type=text]'),
+        data: formData,
         success: function (json) {
             if (json['error']) {
                 $.each(json['error'], function (key, value) {
-                    $(`#recovery-password-popup input[name=${key}]`).addClass('error');
-                    $(`#recovery-password-popup input[name=${key}]`).siblings('.invalid-feedback').html(value);
+                    if (key === 'captcha_error') {
+                        $captchaError.text(value).show();
+                        // Обновляем капчу
+                        const newId = Date.now();
+                        $('#captcha_recovery').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                        $captchaIdHidden.val(newId);
+                        $captchaInput.focus();
+                    } else {
+                        $(`#recovery-password-popup input[name=${key}]`).addClass('error');
+                        $(`#recovery-password-popup input[name=${key}]`).siblings('.invalid-feedback').html(value);
+                    }
                 });
-            }
-            if (json['success']) {
-
-                // Сначала скрываем .popup.pass, затем показываем recovery-password__popup2
+                $btn.prop('disabled', false).text('Восстановить');
+            } else if (json['success']) {
                 $('.popup.pass').fadeOut(function () {
                     $(".recovery-password__popup2").fadeIn();
                 });
             }
         },
-        error: function (xhr, status, error) {
-            // Аналогично в блоке error
-            $('.popup.pass').fadeOut(function () {
-                $(".recovery-password__popup2").fadeIn();
-            });
-            $("#recovery-password-popup").fadeOut();
+        error: function () {
+            $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
+
+            const newId = Date.now();
+            $('#captcha_recovery').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+            $captchaIdHidden.val(newId);
+            $captchaInput.focus();
+
+            $btn.prop('disabled', false).text('Восстановить');
         }
     });
+});
+
+// Обновление капчи кнопкой
+$('#recovery-password-popup').on('click', '#captcha_refresh_recovery', function (e) {
+    e.preventDefault();
+
+    const $captchaField = $(this).closest('.captcha-field');
+    const $captchaInput = $captchaField.find('input[name="captcha_code_recovery"]');
+    const $captchaIdHidden = $captchaField.find('input[name="captcha_id_recovery"]');
+    const $captchaImg = $captchaField.find('img#captcha_recovery');
+
+    const newId = Date.now(); // новый ID капчи
+    $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+    $captchaIdHidden.val(newId);
+    $captchaInput.val('').focus();
+    $captchaField.find('.captcha-error').hide().text('');
 });
 
 $('#recovery-password-popup-2').on('click', 'button', function (e) {
@@ -991,50 +1160,101 @@ $('#support-popup, #support-popup-header').on('click', 'button[type="submit"]', 
     })
 })
 
-// Review
-$('#review-popup').on('click', 'button', function (e) {
-    e.preventDefault()
+// Review with Captcha - безопасная версия
+$('#review-popup').on('click', '.button button', function (e) {
+    e.preventDefault();
 
-    $('input, textarea').removeClass('error')
-    $('.invalid-feedback').html('')
+    const $popup = $('#review-popup');
+    const $btn = $(this);
+
+    const $captchaInput = $popup.find('input[name="captcha_code_review"]');
+    const $captchaIdHidden = $popup.find('input[name="captcha_id_review"]');
+    const $captchaError = $popup.find('.captcha-error');
+
+    // Очищаем предыдущие ошибки
+    $popup.find('input, textarea').removeClass('error');
+    $popup.find('.invalid-feedback').html('');
+    $captchaError.hide().text('');
+
+    // Собираем данные формы
+    const formData = $popup.find('input[type=text], input[type=hidden], textarea, input[type=radio]:checked').serializeArray();
+    formData.push({ name: 'captcha_code_review', value: $captchaInput.val() });
+    formData.push({ name: 'captcha_id_review', value: $captchaIdHidden.val() });
+
+    $btn.prop('disabled', true).text('Отправка...');
 
     $.ajax({
         type: "POST",
         url: "/actions/review.php",
         dataType: 'json',
-        data: $('#review-popup input[type=text], #review-popup input[type=hidden], #review-popup textarea, #review-popup input[type=radio]:checked'),
+        data: formData,
         success: function (json) {
             if (json['error']) {
+                // Фатальная ошибка
                 if (json['error']['fatal_error']) {
-                    $('#review-popup .name').text('Отзыв не будет опубликован')
-                    $('#review-popup .form6').html(`<div class="field">${json['error']['fatal_error']}</div>`)
-                    return
+                    if (!$popup.find('.feedback-message').length) {
+                        $popup.find('.form6').prepend('<div class="feedback-message"></div>');
+                    }
+                    $popup.find('.feedback-message').html(`<div class="field">${json['error']['fatal_error']}</div>`);
+                    $btn.prop('disabled', false).text('Отправить');
+                    return;
                 }
 
                 $.each(json['error'], function (key, value) {
                     if (key === 'review') {
-                        $(`#review-popup textarea[name=${key}]`).addClass('error')
-                        $(`#review-popup textarea[name=${key}]`).siblings('.invalid-feedback').html(value)
-                        return true
+                        $popup.find(`textarea[name=${key}]`).addClass('error');
+                        $popup.find(`textarea[name=${key}]`).siblings('.invalid-feedback').html(value);
+                    } else if (key === 'rating') {
+                        $popup.find(`input[name=${key}]`).closest('.rating-area').siblings('.invalid-feedback').html(value);
+                    } else if (key === 'captcha_error') {
+                        $captchaError.text(value).show();
+                        // обновление капчи
+                        const newId = Date.now();
+                        $popup.find('img#captcha_review').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+                        $captchaIdHidden.val(newId);
+                        $captchaInput.focus();
+                    } else {
+                        $popup.find(`input[name=${key}]`).addClass('error');
+                        $popup.find(`input[name=${key}]`).siblings('.invalid-feedback').html(value);
                     }
+                });
 
-                    $(`#review-popup input[name=${key}]`).addClass('error')
-
-                    if (key === 'rating') {
-                        $(`#review-popup input[name=${key}]`).closest('.rating-area').siblings('.invalid-feedback').html(value)
-                        return true
-                    }
-
-                    $(`#review-popup input[name=${key}]`).siblings('.invalid-feedback').html(value)
-                })
+                $btn.prop('disabled', false).text('Отправить');
             }
 
             if (json['success']) {
-                $('#review-popup .form6').html(`<div class="field">${json['success']}</div>`)
+                $popup.find('.form6').html(`<div class="field">${json['success']}</div>`);
             }
+        },
+        error: function () {
+            $captchaError.text('Ошибка сети или сервера. Попробуйте ещё раз.').show();
+
+            const newId = Date.now();
+            $popup.find('img#captcha_review').attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+            $captchaIdHidden.val(newId);
+            $captchaInput.focus();
+
+            $btn.prop('disabled', false).text('Отправить');
         }
-    })
-})
+    });
+});
+
+// Обновление капчи кнопкой
+$('#review-popup').on('click', '#captcha_refresh_review', function (e) {
+    e.preventDefault();
+
+    const $captchaField = $(this).closest('.captcha-field');
+    const $captchaInput = $captchaField.find('input[name="captcha_code_review"]');
+    const $captchaIdHidden = $captchaField.find('input[name="captcha_id_review"]');
+    const $captchaImg = $captchaField.find('img#captcha_review');
+
+    const newId = Date.now(); // новый ID капчи
+    $captchaImg.attr('src', '/libs/securimage/securimage_show.php?id=' + newId);
+    $captchaIdHidden.val(newId);
+    $captchaInput.val('').focus();
+    $captchaField.find('.captcha-error').hide().text('');
+});
+
 
 $('.index-catalog-block').on('click', '#get-specialist button', function () {
     let form = '#get-specialist',
@@ -1244,3 +1464,57 @@ $(document).ready(function () {
         }
     });
 })();
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("img:not([loading]), iframe:not([loading])").forEach(el => {
+        el.setAttribute("loading", "lazy");
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // IntersectionObserver для ленивой загрузки
+    const lazyObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const bg = el.dataset.bg;
+                if (bg) {
+                    el.style.backgroundImage = `url('${bg}')`;
+                    observer.unobserve(el); // перестаем наблюдать
+                }
+            }
+        });
+    }, { rootMargin: "0px 0px 200px 0px" });
+
+    // Функция для наблюдения за элементами
+    function observeLazyBgs(container = document) {
+        const lazyBgs = container.querySelectorAll('.lazy-bg');
+        lazyBgs.forEach(el => {
+            if (!el.dataset.observed) { // чтобы не дублировать
+                lazyObserver.observe(el);
+                el.dataset.observed = "1";
+            }
+        });
+    }
+
+    // Наблюдаем уже существующие элементы
+    observeLazyBgs();
+
+    // MutationObserver для подхвата новых элементов динамически
+    const mutationObserver = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) { // если это элемент
+                    // проверяем сам элемент
+                    if (node.classList.contains('lazy-bg')) {
+                        observeLazyBgs(node.parentNode);
+                    }
+                    // проверяем его потомков
+                    observeLazyBgs(node);
+                }
+            });
+        });
+    });
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+});

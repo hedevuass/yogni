@@ -24,9 +24,37 @@ if (isset($article)) {
     $theme_id = intval($article['service_id']);
     $theme_name = $article['service_title'];
 }
-//вывод полей к заполнению
-$data['title_input'] = '<input type="text" name="title" placeholder="Название записи (не более 65 символов)" maxlength="65" value="'.strip_tags(html_entity_decode($title_input)).'"> <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
-$data['content'] = '<textarea name="content" placeholder="Текст поста (не более 7500 символов)" maxlength="7500">'.strip_tags(html_entity_decode($content)).'</textarea> <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
+
+function html_to_textarea($html) {
+    // Декодируем HTML-сущности (иногда нужно 2 раза, если они были вложены)
+    $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
+    $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8'); // второй проход
+
+    // Заменяем <br> и закрывающие теги на перенос строки
+    $html = preg_replace('/<\s*br\s*\/?>/i', "\n", $html);
+    $html = preg_replace('/<\/(div|p|li|h[1-6])>/i', "\n", $html);
+
+    // Убираем остальные HTML-теги
+    $html = strip_tags($html);
+
+    // Убираем лишние переносы
+    $html = preg_replace("/\n{3,}/", "\n\n", $html);
+
+    return trim($html);
+}
+
+// Вывод полей
+$data['title_input'] = '
+<input type="text" name="title" placeholder="Название записи (не более 65 символов)" maxlength="65" 
+value="'.htmlspecialchars(html_to_textarea($title_input), ENT_QUOTES, 'UTF-8').'">
+<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
+
+$data['content'] = '
+<textarea name="content" placeholder="Текст поста (не более 7500 символов)" maxlength="7500">'.
+htmlspecialchars(html_to_textarea($content), ENT_QUOTES, 'UTF-8').
+'</textarea>
+<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
+
 /* $data['keywords'] = '<input type="text" name="keywords" class="keywords-input" placeholder="До 4 слов" maxlength="60" value="'.$keywords.'">'; */
 
 //скрытое поле айди блога для js

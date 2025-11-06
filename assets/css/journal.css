@@ -672,7 +672,6 @@
 
   .blog-page .banner-sidebar .banner {
     display: block;
-    background: url('../img/blog-banner.png') center / cover;
     padding: 33px 24px 43px 24px;
     color: #fff;
     border-radius: 16px;
@@ -700,7 +699,7 @@
   }
 
   .blog-page .banner-sidebar .banner p {
-    margin-bottom: 117px;
+    margin-bottom: 112px;
   }
 
   .blog-page .banner-sidebar .banner ul {
@@ -930,7 +929,7 @@
   }
 
   .blog-page .main-content .item2 .author {
-    margin-top: 24px;
+    margin-top: 18px;
     font-weight: 300;
     color: #6F6F6F;
     font-size: 12px;
@@ -943,7 +942,7 @@
   }
 
   .blog-page .main-content .item2 .tags {
-    margin-top: 16px;
+    margin-top: 18px;
   }
 
   .blog-page .main-content .item2 .tags a {
@@ -965,7 +964,7 @@
   .articles .item2 {
     margin-bottom: 32px;
     background: #F6F6F6;
-    padding: 17px 24px 30px 24px;
+    padding: 30px 24px 30px 24px;
   }
 
   .articles .post-data {
@@ -988,6 +987,7 @@
     padding-left: 22px;
     background-position: left center;
     background-size: 16px;
+    line-height: 16px;
     background-repeat: no-repeat;
     background-image: url('../img/cat_blogs_active.svg');
   }
@@ -1324,14 +1324,14 @@
   .blog-page .main-content .item5 .bottom-block .author div p {
     margin-bottom: 0px;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 400;
     white-space: nowrap;
     max-width: 350px;
   }
 
   .blog-page .main-content .item5 .bottom-block .author div .classification {
     font-size: 14px !important;
-    font-weight: 400 !important;
+    font-weight: 300 !important;
     margin-bottom: 3px;
   }
 
@@ -1395,7 +1395,8 @@
   .blog-page .main-content .author-block .info .name {
     font-size: 18px;
     font-weight: 500;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    line-height: 26px;
   }
 
   .blog-page .main-content .author-block .info .name a {
@@ -1458,6 +1459,7 @@
     background: url('../img/adress.svg') no-repeat 0 0;
     color: #6A6A6A;
     font-size: 14px;
+    margin-bottom: 2px;
   }
 
   .blog-page .main-content .author-block .link {
@@ -1512,8 +1514,13 @@
     font-weight: 500;
   }
 
+  .lazy-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
   .blog-page .top-banner {
-    background: url('../img/blog-page.jpg') center / cover;
     width: 100%;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -1842,7 +1849,7 @@
 
     .blog-page .main-content .item5 .bottom-block .author {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
     }
 
     .blog-page .main-content {
@@ -1896,7 +1903,7 @@
     .company-page .articles .item2 {
       margin-bottom: 24px;
       background: #FFF;
-      padding: 17px 20px 24px 20px;
+      padding: 30px 20px 30px 20px;
     }
 
     .big-mobile-popup.mobile-journal-themes {
@@ -2212,10 +2219,15 @@
 
     .blog-page .main-content .author-block .info .name {
       font-size: 16px;
+      line-height: 22px;
+    }
+
+    .author-block div .rating_code {
+      margin-bottom: 8px;
     }
 
     .blog-page .main-content .author-block .info .name {
-      margin-bottom: -2px;
+      margin-bottom: 4px;
     }
 
     .blog-mob-menu .wrap {
@@ -2223,7 +2235,7 @@
     }
 
     .blog-page .main-content .item5 .bottom-block .author div p {
-      margin-bottom: 4px;
+      margin-bottom: 0px;
     }
 
     .blog-page .main-content .item5 .bottom-block .author div .blog_name_mobile {
@@ -2238,7 +2250,7 @@
       padding: 30px 24px;
       gap: 0 20px;
       flex-wrap: wrap;
-      align-items: flex-start;
+      align-items: center;
       border-radius: 0;
     }
 
@@ -2252,7 +2264,7 @@
     }
 
     .blog-page .main-content .author-block .info .adress {
-      margin-bottom: 8px;
+      margin-bottom: 1px;
       color: #6A6A6A;
       /* line-height: 120%; */
       min-height: 16px;
