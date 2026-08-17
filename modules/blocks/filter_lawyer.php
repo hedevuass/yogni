@@ -39,16 +39,16 @@ foreach ($services as $key => $service) {
     // проход по основным разделам
     foreach ($service[0] as $parrent) {
         // пропускаем "прочие" до конца
-        if (mb_stripos($parrent['title'], 'прочие') !== false) {
+        /* if (mb_stripos($parrent['title'], 'прочие') !== false) {
             $last_cat = $parrent;
             continue;
-        }
+        } */
 
         // определяем, выбран ли этот пункт
         $isSelected = ($parrent['id'] == $original_id || $parrent['id'] == $original_p_id);
 
         // для выбранного — используем ALT-slug, иначе — обычный
-        $slugForParrent = $isSelected ? $category['slug'] : $parrent['slug'];
+        $slugForParrent = $parrent['slug'];
 
         // строим option родительского раздела
         $data['filter_lawyer_category'] .=
@@ -76,7 +76,7 @@ foreach ($services as $key => $service) {
                     continue;
                 }
                 $isChildSelected = ($child['id'] == $original_id);
-                $slugForChild = $isChildSelected ? $category['slug'] : $child['slug'];
+                $slugForChild = $child['slug'];
 
                 $data['filter_lawyer_subcategory'] .=
                     "<option value='{$slugForChild}'"
@@ -102,7 +102,7 @@ foreach ($services as $key => $service) {
     // теперь раздел "прочие" в конец
     if (isset($last_cat)) {
         $isLastCatSelected = ($last_cat['id'] == $original_id || $last_cat['id'] == $original_p_id);
-        $slugForLastCat = $isLastCatSelected ? $category['slug'] : $last_cat['slug'];
+        $slugForLastCat = $last_cat['slug'];
 
         $data['filter_lawyer_category'] .=
             "<option value='.s{$last_cat['id']}' data-slug='{$slugForLastCat}'"
@@ -138,7 +138,7 @@ foreach ($services as $key => $service) {
 
             if ($last_child) {
                 $isLastChildSelected = ($last_child['id'] == $original_id);
-                $slugForLastChild = $isLastChildSelected ? $category['slug'] : $last_child['slug'];
+                $slugForLastChild = $last_child['slug'];
 
                 $data['filter_lawyer_subcategory'] .=
                     "<option value='{$slugForLastChild}'"
@@ -169,8 +169,10 @@ if (str_contains($current_path, 'company') && !str_contains($current_path, 'priv
 }
 
 $data['filter_lawyer_checkbox'] = <<<EOF
+<div>
     <input type="checkbox" class="checkbox" id="ch1" $specialist><label for="ch1">Частные</label>
     <input type="checkbox" class="checkbox" id="ch2" $company><label for="ch2">Компании</label>
+</div>
 EOF;
 
 $data['filter_checkbox_mobile'] = <<<EOF

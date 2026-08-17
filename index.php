@@ -42,6 +42,7 @@ $HTML = '';
 
 // теперь проверяем файл страницы
 if (!file_exists("pages/$requested_page.html")) {
+    http_response_code(404); 
     $requested_page = 'not_found';
 }
 

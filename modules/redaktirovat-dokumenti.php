@@ -13,11 +13,15 @@ $specialist_description = get_specialist_description($_SESSION['user']['id']);
 // Декодируем его документы
 $documents = is_null($specialist_description['document']) ? [] : (json_decode($specialist_description['document'], true) ?: []);
 
+$data['documents'] .= <<<EOF
+<input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
+EOF;
+
 // Формируем HTML документов
 foreach ($documents as $key => $document) {
     $data['documents'] .= <<<EOF
     <tr style="white-space: nowrap;">
-        <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование документа (не более 65 символов)" maxlength="65" value="{$document['name']}"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
+        <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование акции (не более 65 символов)" maxlength="65" value="{$document['name']}"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
         <td>
             <div class="doc">
                 <!-- Старая ссылка меняем: убираем href, добавляем класс и onclick -->
@@ -29,10 +33,8 @@ foreach ($documents as $key => $document) {
             </div>
         </td>
         <td>
-            <a class="edit-docs-mobile"></a>
-            <a class="delete"></a>
+            <a class="edit-docs-mobile"></a><a class="delete"></a>
         </td>
-        <input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
     </tr>
     EOF;
 }
@@ -47,7 +49,7 @@ for ($i = 0; $i < $empty_input; $i++) {
 
     $data['documents'] .= <<<EOF
         <tr style="white-space: nowrap;" class="mob__empty">
-            <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование документа (не более 65 символов)" maxlength="65"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
+            <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование акции (не более 65 символов)" maxlength="65"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
             <td>
                 <a class="upload" onclick="$(this).siblings('input').click()">Загрузить</a>
                 <input type="file" name="{$key}" hidden>

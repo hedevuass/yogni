@@ -6,7 +6,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/functions.php';
 if (isset($_POST['search'])) {
     // если строка поиска пустая
     if ($_POST['search'] == "") {
-        ?>
+        ?>/
         <div class="search-categories">
             <?php
             //получение и вывод категорий (кругляшей)
@@ -32,7 +32,7 @@ if (isset($_POST['search'])) {
     }
     //если строка поиска не пустая
     $cats = [];
-    $search_str = trim(htmlspecialchars($_POST['search'], ENT_NOQUOTES));
+    $search_str = trim($_POST['search'], ENT_NOQUOTES);
 
     // получаем рузельтаты
     $services = search_services($search_str);
@@ -58,7 +58,7 @@ if (isset($_POST['search'])) {
                 }
                 $found_in_categories[] = $service;
             } else if ($service['classification'] == 3 && count($found_in_categories) < 3) {
-                $service['bottom_text'] = 'В категории "' . 'Все эксперты"';
+                $service['bottom_text'] = 'В категории "' . 'Направления йоги"';
                 $found_in_categories[] = $service;
             }
         }
@@ -75,7 +75,8 @@ if (isset($_POST['search'])) {
 
             if (mb_stripos($full_name, $search_str) !== false) {
                 $specialist['text1'] = $full_name;
-                $specialist['link1'] = '/specialist/id' . $specialist['id'];
+                $studio_slug = !empty($specialist['slug']) ? $specialist['slug'] : 'id' . $specialist['id'];
+                $specialist['link1'] = '/studio/' . $studio_slug;
 
                 $lawyer_classifications = [1, 2];
                 $expert_classifications = [3, 8];
@@ -87,7 +88,7 @@ if (isset($_POST['search'])) {
                     $found_in_categories[] = $specialist;
                     $lawyers = true;
                 } else if (in_array($specialist['classification_id'], $expert_classifications) && !$experts) {
-                    $specialist['bottom_text'] = 'В категории "Эксперты"';
+                    $specialist['bottom_text'] = 'В категории "Студии йоги"';
                     /* $specialist['link1'] .= '&filter=expert'; */
                     $found_in_categories[] = $specialist;
                     $experts = true;
@@ -105,14 +106,15 @@ if (isset($_POST['search'])) {
         foreach ($companies as $company) {
             $company['text1'] = $company['title'];
             // ссылка на результаты поиска
-            $company['link1'] = '/specialist/id' . $company['id_link'];
+            $studio_slug = !empty($company['slug_link']) ? $company['slug_link'] : 'id' . $company['id_link'];
+            $company['link1'] = '/studio/' . $studio_slug;
             if (($company['classification'] == 5 || $company['classification'] == 6 || $company['classification'] == 7) && !$lawyers) {
                 $company['bottom_text'] = 'В категории "' . 'Юристы и адвокаты"';
                 /* $company['link1'] .= '&filter=lawyers'; */
                 $found_in_categories[] = $company;
                 $lawyers = true;
             } else if ($company['classification'] == 8 && !$experts) {
-                $company['bottom_text'] = 'В категории "' . 'Эксперты"';
+                $company['bottom_text'] = 'В категории "' . 'Студии йоги"';
                 /* $company['link1'] .= '&filter=experts'; */
                 $found_in_categories[] = $company;
                 $experts = true;
@@ -157,10 +159,14 @@ if (isset($_POST['search'])) {
             }
             // выводим остальные категории
             foreach ($categories as $category) {
-                if ($category['classification'] == 3 || $services[0]['id'] == $category['id'] || $services[0]['p_id'] == $category['id']) {
+                // пропускаем уже выведенные категории (юристы)
+                if ($services[0]['id'] == $category['id'] || $services[0]['p_id'] == $category['id']) {
                     continue;
                 }
-                if (mb_stripos($category['title'], 'прочие') !== false) {
+                // йога выводим с другой ссылкой
+                if ($category['classification'] == 3) {
+                    echo '<a href="/yoga-studii/' . $category['slug'] . '" class="category">' . $category['title'] . '</a>';
+                } elseif (mb_stripos($category['title'], 'прочие') !== false) {
                     //раздел "прочие" в конец
                     $last_category = $category;
                 } else {
@@ -174,7 +180,7 @@ if (isset($_POST['search'])) {
             //выводим кругляши если ничего не найдено в категориях
             foreach ($categories as $category) {
                 if ($category['classification'] == 3) {
-                    continue;
+                    echo '<a href="/yoga-studii/' . $category['slug'] . '" class="category">' . $category['title'] . '</a>';
                 }
                 if (mb_stripos($category['title'], 'прочие') !== false) {
                     //раздел "прочие" в конец

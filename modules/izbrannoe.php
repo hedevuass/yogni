@@ -112,8 +112,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             }
             $(".index-catalog-block .grid_flex").removeClass("preload");
 
-            // оставляем редирект на page=1, чтобы на первой загрузке URL стал корректным
-            window.location.href = window.location.pathname + "?specialization=lawyers,experts,notaries&page=1";
+            initSpecSliders();
         },
         error: function () {
             $(".index-catalog-block .grid_flex").removeClass("preload");
@@ -140,10 +139,10 @@ window.addEventListener("DOMContentLoaded", (event) => {
     $all_ids = array_values($all_ids);
 
     // array_reverse разворачивает
-    $all_ids = array_reverse($all_ids);
+    /* $all_ids = array_reverse($all_ids); */
 
     if (empty($all_ids)) {
-        $data['favorite_items'] = "Не найдено избранных специалистов/компаний.";
+        $data['favorite_items'] = "Не найдено избранных студий.";
         $count = 0;
     } else {
         // общее количество для пагинации
@@ -154,7 +153,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         // защищаем от выхода за границы
         if ($start < 0) $start = 0;
         if ($start >= $count) {
-            $data['favorite_items'] = "Не найдено избранных специалистов/компаний.";
+            $data['favorite_items'] = "Не найдено избранных студий.";
             $data['pagination'] = block_pagination_fav($count, $limit, $page, implode(',', $specialization));
         } else {
             // собираем id для текущей страницы, но с учётом того, что некоторые id в БД могут отсутствовать
@@ -196,7 +195,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             }
 
             // если всё же не нашлось ничего — показываем сообщение
-            $data['favorite_items'] = !empty($favorites) ? block($favorites) : "Не найдено избранных специалистов/компаний.";
+            $data['favorite_items'] = !empty($favorites) ? block($favorites) : "Не найдено избранных студий.";
         }
     }
 

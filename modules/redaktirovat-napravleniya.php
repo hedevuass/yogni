@@ -25,7 +25,7 @@ EOF;
 // Подставляем кол-во выбранных специализаций
 if($has_specializations) {
 	$data['cabinet_quantity_specialization'] = <<<EOF
-		<div class="specialization-quantity active">Выбрано {$selected_count} направлений</div>
+		<div class="specialization-quantity active">Направления ({$selected_count})</div>
 	EOF;
 } else {
 	$data['cabinet_quantity_specialization'] = <<<EOF
@@ -43,8 +43,8 @@ $data['classification_text'] = '';
 $data['classification_text_mob'] = '';
 
 if (in_array($user['classification_id'], [3, 8])) {
-	$data['classification_text'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги специалистов.';
-	$data['classification_text_mob'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги специалистов.';
+	$data['classification_text'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги направлений йоги.';
+	$data['classification_text_mob'] = 'Выбранные направления будут отображаться на вашей личной странице, а также повлияют на добавление профиля в каталоги направлений йоги.';
 } else {
 	$data['classification_text'] = 'Выбор подразделов права повлияет на добавление профиля в каталоги специалистов, но на личной странице будут
 			отображаться только выбранные разделы права.';

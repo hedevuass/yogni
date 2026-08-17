@@ -9,7 +9,9 @@ $specialists = getCachedData('promo_block_top_specialists_' . $lastModifiedTop, 
     return get_promo_list('block_top_specialists');
 });
 
-$data['specialists_top'] = block($specialists);
+$specialists = loadSpecializationList($specialists);
+
+$data['specialists_top'] = block($specialists, false, true);
 
 
 $HTML_ = explode( '<!--data:specialists_top-->' , $HTML , 3 );

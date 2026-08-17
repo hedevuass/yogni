@@ -8,38 +8,48 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
-    if (!empty($social['link'])) {
-        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
-        $height = 24; 
+  if (!empty($social['link'])) {
+
+    if ($social['alt'] === 'Telegram') {
+      continue;
+    }
+
+    $image_src = 'https://yogni.ru/assets/img/login-parol/';
+    $height = 24;
+    $width = 30;
+
+    switch ($social['alt']) {
+      case 'Youtube':
+        $image_src .= $social['image'];
+        $height = 24;
         $width = 30;
-        
-        switch ($social['alt']) {
-          case 'Youtube':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 30;
-              break;
-          case 'Telegram':
+        break;
+      /* case 'Telegram':
               $image_src .= $social['image'];
               $height = 24;
               $width = 24;
-              break;
-          case 'Vk':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 24;
-              break;
-          case 'Yandex':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 24;
-              break;
-          default:
-              $image_src .= $social['image'];
-              break;
-      }
-        
-        $social_html .= '
+              break; */
+      case 'Vk':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'MAX':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'Yandex':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      default:
+        $image_src .= $social['image'];
+        break;
+    }
+
+    $social_html .= '
             <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
                 <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
                    style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px">
@@ -51,39 +61,39 @@ foreach ($socials as $social) {
                          style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic">
                 </a>
             </td>';
-    }
+  }
 }
 
 $social_html .= '</tr>';
 
 if (isset($_POST['email'])) {
-    $email = clean_elem_form($_POST['email']);
-    $company = clean_elem_form($_POST['company']);
-    if ($company && !empty($company)) {
-      $name = $company;
-    } else {
-      $name = clean_elem_form($_POST['name']);
-    }
-    $user = get_user_by_email($email);
+  $email = clean_elem_form($_POST['email']);
+  $company = clean_elem_form($_POST['company']);
+  if ($company && !empty($company)) {
+    $name = $company;
+  } else {
+    $name = clean_elem_form($_POST['name']);
+  }
+  $user = get_user_by_email($email);
 
-    if ($user && isset($user['id'])) {
-        $id = $user['id'];
-    } else {
-        $id='нет айди';
-    }
+  if ($user && isset($user['id'])) {
+    $id = $user['id'];
+  } else {
+    $id = 'нет айди';
+  }
 
-    if (!$email) $json['error']['email'] = 'Укажите email';
+  if (!$email) $json['error']['email'] = 'Укажите email';
 
-    if ($email) {
-        if (!filter_var($email, FILTER_SANITIZE_EMAIL)) $json['error']['email'] = 'Некорректный email';
-        if ($specialist = get_user_by_email($email)) $json['error']['email'] = 'Email зарегистрирован';
-    }
+  if ($email) {
+    if (!filter_var($email, FILTER_SANITIZE_EMAIL)) $json['error']['email'] = 'Некорректный email';
+    if ($specialist = get_user_by_email($email)) $json['error']['email'] = 'Email зарегистрирован';
+  }
 
-    if (isset($json['error'])) responseJson($json);
+  if (isset($json['error'])) responseJson($json);
 
-    $title = 'ЮРФАК - регистрация';
-    $url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '?reg&name=' . urlencode($name) . '&email=' . urlencode($email);
-    $body = <<<EOF
+  $title = 'ЮРФАК - регистрация';
+  $url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '?reg&name=' . urlencode($name) . '&email=' . urlencode($email);
+  $body = <<<EOF
     <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0">
  <head>
   <meta charset="UTF-8">
@@ -183,10 +193,10 @@ a[x-apple-data-detectors] {
                   <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
                    <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                      <tr class="es-mobile-hidden" style="border-collapse:collapse">
-                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                      </tr><!--[if !mso]><!-- -->
                      <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                      </tr><!--<![endif]-->
                    </table></td>
                  </tr>
@@ -239,7 +249,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
                          </tr>
                      </tbody></table></td>
                  </tr>
@@ -255,9 +265,9 @@ a[x-apple-data-detectors] {
      </body></html>
 EOF;
 
-    if (send_mail_smtp($email, $title, $body)) {
-        $json['success'] = 'Для восстановления пароля мы направили на указанную вами электронную почту письмо с инструкциями.';
-    }
+  if (send_mail_smtp($email, $title, $body)) {
+    $json['success'] = 'Для восстановления пароля мы направили на указанную вами электронную почту письмо с инструкциями.';
+  }
 
-    responseJson($json);
+  responseJson($json);
 }

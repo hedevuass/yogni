@@ -63,7 +63,7 @@ $pro_photo_for_employee = get_pro_photo_by_id(4);
 
 $faq_pro_photo_array = get_faq_pro_photo();
 
-$faq_page = get_faq_page_by_id(22);
+$faq_page = get_faq_page_by_id(3);
 $data['faq_page'] = '<a href="/cabinet/faq/' . $faq_page . '" class="order-photo-btn">Правила выбора фото</a>';
 
 //вывод информации для специалиста
@@ -235,7 +235,7 @@ if (!is_null($specialist['company_id'])) {
 
 
     $data['add_photo_emp'] = '<div class="add-photo-emp">Добавить съемку сотрудников</div>';
-    $data['add_company_photo'] = '<div class="add-company-photo">Добавить съемку компании</div>';
+    $data['add_company_photo'] = '<div class="add-company-photo">Добавить съемку студии</div>';
     $pro_photos = [
         '4_1' => $pro_photo1,
         '4_2' => $pro_photo2,
@@ -279,7 +279,8 @@ if (!empty($faq_pro_photo_array)) {
             <div class="faq-item">
                 <button class="faq-question">
                     <div>' . $question . '</div>
-                    <img src="../assets/img/cabinet/arrow-faq-down.svg" alt="" />
+                    <img src="../assets/img/cabinet/arrow-faq-down.svg" class="default-arrow" alt="" />
+                    <img src="../assets/img/cabinet/arrow-faq-down-hover.svg" class="hover-arrow" alt="">
                 </button>
                 <div class="faq-answer">
                     <p>' . $answer . '</p>

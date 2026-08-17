@@ -355,7 +355,7 @@ $faq_html = '';
 
 foreach ($faqs as $faq) {
   $faq_html .= "<div class='faq-item'>";
-  $faq_html .= "<button class='faq-question'><div>{$faq['title']}</div><img src='../assets/img/cabinet/arrow-faq-down.svg' alt=''></button>";
+  $faq_html .= "<button class='faq-question'><div>{$faq['title']}</div><img src='../assets/img/cabinet/arrow-faq-down.svg' class='default-arrow' alt=''><img src='../assets/img/cabinet/arrow-faq-down-hover.svg' class='hover-arrow' alt=''></button>";
   $faq_html .= "<div class='faq-answer'>";
   $faq_html .= "<p>{$faq['description']}</p>";
   $faq_html .= "</div></div>";
@@ -421,9 +421,9 @@ function generate_tariff_html($tariff, $class, $specialist_id, $connected_tariff
     $text = $option['text'];
 
     if ($text == "Всё, что в БАЗОВОМ") {
-      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
+      $text = '<span>Всё, что в <span style="color: #F2606C; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
     } elseif ($text == "Всё, что в ПРО") {
-      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'ПРО\'</span></span>';
+      $text = '<span>Всё, что в <span style="color: #F2606C; font-weight: 500;">\'ПРО\'</span></span>';
     }
 
     $li_style = ($option['image'] === 'tariff-up.svg') ? ' style="margin-left: -1px;"' : '';
@@ -470,9 +470,9 @@ function generate_mobile_tariff_html($tariff, $class, $specialist_id, $connected
     $text = $option['text'];
 
     if ($text == "Всё, что в БАЗОВОМ") {
-      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
+      $text = '<span>Всё, что в <span style="color: #F2606C; font-weight: 500;">\'БАЗОВОМ\'</span></span>';
     } elseif ($text == "Всё, что в ПРО") {
-      $text = '<span>Всё, что в <span style="color: #FF8139; font-weight: 500;">\'ПРО\'</span></span>';
+      $text = '<span>Всё, что в <span style="color: #F2606C; font-weight: 500;">\'ПРО\'</span></span>';
     }
 
     $options_html .= '<li><img src="../assets/img/cabinet/' . $option['image'] . '" alt="' . strip_tags($text) . '">' . $text . '</li>';
@@ -788,7 +788,7 @@ $forbidden_popup = '
 							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
 							<span id="forbidden-words-list"></span>.
 							<br><br>С правилами сайта вы можете ознакомиться
-							на странице <a href="' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/o-proekte' . '">«О проекте»</a>
+							на странице <a href="' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/o-proekte' . '">«О проекте»</a>.
           </div>
           </div>
         </form>
@@ -966,7 +966,7 @@ foreach ($promo_blocks as $block) {
 
 $id_to_slug = [
   3 => 'yuristy-i-advokaty',
-  4 => 'experty',
+  4 => 'yoga-studii',
   5 => 'notariusy',
 ];
 

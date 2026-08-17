@@ -35,7 +35,7 @@ if ($faq_sub_page) {
 if (!$faq_sub_page) {
     $faq_pages = faq_pages();
     $data['faq_content'] = '
-        <div class="support-top-text">В этом разделе мы постарались собрать самые популярные вопросы. Если это не помогло, вы можете обратиться в <a href="/cabinet/podderzhka">Поддержку</a>.</div>
+        <div class="support-top-text">В этом разделе мы постарались собрать самые популярные вопросы. Если это не помогло, вы можете обратиться в поддержку.</div>
         <div class="faq-mobile-title">Популярные вопросы</div>
         <ul>';
     foreach ($faq_pages as $faq_page){

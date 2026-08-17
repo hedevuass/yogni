@@ -1,0 +1,55 @@
+<form method="POST" class="main-info-block rooms-editor-block flex" id="rooms-info">
+    <!--data:rooms_info--><!--data:rooms_info-->
+    <div class="refresh">
+		<button type="submit" disabled>Сохранить информацию</button>
+	</div>
+</form>
+
+<div class="cabinet-popup" id="room-mobile-popup">
+    <div class="popup__close"></div>
+    <div class="popup__title">Зал для занятий</div>
+    <div class="popup__body">
+
+        <div class="popup__field">
+            <div class="popup__mob-subtitle small-margin">Наименование</div>
+            <input type="text" class="popup__input" id="popup-room-name"
+                   placeholder="Наименование зала (не более 35 символов)" maxlength="35">
+			<!--data:rooms_forbidden-words--><!--data:rooms_forbidden-words-->	
+            <div class="invalid-feedback" style="display:none;">Достигнуто максимальное количество символов</div>
+        </div>
+
+        <div class="popup__field">
+            <div class="popup__mob-subtitle small-margin">Фото (jpeg, png)</div>
+            <div class="popup-photos-grid" id="popup-photos-container"></div>
+        </div>
+
+		<span class="mob-add">Добавить фотографии</span>
+
+        <input type="hidden" id="popup-room-key">
+        <div class="mob-docs-btn">Подтвердить</div>
+    </div>
+</div>
+
+<div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="/o-proekte">«О проекте»</a>.
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

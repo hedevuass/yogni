@@ -3,6 +3,19 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
 
+$is_mobile = isset($_POST['is_mobile']) && $_POST['is_mobile'] === 'true';
+
+if ($is_mobile && !isset($_POST['name'])) {
+    // Мобильная версия: удалён последний документ
+    $documents = json_encode([], JSON_FORCE_OBJECT);
+    if (update_specialist_documents($documents)) {
+        $json['success'] = 'Документы удалены';
+    } else {
+        $json['fatal_error'] = 'Загрузка документов временно недоступна';
+    }
+    responseJson($json);
+}
+
 if (isset($_POST['name'])) {
     // 1. Собираем и очищаем данные из POST
     foreach ($_POST as $key => $value) {
@@ -26,14 +39,14 @@ if (isset($_POST['name'])) {
         if (isset($documents[$key])) {
             // — проверяем, что описание не пустое
             if (!$name) {
-                $json['error']["$key"] = 'Укажите описание';
+                $json['error']["$key"] = 'Укажите наименование документа';
                 continue;
             }
 
             // — если пришёл новый файл, заменяем
             if (isset($_FILES[$key]) && $_FILES[$key]['error'] === UPLOAD_ERR_OK) {
                 if ($_FILES[$key]['size'] > 5 * 1024 * 1024) {
-                    $json['error'][$key] = 'Файл слишком большой (максимальный размер - до 5 МБ).';
+                    $json['error'][$key] = 'Файл слишком большой (максимальный размер - до 5 МБ)';
                     continue;
                 }
 
@@ -53,6 +66,19 @@ if (isset($_POST['name'])) {
 
         // 4.2. Если записи ещё нет — обрабатываем как новый документ
         // пропускаем совсем пустые строки
+        if ($is_mobile && isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
+            if (!$name) {
+                $json['error']["$key"] = 'Укажите наименование документа';
+                continue;
+            }
+            $documents[] = [
+                'name' => $name,
+                'file' => $data['mobile_loaded'][$key]
+            ];
+            continue;
+        }
+
+        // пропускаем совсем пустые строки
         if (!$name && !isset($_FILES[$key])) {
             continue;
         }
@@ -63,7 +89,7 @@ if (isset($_POST['name'])) {
         }
         // если есть файл, но пустое имя — ошибка
         if (!$name && isset($_FILES[$key])) {
-            $json['error']["$key"] = 'Укажите описание';
+            $json['error']["$key"] = 'Укажите наименование документа';
             continue;
         }
 

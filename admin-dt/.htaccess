@@ -6,4 +6,4 @@ RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-RewriteRule .+ /dicfacducfer1113/index.php
+RewriteRule .+ /mukadhoha96/index.php

@@ -395,6 +395,7 @@ function load_image_webp(array $file, string $directory, string $img_name = '', 
     switch ($extTmp) {
         case 'jpg':
         case 'jpeg':
+        case 'jfif':
             $image = @imagecreatefromjpeg($tmpPath);
             if ($image === false) {
                 // пробуем открыть как прогрессивный JPEG через imagecreatefromstring
@@ -479,6 +480,56 @@ function load_image_webp(array $file, string $directory, string $img_name = '', 
     return ['name' => $webpName];
 }
 
+function fix_image_orientation($file_path) {
+    if (!function_exists('exif_read_data')) {
+        return; // Если на сервере не включено расширение EXIF, пропускаем
+    }
+
+    // Читаем метаданные только у файлов JPG/JPEG
+    $mime = mime_content_type($file_path);
+    if ($mime !== 'image/jpeg') {
+        return; 
+    }
+
+    $exif = @exif_read_data($file_path);
+    if (empty($exif['Orientation'])) {
+        return; // Ориентация нормальная или тега нет
+    }
+
+    $orientation = $exif['Orientation'];
+    if ($orientation <= 1) {
+        return; // Поворот не требуется
+    }
+
+    // Загружаем исходник в память для вращения
+    $image = imagecreatefromjpeg($file_path);
+    if (!$image) return;
+
+    $degrees = 0;
+    switch ($orientation) {
+        case 3: // Перевернуто вверх ногами (180°)
+            $degrees = 180;
+            break;
+        case 6: // Повернуто на 90° по часовой стрелке
+            $degrees = -90; // или 270
+            break;
+        case 8: // Повернуто на 90° против часовой стрелки
+            $degrees = 90;
+            break;
+    }
+
+    if ($degrees !== 0) {
+        // Физически вращаем картинку
+        $rotated = imagerotate($image, $degrees, 0);
+        if ($rotated) {
+            // Перезаписываем временный файл уже в правильном положении
+            imagejpeg($rotated, $file_path, 95); 
+            imagedestroy($rotated);
+        }
+    }
+    
+    imagedestroy($image);
+}
 
 /**
  * Возвращает массив с месяцами года
@@ -625,16 +676,23 @@ function containsForbiddenWords(?string $text, array $forbidden_words)
         $results[] = ['type' => 'element', 'value' => 'ссылка'];
     }
 
-    // Проверка на запрещённые слова
+    // Проверка на запрещённые слова (только целые слова)
     foreach ($forbidden_words as $word) {
         if (!is_string($word)) continue;
-        if (mb_stripos($text, mb_strtolower($word)) !== false) {
+        if (preg_match('/<[^>]+>/i', $word)) continue;
+
+        // Экранируем спецсимволы
+        $escapedWord = preg_quote(mb_strtolower($word), '/');
+
+        // Проверяем как отдельное слово (\b — граница слова)
+        if (preg_match("/\b{$escapedWord}\b/u", $text)) {
             $results[] = ['type' => 'word', 'value' => $word];
         }
     }
 
     return empty($results) ? false : $results;
 }
+
 
 
 function fix_html($html)

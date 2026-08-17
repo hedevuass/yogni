@@ -12,11 +12,15 @@ $company_id = get_specialist($_SESSION['user']['id'])['company_id'];
 // Получаем сотрудников компании
 $employees = get_company_employees($company_id);
 
+$data['employees'] .= <<<EOF
+<input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
+EOF;
+
 // Формируем HTML документов
 if ($employees) {
     foreach ($employees as $key => $employee) {
         $data['employees'] .= <<<EOF
-            <tr>
+            <tr style="white-space: nowrap;">
                 <td>
                     <div class="employee-info-mobile">
                     <input type="text"
@@ -59,7 +63,6 @@ if ($employees) {
                     <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>
                 </td>
             </tr>
-            <input type="hidden" id="popup-forbidden-words" value="{$escaped_forbidden_words}">
         EOF;
     }
 }

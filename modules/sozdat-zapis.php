@@ -16,6 +16,7 @@ $data['edit_input'] = '<input type="hidden" name="is_edit" value="'.($is_edit ? 
 $title_input = '';
 $content = '';
 $keywords = '';
+$main_image = '';
 
 if (isset($article)) {
     $title_input = $article['title'];
@@ -23,7 +24,44 @@ if (isset($article)) {
     $keywords = $article['keywords'];
     $theme_id = intval($article['service_id']);
     $theme_name = $article['service_title'];
+    
+    // Получаем имя файла картинки (если оно загружено)
+    $main_image = !empty($article['photo']) ? $article['photo'] : '';
 }
+
+$folder = 'articles';
+$item_class = !empty($main_image) ? 'has-image' : 'empty';
+$style = !empty($main_image) ? "style=\"background-image: url('/uploads/{$folder}/{$main_image}');\"" : "";
+$hidden_val = !empty($main_image) ? htmlspecialchars($main_image, ENT_QUOTES, 'UTF-8') : "";
+
+$data['main_image_input'] = "
+<div class='gallery-grid' style='margin-bottom: 0;'>
+    <style>
+        .gallery-item.empty .delete-btn { display: none !important; }
+        .gallery-item.has-image .upload-btn { display: none !important; }
+    </style>
+    
+    <div class=\"gallery-item {$item_class}\" id=\"main_image_container\" {$style}>
+        
+        <!-- Кнопка удаления обложки -->
+        <div class=\"gallery-action-btn delete-btn\" id=\"main_image_delete\" title=\"Удалить фото\">
+            <img src=\"/assets/img/cabinet/gallery-delete.svg\">
+            <img src=\"/assets/img/cabinet/gallery-delete-hover.svg\">
+        </div>
+
+        <!-- Кнопка загрузки обложки -->
+        <label class=\"gallery-action-btn upload-btn\" for=\"main_image_file\" title=\"Добавить фото\">
+            <img src=\"/assets/img/cabinet/gallery-upload.svg\">
+            <img src=\"/assets/img/cabinet/gallery-upload-hover.svg\">
+        </label>
+        
+        <!-- Реальный инпут выбора файла -->
+        <input type=\"file\" name=\"main_image\" id=\"main_image_file\" accept=\"image/jpeg, image/png\" style=\"display: none;\">
+        
+        <!-- Скрытое поле для передачи старого имени файла на бэкенд -->
+        <input type=\"hidden\" name=\"existing_main_image\" id=\"existing_main_image\" value=\"{$hidden_val}\">
+    </div>
+</div>";
 
 function html_to_textarea($html) {
     // Декодируем HTML-сущности (иногда нужно 2 раза, если они были вложены)
@@ -51,7 +89,7 @@ value="'.htmlspecialchars(html_to_textarea($title_input), ENT_QUOTES, 'UTF-8').'
 
 $data['content'] = '
 <textarea name="content" placeholder="Текст поста (не более 7500 символов)" maxlength="7500">'.
-htmlspecialchars(html_to_textarea($content), ENT_QUOTES, 'UTF-8').
+$content.
 '</textarea>
 <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div>';
 

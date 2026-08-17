@@ -92,7 +92,7 @@ if (
 }
 
 // Формируем success_url и данные для preview
-$success_url = 'https://urfaq.ru/cabinet/page_promo?orderId=' . urlencode($orderId);
+$success_url = 'https://yogni.ru/cabinet/page_promo?orderId=' . urlencode($orderId);
 $payment_data = [
     'orderid'      => $orderId,
     'pay_amount'   => $pay_amount,

@@ -17,7 +17,8 @@ if ($blog) {
     $data['blog_id_input'] = '<input type="hidden" name="blog_id" value="' . $blog_id . '">';
     $articles = get_blog_articles($blog_id, 0, 5, 0, [0, 1, 2]);
     $data['articles'] = block_articles_cabinet($articles, true);
-    if (count($articles) == 5) {
+    $articles_count_all = count_blog_articles($blog_id, [0, 1, 2]);
+    if ($articles_count_all > 5) {
         $data['articles_more_btn'] = '<button class="more-articles">Больше записей</button>';
     }
 

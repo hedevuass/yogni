@@ -89,12 +89,12 @@ $(document).ready(function () {
 
     function updateClamp() {
         loadAndClamp('.cut-text', 4);
+        loadAndClamp('.cut-text-catalog', 3);
 
         const isMobile = window.innerWidth <= 768;
         const blogLines = isMobile ? 4 : 4;
         const blogLinesCatalog = isMobile ? 2 : 2;
         loadAndClamp('.cut-text-blogs', blogLines);
-        loadAndClamp('.cut-text-catalog', blogLinesCatalog);
     }
 
     updateClamp();
@@ -276,7 +276,7 @@ $('#filter-lawyers').on('click', 'button', function () {
 // Filter Expertise
 $('#filter-expertise').on('click', 'button', function () {
     let category = $('#expertise').val(),
-        baseURL = '/experty';
+        baseURL = '/yoga-studii';
 
     if (category !== '0' && category !== '.s0') baseURL += '/' + category;
 
@@ -902,7 +902,7 @@ $(function () {
 
         $.ajax({
             type: 'POST',
-            url: '/actions/mail/send_message.php',
+            url: '/actions/cabinet/request.php',
             dataType: 'json',
             data: data,
             success: function (res) {

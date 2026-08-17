@@ -27,6 +27,12 @@ if (!is_null($user['other'])) {
 }
 
 //попап с контактами
+/* Убрали
+<div class="item">
+		<p>Телеграм</p>
+		<input type="text" name="tg" placeholder="Имя пользователя" value="{$other_contacts['tg']}">
+	</div>
+	после Сайт */
 $data['cabinet_contacts'] .= <<<EOF
 	<div class="item">
 		<p>Публичный email</p>
@@ -37,16 +43,16 @@ $data['cabinet_contacts'] .= <<<EOF
 		<input type="text" name="site" placeholder="Адрес сайта (в формате urfaq.ru)" value="{$other_contacts['site']}">
 	</div>
 	<div class="item">
-		<p>Телеграм</p>
-		<input type="text" name="tg" placeholder="Имя пользователя" value="{$other_contacts['tg']}">
-	</div>
-	<div class="item">
 		<p>Вконтакте</p>
 		<input type="text" name="vk" placeholder="Адрес страницы в VK (vk.com/urfaq)" value="{$other_contacts['vk']}">
 	</div>
 	<div class="item">
 		<p>Яндекс. Дзен</p>
 		<input type="text" name="dzen" placeholder="Адрес страницы на Я.дзен" value="{$other_contacts['dzen']}">
+	</div>
+	<div class="item">
+		<p>MAX</p>
+		<input type="text" name="max" placeholder="Адрес страницы в MAX" value="{$other_contacts['max']}">
 	</div>
 	<div class="item">
 		<p>Адрес</p>
@@ -73,7 +79,7 @@ $data['cabinet_contacts_break'] .= select_break_schedule($user['schedule']);
 // Превью карточки
 $data['cabinet_cart'] = <<<EOF
 	<ul>
-		<li><a href="tel:{$user['phone']}"><img src="/assets/img/cabinet/contacts1.svg"> {$user['phone']}</a></li>
+		<li class="contacts-tel"><a href="tel:{$user['phone']}"><img src="/assets/img/cabinet/contacts1.svg"> {$user['phone']}</a></li>
 EOF;
 if (!is_null($user['other'])) {
 	$data['cabinet_cart'] .= cart_contacts($user['other']);
@@ -95,23 +101,23 @@ $HTML = html_explode($data, $HTML);
  */
 function select_times(string $select_name, string $time, bool $empty = false): string
 {
-    $code = "<select name='{$select_name}' class='sel'>";
+	$code = "<select name='{$select_name}' class='sel'>";
 
-    if ($empty) {
-        $code .= '<option value="0" class="hidden">' . $time . '</option>';
-    }
+	if ($empty) {
+		$code .= '<option value="0" class="hidden">' . $time . '</option>';
+	}
 
-    for ($hours = 0; $hours < 24; $hours++) {
-        for ($minutes = 0; $minutes < 60; $minutes += 15) {
-            $value = sprintf("%02d:%02d", $hours, $minutes);
-            $selected = ($value == $time && !$empty) ? 'selected' : '';
-            $code .= "<option {$selected}>{$value}</option>";
-        }
-    }
+	for ($hours = 0; $hours < 24; $hours++) {
+		for ($minutes = 0; $minutes < 60; $minutes += 15) {
+			$value = sprintf("%02d:%02d", $hours, $minutes);
+			$selected = ($value == $time && !$empty) ? 'selected' : '';
+			$code .= "<option {$selected}>{$value}</option>";
+		}
+	}
 
-    $code .= "</select>";
+	$code .= "</select>";
 
-    return $code;
+	return $code;
 }
 
 
@@ -328,10 +334,18 @@ function cart_contacts(string $contacts, array $classes = []): string
 
 	$code = '';
 
-	foreach ($contacts as $key => $contact) {
+	$order = ['email', 'site', 'vk', 'dzen', 'max'];
+
+	foreach ($order as $key) {
+		if (!array_key_exists($key, $contacts)) continue;
+		$contact = $contacts[$key];
+
 		$class = '';
 		if (!$contact) {
 			$class .= 'hidden';
+		}
+		if ($key === 'email') {
+			$class .= ' contacts-email';
 		}
 		$code .= "<li class='$class'>";
 
@@ -340,18 +354,20 @@ function cart_contacts(string $contacts, array $classes = []): string
 				$code .=  "<a href='mailto:{$contact}'><img src='/assets/img/cabinet/contacts2.svg'> {$contact}</a>";
 				break;
 			case 'site':
-				$code .=  "<a href='https://{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts3.svg'> Сайт</span></a>";
+				$code .=  "<a href='{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts3.svg'> Сайт</span></a>";
 				break;
-			case 'tg':
+			/* case 'tg':
 				$code .=  "<a href='https://t.me/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts4.svg'> Телеграм</span></a>";
-				break;
+				break; */
 			case 'vk':
-				$code .=  "<a href='https://vk.com/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts5.svg'> Вконтакте</span></a>";
+				$code .=  "<a href='{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts5.svg'> Вконтакте</span></a>";
 				break;
 			case 'dzen':
-				$code .=  "<a href='https://dzen.ru/{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts6.svg'> Яндекс Дзен</span></a>";
+				$code .=  "<a href='{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts6.svg'> Яндекс Дзен</span></a>";
 				break;
-
+			case 'max':
+				$code .=  "<a href='{$contact}' target='_blank'><span><img src='/assets/img/cabinet/contacts-max-hover.svg'> MAX</span></a>";
+				break;
 			default:
 				# code...
 				break;

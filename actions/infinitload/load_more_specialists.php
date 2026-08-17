@@ -16,12 +16,16 @@ if (!is_array($metro_ids)) {
     $metro_ids = array_map('intval', $metro_ids);
 }
 
+$selected_amenities = isset($_POST['selected_amenities']) && is_array($_POST['selected_amenities']) ? $_POST['selected_amenities'] : [];
+$selected_equipment = isset($_POST['selected_equipment']) && is_array($_POST['selected_equipment']) ? $_POST['selected_equipment'] : [];
+$selected_price     = isset($_POST['selected_price']) && is_array($_POST['selected_price']) ? $_POST['selected_price'] : [];
 
 // Нам нужно понять: это «категория» ($category) или «главная/фильтр по классификации».
 $service_parent = get_service_parent_catalog($slug);
 $category       = get_service_by_slug($slug);
 
-$html = '';
+$html_desktop = '';
+$html_mobile = '';
 
 // Если категория найдена (например, в разделе «юристы» → «консультации» и т.п.)
 if ($category) {
@@ -33,11 +37,12 @@ if ($category) {
     }
 
     // Достаём специалистов именно для категории → с тарифами
-    $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start, $filter);
+    $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start, $filter, false, $selected_amenities, $selected_equipment, $selected_price);
 
     if ($specialists_with_tarrifs) {
-        // block() возвращает HTML разметку «штук по 24»
-        $html = block($specialists_with_tarrifs);
+        $specialists_with_tarrifs = loadSpecializationList($specialists_with_tarrifs);
+        $html_desktop = block_catalog($specialists_with_tarrifs);
+        $html_mobile = block_mobile($specialists_with_tarrifs);
     }
 } else {
     // Если категории нет → значит это «главный» раздел (юристы/эксперты/нотариусы и т.п.)
@@ -46,10 +51,12 @@ if ($category) {
     $classification = $vars['classification'];
 
     // Достаём специалистов по классификации
-    $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($classification, $limit, $start, $filter, $metro_ids);
+    $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($classification, $limit, $start, $filter, $metro_ids, false, $selected_amenities, $selected_equipment, $selected_price);
 
     if ($specialists_with_tarrifs) {
-        $html = block($specialists_with_tarrifs);
+        $specialists_with_tarrifs = loadSpecializationList($specialists_with_tarrifs);
+        $html_desktop = block_catalog($specialists_with_tarrifs, false, true);
+        $html_mobile = block_mobile($specialists_with_tarrifs, false, true);
     }
 }
 
@@ -75,7 +82,7 @@ function vars(int $classification = null, string $requestion = null, array $serv
             ],
             3 => [
                 'title'       => 'Эксперты',
-                'slug'        => 'experty',
+                'slug'        => 'yoga-studii',
                 'description' => 'Каталог экспертов для профессиональных консультаций и помощи. Найдите подходящего эксперта прямо сейчас.',
                 'keywords'    => 'эксперты, профессиональные консультации, помощь специалистов',
                 'h1'          => 'Эксперты по направлению ',
@@ -96,9 +103,9 @@ function vars(int $classification = null, string $requestion = null, array $serv
 
     if ($requestion) {
         $vars = match ($requestion) {
-            'experty' => [
+            'yoga-studii' => [
                 'title'             => 'Эксперты',
-                'slug'              => 'experty',
+                'slug'              => 'yoga-studii',
                 'description'       => 'Каталог экспертов из различных областей. Мы собрали лучших специалистов для ваших нужд.',
                 'keywords'          => 'эксперты, профессионалы, услуги экспертов',
                 'h1'                => $service_parent['title'],
@@ -132,5 +139,36 @@ function vars(int $classification = null, string $requestion = null, array $serv
     return $vars;
 }
 
-echo json_encode(['html' => $html]);
+// Создаем уникальный ID для текущей пачки (например, на основе времени)
+$batch_id = 'batch_' . time() . '_' . rand(0, 1000);
+
+// Оборачиваем весь контент в этот ID
+$html_desktop = "<div class='grid_flex grid_catalog comp-catalog' id='{$batch_id}'>" . $html_desktop . "</div>";
+$html_mobile = "<div class='grid_flex grid_catalog mobile-catalog' id='{$batch_id}_mob'>" . $html_mobile . "</div>";
+
+// Скрипт теперь ищет элементы ТОЛЬКО внутри этого ID
+$inline_js = "<script>
+(function(){
+    var b = document.getElementById('{$batch_id}');
+    var bm = document.getElementById('{$batch_id}_mob');
+    if(typeof loadAndClamp === 'function'){
+        [b, bm].forEach(function(cont){
+            if(!cont) return;
+            loadAndClamp(cont.querySelectorAll('.cut-text'), 4);
+            loadAndClamp(cont.querySelectorAll('.cut-text-cards'), 3);
+            loadAndClamp(cont.querySelectorAll('.cut-text-catalog'), 2);
+            loadAndClamp(cont.querySelectorAll('.cut-title-catalog'), 3);
+        });
+    }
+})();
+</script>";
+
+// Конкатенируем и отдаем
+$html_desktop .= $inline_js;
+$html_mobile .= $inline_js;
+
+echo json_encode([
+    'html_desktop' => $html_desktop,
+    'html_mobile' => $html_mobile
+]);
 exit;

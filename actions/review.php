@@ -1,10 +1,26 @@
 <?php
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
-
+include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 require_once __DIR__ . '/../libs/securimage/securimage.php';
 
 $forbidden_words = getForbiddenWords();
+
+if (isset($_POST['action']) && $_POST['action'] === 'verify_code') {
+    $review_id = (int)$_POST['review_id'];
+    $user_code = trim($_POST['verification_code']);
+
+    // Проверяем код в базе данных
+    // Тебе нужно будет создать простую функцию check_review_code($id, $code)
+    if (check_review_code($review_id, $user_code)) {
+        // Если код верный, активируем отзыв (ставим is_active = 1)
+        activate_review($review_id);
+        $json['success'] = 'Спасибо! Ваш отзыв успешно подтвержден и опубликован.';
+    } else {
+        $json['error']['verification_code'] = 'Проверочный код введен неверно';
+    }
+    responseJson($json);
+}
 
 if (isset($_POST['specialist'])) {
     $fields_to_check = ['name', 'contact', 'review'];
@@ -59,16 +75,47 @@ if (isset($_POST['specialist'])) {
     // Проверка капчи
     $securimage = new Securimage();
     if (!$captchaCode) {
-        $json['error']['captcha_error'] = 'Введите код с картинки.';
+        $json['error']['captcha_error'] = 'Введите цифры с картинки';
     } elseif (!$securimage->check($captchaCode, $captchaId)) {
         $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
     }
 
     if (isset($json['error'])) responseJson($json);
 
-    $review_status = set_review($data);
+    $code = (string)rand(10000, 99999);
+    $data['v_code'] = $code;
 
-    if ($review_status === "duplicate") {
+    // Записываем в базу (функция set_review должна возвращать ID или "duplicate")
+    $review_result = set_review($data);
+
+    if ($review_result === "duplicate") {
+        $json['error']['fatal_error'] = 'Вы уже оставляли отзыв об этом специалисте';
+        responseJson($json);
+    }
+
+    if ($review_result) {
+        $title = 'Ваш код: ' . $code;
+        $body = "
+            <p>Ваш код: <b>$code</b></p>
+            <p>Для публикации отзыва введите одноразовый код в поле попапа \"Подтверждение почты\" и нажмите кнопку \"Подтвердить\". При случайном закрытии попапа запросите код повторно.</p>
+            <p>Если Вы не пытались опубликовать отзыв на сайте ЮРФАК.РУ, проигнорируйте его.</p>
+            <p>С уважением, команда ЮРФАК.РУ.</p>
+        ";
+
+        if (send_mail_smtp($data['contact'], $title, $body)) {
+            $json['step'] = 'verify';
+            $json['review_id'] = $review_result; // ID из базы для JS
+            $json['message'] = 'Код отправлен на вашу почту';
+        } else {
+            $json['error']['fatal_error'] = 'Не удалось отправить письмо, но отзыв сохранен как черновик.';
+        }
+    } else {
+        $json['error']['fatal_error'] = 'Ошибка при сохранении отзыва.';
+    }
+
+    responseJson($json);
+
+    /* if ($review_status === "duplicate") {
         $json['error']['fatal_error'] = 'Вы уже оставляли отзыв для этого специалиста.';
     } elseif ($review_status) {
         $json['success'] = 'Спасибо за отзыв!';
@@ -76,5 +123,5 @@ if (isset($_POST['specialist'])) {
         $json['error']['fatal_error'] = 'Добавление отзывов временно не работает';
     }
 
-    responseJson($json);
+    responseJson($json); */
 }

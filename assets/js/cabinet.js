@@ -1069,11 +1069,11 @@ $("#main-info").on("click", 'button[type="submit"]', function (e) {
         if (json["success"] && window.photoUploaded !== false) {
           btn.text("Сохранено");
         } else {
-          btn.prop("disabled", true).text("Сохранение");
+          btn.prop("disabled", true).text("Сохранить информацию");
         }
       },
       error: function () {
-        btn.prop("disabled", true).text("Сохранение");
+        btn.prop("disabled", true).text("Сохранить информацию");
       },
     });
   }
@@ -1247,7 +1247,7 @@ $("#cabinet-contacts").on("click", 'button[type="submit"]', function (e) {
 
   if (hasForbidden) {
     showForbiddenPopup(words);
-    $(this).prop("disabled", false).text("Сохранить");
+    $(this).prop("disabled", true).text("Сохранить");
     return false;
   }
 
@@ -1260,7 +1260,7 @@ $("#cabinet-contacts").on("click", 'button[type="submit"]', function (e) {
     ),
     success: function (json) {
       if (json["error"]) {
-        $(this).text(" информацию");
+        $('#cabinet-contacts button[type="submit"]').text("Сохранить информацию");
         if (json["error"]["fatal_error"]) {
           $(`${popup}`).prepend(
             `<div class="invalid-feedback">${json["error"]["fatal_error"]}</div>`
@@ -1665,7 +1665,6 @@ $("#cabinet-prices-popup .mob-prices-btn").on("click", function () {
 
   if (hasForbidden) {
     has_error = true;
-    $("#cabinet-prices-popup").fadeOut(200);
     showForbiddenPopup(words);
     $(this).prop("disabled", false).text("Сохранить");
     return false;
@@ -1808,6 +1807,8 @@ $("#cabinet-docs-popup").on("click", ".mob-docs-btn", async function (e) {
   let fileInput = $("#cabinet-docs-popup input[type=file]")[0];
   let hasError = false;
 
+  const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
+
   if (name == "") {
     $("#popup-docs-name").after(`<div class="invalid-feedback">Введите наименование документа</div>`);
     hasError = true;
@@ -1829,6 +1830,13 @@ $("#cabinet-docs-popup").on("click", ".mob-docs-btn", async function (e) {
     hasError = true;
   }
 
+  if (hasForbidden) {
+    has_error = true;
+    showForbiddenPopup(words);
+    $(this).prop("disabled", false).text("Сохранить");
+    return false;
+  }
+
   if (!hasError) {
     $(".mob-docs-btn").removeClass("disabled").text("Подтверждено");
     // остальная логика
@@ -1838,7 +1846,7 @@ $("#cabinet-docs-popup").on("click", ".mob-docs-btn", async function (e) {
       $("#cabinet-docs tbody").append(`
         <tr>
           <td><input type="text" name="name[${key}]" data-key="${key}" 
-          placeholder="Наименование документа (не более 65 символов)" maxlength="65" value="${name}">
+          placeholder="Наименование акции (не более 65 символов)" maxlength="65" value="${name}">
           <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
           <td><div class="doc loaded"></div></td>
           <td><a class="edit-docs-mobile"></a><a class="delete"></a></td>
@@ -2004,7 +2012,7 @@ $("#cabinet-docs").on("click", ".add", function () {
 
   $("tbody").append(`
 		<tr>
-			<td><input type="text" name="name[${key}]" data-key="${key}" placeholder="Наименование документа (не более 65 символов)" maxlength="65"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
+			<td><input type="text" name="name[${key}]" data-key="${key}" placeholder="Наименование акции (не более 65 символов)" maxlength="65"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
 			<td>
 				<a class="upload" onclick="$(this).siblings('input').click()">Загрузить</a>
 				<input type="file" name="${key}" hidden>
@@ -2060,7 +2068,7 @@ $("#cabinet-docs").on("click", 'button[type="submit"]', function (e) {
     processData: false,
     success: function (json) {
       if (json["error"]) {
-        $(this).text("Сохранить информацию");
+        $('#cabinet-docs button[type="submit"]').text("Сохранить информацию");
         if (json["error"]["fatal_error"]) {
           $(`${form}`).prepend(
             `<div class="invalid-feedback">${json["error"]["fatal_error"]}</div>`
@@ -2095,6 +2103,7 @@ $("#cabinet-employee table").on("change", "input[type=file]", function (e) {
   // Если <div class="doc"> отсутствует — создаём
   if (!$doc.length) {
     $doc = $('<div class="doc"></div>');
+    $input.appendTo($doc);
     $td.append($doc);
     // Удаляем ссылку "Загрузить", если была
     $td.find("a.upload").remove();
@@ -2102,8 +2111,9 @@ $("#cabinet-employee table").on("change", "input[type=file]", function (e) {
 
   // Удаляем старые ссылки и добавляем новую
   $doc.find("a").remove();
-  $doc.prepend(`
-    <a onclick="$(this).siblings('input[type=file]').click()">${fileName}</a>
+  $doc.append(
+    $input,
+    `<a onclick="$(this).siblings('input[type=file]').click()">${fileName}</a>
   `);
 
   $('#cabinet-employee button[type="submit"]')
@@ -2327,14 +2337,6 @@ $("#cabinet-employee-popup").on("click", ".mob-employee-btn", async function () 
   });
   const { hasForbidden, words } = checkForbiddenWords(`${form} input[type="text"], ${form} textarea`);
 
-  if (hasForbidden) {
-    has_error = true;
-    $("#cabinet-employee-popup").fadeOut(200);
-    showForbiddenPopup(words);
-    $(this).prop("disabled", false).text("Сохранить");
-    return false;
-  }
-
   if (name == "") {
     $("#popup-employee-name").after(
       `<div class="invalid-feedback">Введите имя сотрудника</div>`
@@ -2393,6 +2395,14 @@ $("#cabinet-employee-popup").on("click", ".mob-employee-btn", async function () 
     }
 
     has_error = true;
+  }
+
+  if (hasForbidden) {
+    has_error = true;
+    $("#cabinet-employee-popup").fadeOut(200);
+    showForbiddenPopup(words);
+    $(this).prop("disabled", false).text("Сохранить");
+    return false;
   }
 
   if (!has_error) {
@@ -2547,7 +2557,7 @@ $("#cabinet-employee").on("click", 'button[type="submit"]', function (e) {
       $(`${form} .error-row`).remove();
 
       if (json["error"]) {
-        $(this).text("Сохранить информацию");
+        $('#cabinet-employee button[type="submit"]').text("Сохранить информацию");
 
         // Фатальная ошибка — в начало формы
         if (json["error"]["fatal_error"]) {

@@ -1,318 +1,465 @@
 <style>
-	.popup.popup.support-write-oproekte .window .reg .name {
-		font-weight: 500;
-		font-family: 'Roboto', sans-serif;
-	}
+  .popup.popup.support-write-oproekte .window .reg .name {
+    font-weight: 500;
+    font-family: "Roboto", sans-serif;
+  }
 
-	.support-write-oproekte .popup-btn {
-		background-color: #FF9E68 !important;
-		box-shadow: 0px 0px 2px 0px #0000001A !important;
-		color: #ffffff !important;
-		border: none !important;
-		border-radius: 12px !important;
-		margin-top: 50px;
-	}
+  .support-write-oproekte .popup-btn {
+    background-color: #ff9e68 !important;
+    box-shadow: 0px 0px 2px 0px #0000001a !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    margin-top: 50px;
+  }
 
-	.support-write-oproekte .window .reg {
-		padding: 15px 20px 40px 20px;
-	}
+  .support-write-oproekte .window .reg {
+    padding: 15px 20px 40px 20px;
+  }
 
-	.popup .window .reg .popup-body .button p .bold {
-		font-weight: 400;
-	}
+  .popup .window .reg .popup-body .button p .bold {
+    font-weight: 400;
+  }
 
-	.support-write-oproekte .window .reg .button p {
-		margin: 16px 0 0 0;
-	}
+  .support-write-oproekte .window .reg .button p {
+    margin: 16px 0 0 0;
+  }
 
-	.support-write-oproekte .window .reg .field {
-		margin-bottom: 0;
-	}
+  .support-write-oproekte .window .reg .field {
+    margin-bottom: 0;
+  }
 
-	.faq-answer p {
-		margin-bottom: -10px !important;
-	}
+  .faq-answer p {
+    margin-bottom: -10px !important;
+  }
 
-	.faq-answer p {
-		margin-top: -10px;
-	}
+  .faq-answer p {
+    margin-top: -10px;
+  }
 
-	.popup-body input {
-		width: 100%;
-		padding: 12px;
-		border: 1px solid;
-		margin-top: 20px;
-		border-radius: 12px;
-		color: #B0B0B0;
-	}
+  .popup-body input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid;
+    margin-top: 20px;
+    border-radius: 12px;
+    color: #b0b0b0;
+  }
 
-	.support-write-oproekte .inp {
-		margin-top: 20px;
-		color: #B0B0B0;
-	}
+  .support-write-oproekte .inp {
+    margin-top: 20px;
+    color: #b0b0b0;
+  }
 
-	.message {
-		margin-top: 30px;
-		font-weight: 500;
-	}
+  .message {
+    margin-top: 30px;
+    font-weight: 500;
+  }
 
-	.popup.support-end-oproekte .end__block {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 80px 20px 271px;
-	}
+  .popup.support-end-oproekte .end__block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 20px 271px;
+  }
 
-	.popup.support-end-oproekte .end__text {
-		display: block;
-		width: 100%;
-		text-align: center;
-		color: #222;
-		font-size: 14px;
-		font-weight: 400;
-	}
+  .popup.support-end-oproekte .end__text {
+    display: block;
+    width: 100%;
+    text-align: center;
+    color: #222;
+    font-size: 14px;
+    font-weight: 400;
+  }
 
-	.popup.support-end-oproekte .end__text p+p {
-		margin-top: 32px;
-	}
+  .popup.support-end-oproekte .end__text p + p {
+    margin-top: 32px;
+  }
 
-	.popup.support-end-oproekte .end__title {
-		padding: 0 20px;
-		color: #222;
-		font-size: 16px;
-		font-weight: 400;
-		margin-bottom: 72px;
-	}
+  .popup.support-end-oproekte .end__title {
+    padding: 0 20px;
+    color: #222;
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 72px;
+  }
 
-	.popup.support-end-oproekte .convert {
-		position: relative;
-		width: 40px;
-		height: 40px;
-		margin-bottom: 32px;
-	}
+  .popup.support-end-oproekte .convert {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 32px;
+  }
 
-	.popup.support-end-oproekte .convert img {
-		max-width: 100%;
-	}
+  .popup.support-end-oproekte .convert img {
+    max-width: 100%;
+  }
 
-	.popup.support-end-oproekte .end__text {
-		text-align: left;
-	}
+  .popup.support-end-oproekte .end__text {
+    text-align: left;
+  }
 
-	/* Дополнительные стили, если они требуются */
-	.popup.support-end-oproekte .button {
-		display: flex;
-		justify-content: center;
-	}
+  /* Дополнительные стили, если они требуются */
+  .popup.support-end-oproekte .button {
+    display: flex;
+    justify-content: center;
+  }
 
-	.popup.support-end-oproekte .popup-btn {
-		padding: 12px 25px;
-		background-color: #222;
-		color: #fff;
-		font-size: 14px;
-		cursor: pointer;
-	}
+  .popup.support-end-oproekte .popup-btn {
+    padding: 12px 25px;
+    background-color: #222;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+  }
 
-	.popup.support-end-oproekte .popup-btn:hover {
-		background-color: #444;
-	}
+  .popup.support-end-oproekte .popup-btn:hover {
+    background-color: #444;
+  }
 
-	.popup.support-end-oproekte .close-popup-btn {
-		background-color: #ff4d4d;
-		color: white;
-	}
+  .popup.support-end-oproekte .close-popup-btn {
+    background-color: #ff4d4d;
+    color: white;
+  }
 
-	.popup.support-end-oproekte .close-popup-btn:hover {
-		background-color: #e60000;
-	}
+  .popup.support-end-oproekte .close-popup-btn:hover {
+    background-color: #e60000;
+  }
 
-	.popup.support-end-oproekte .close-popup-btn {
-		width: 100%;
-		text-align: center;
-	}
+  .popup.support-end-oproekte .close-popup-btn {
+    width: 100%;
+    text-align: center;
+  }
 
-	.index-catalog-block .top-text {
-		padding: 16px 0 204px;
-	}
+  .index-catalog-block .top-text {
+    padding: 16px 0 204px;
+  }
 
-	@media (max-width: 991px) {
-		.message-to-support {
-			width: 100%;
-		}
+  @media (max-width: 991px) {
+    .message-to-support {
+      width: 100%;
+    }
 
-		.index-catalog-block .top-text {
-			margin: 0 0 -80px;
-			padding: 16px 0 136px !important;
-		}
-	}
+    .index-catalog-block .top-text {
+      margin: 0 0 -80px;
+      padding: 16px 0 136px !important;
+    }
+  }
 </style>
 <script type="text/javascript">
-	(function(m,e,t,r,i,k,a){
-		m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-		m[i].l=1*new Date();
-		for (var j = 0; j < document.scripts.length; j++) {
-			if (document.scripts[j].src === r) return;
-		}
-		k=e.createElement(t),a=e.getElementsByTagName(t)[0];
-		k.async=1;k.src=r;a.parentNode.insertBefore(k,a);
-	})(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=104107457', 'ym');
+  (function (m, e, t, r, i, k, a) {
+    m[i] =
+      m[i] ||
+      function () {
+        (m[i].a = m[i].a || []).push(arguments);
+      };
+    m[i].l = 1 * new Date();
+    for (var j = 0; j < document.scripts.length; j++) {
+      if (document.scripts[j].src === r) return;
+    }
+    (k = e.createElement(t)), (a = e.getElementsByTagName(t)[0]);
+    k.async = 1;
+    k.src = r;
+    a.parentNode.insertBefore(k, a);
+  })(
+    window,
+    document,
+    "script",
+    "https://mc.yandex.ru/metrika/tag.js?id=104107457",
+    "ym"
+  );
 
-	ym(104107457, 'init', {
-		ssr: true,
-		webvisor: true,
-		clickmap: true,
-		ecommerce: "dataLayer",
-		accurateTrackBounce: true,
-		trackLinks: true
-	});
+  ym(104107457, "init", {
+    ssr: true,
+    webvisor: true,
+    clickmap: true,
+    ecommerce: "dataLayer",
+    accurateTrackBounce: true,
+    trackLinks: true,
+  });
 </script>
 <noscript>
-	<div>
-		<img src="https://mc.yandex.ru/watch/104107457" style="position:absolute; left:-9999px;" alt="">
-	</div>
+  <div>
+    <img
+      src="https://mc.yandex.ru/watch/104107457"
+      style="position: absolute; left: -9999px"
+      alt=""
+    />
+  </div>
 </noscript>
 <h1 class="dn">О ПРОЕКТЕ</h1>
 <div class="navi">
-	<div class="wrap">
-		<a href="/">ЮРФАК</a><span>/</span><span class="curr-page">О проекте</span>
-	</div>
+  <div class="wrap">
+    <a href="/">ЙОГУРТ</a><span>/</span><span class="curr-page">О проекте</span>
+  </div>
 </div>
 <div class="wrap">
-	<div class="index-catalog-block inner">
-		<div class="top-text">
-			<h1>О проекте</h1>
-			<div class="about-page">
-				<div class="text">
-					<p style="font-size: 32px; margin-top: 14px;"><span class="orange">ЮР</span><span>ФАК</span></p>
-					<br><span class="descr">Удобный сервис по поиску лучших юристов, адвокатов, экспертов и
-						нотариусов.</span>
-				</div>
-			</div>
-			<p style="margin: 32px 0 48px;" class="text">
-				Просим вас внимательно ознакомиться с документами, представленными ниже.
-				<br>Используя ЮРФАК.RU, вы соглашаетесь со всеми правилами Проекта.
-			</p>
-			<div id="faq-block" class="faq-section">
-				<!--data:documents--><!--data:documents-->
-			</div>
-			<p class="text2">
-				Если у вас появились вопросы, есть жалобы или предложения,
-				напишите нам на почту <a class="blue-link" href="mailto:info@urfaq.ru">info@urfaq.ru</a><br>
-				Мы обязательно изучим вашу ситуацию и ответим в ближайшее время!
-			</p>
-			<!-- <button class="message-to-support">Написать в поддержку</button> -->
+  <div class="index-catalog-block inner">
+    <div class="top-text">
+      <h1>О проекте</h1>
+      <div class="about-page" style="position: relative; overflow: hidden">
+        <img
+          src="../assets/img/o-proekte.webp"
+          alt="О проекте ЙОГУРТ"
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            z-index: 1;
+            pointer-events: none;
+          "
+        />
 
-		</div>
-	</div>
+        <div class="text" style="position: relative; z-index: 2; width: 100%">
+          <p style="font-size: 32px; margin-top: 14px">
+            <a class="logo" href="/">
+              <img class="logo-img" src="/assets/img/logo/yoga_logo.svg" />
+              <span>ЙОГУРТ</span>
+            </a>
+          </p>
+          <br /><span class="descr"
+            >Удобный сайт по поиску лучших студий йоги.</span
+          >
+        </div>
+      </div>
+      <p style="margin: 32px 0 48px" class="text">
+        Просим вас внимательно ознакомиться с документами, представленными ниже.
+        <br />Используя ЙОГУРТ.RU, вы соглашаетесь со всеми правилами Проекта.
+      </p>
+      <div id="faq-block" class="faq-section">
+        <!--data:documents--><!--data:documents-->
+      </div>
+      <p class="text2">
+        Если у вас появились вопросы, есть жалобы или предложения - заполните и отправьте
+        <a class="custom-link support-message-button" href="#">форму <br class="desktop-only">обращения в службу поддержки</a>. Мы изучим вашу ситуацию и ответим в ближайшее время!
+      </p>
+      <!-- <button class="message-to-support">Написать в поддержку</button> -->
+    </div>
+  </div>
 </div>
 
 <div class="popup support-write-oproekte">
-	<div class="bg"></div>
-	<div class="window middle">
-		<div class="close"></div>
-		<div class="reg">
-			<form method="POST" id="support-popup">
-				<div class="name">Сообщение в поддержку</div>
-				<div class="popup-body">
-					<div class="support-type"></div>
-					<input type="text" name="user_name" placeholder="Имя" value="">
-					<input type="text" name="user_email" placeholder="Адрес электронной почты" value="">
-					<p class="message">Сообщение</p>
-					<div class="field">
-						<textarea class="inp" name="content"
-							placeholder="Опишите вашу проблему, вопрос или предложение"></textarea>
-					</div>
-					<div class="button">
-						<button type="submit" id="btn-support-popup" class="popup-btn">
-							Отправить
-						</button>
-						<p>
-							Нажимая “Отправить”, я принимаю изложенное в документах,
-							представленных в разделе сайта <span class="bold">“О проекте”</span>.
-						</p>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <form method="POST" id="support-popup">
+        <div class="name">Сообщение в поддержку</div>
+        <div class="popup-body">
+          <div class="support-type"></div>
+          <input type="text" name="user_name" placeholder="Имя" value="" />
+          <input
+            type="text"
+            name="user_email"
+            placeholder="Адрес электронной почты"
+            value=""
+          />
+          <p class="message">Сообщение</p>
+          <div class="field">
+            <textarea
+              class="inp"
+              name="content"
+              placeholder="Опишите вашу проблему, вопрос или предложение"
+            ></textarea>
+          </div>
+          <div class="button">
+            <button type="submit" id="btn-support-popup" class="popup-btn">
+              Отправить
+            </button>
+            <p>
+              Нажимая “Отправить”, я принимаю изложенное в документах,
+              представленных в разделе сайта
+              <span class="bold">“О проекте”</span>.
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <div class="popup support-end-oproekte">
-	<div class="bg"></div>
-	<div class="window middle">
-		<div class="close"></div>
-		<div class="reg">
-			<div class="popup-body">
-				<div class="end__block">
-					<i class="convert"><img src="/assets/img/cabinet/convert.svg"></i>
-					<div class="end__title">Спасибо за обращение!</div>
-					<div class="end__text">
-						<p>Ответ придёт на указанную в форме отправки электронную почту.</p><br><br>
-						<p>Мы постараемся ответить как можно быстрее. <br>Обычно ответ приходит в течение нескольких
-							дней.</p>
-					</div>
-				</div>
-				<div class="button">
-					<a href="../" class="popup-btn close-popup-btn">
-						Вернуться на сайт
-					</a>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <div class="end__block">
+          <i class="convert"><img src="/assets/img/cabinet/convert.svg" /></i>
+          <div class="end__title">Спасибо за обращение!</div>
+          <div class="end__text">
+            <p>Ответ придёт на указанную в форме отправки электронную почту.</p>
+            <br /><br />
+            <p>
+              Мы постараемся ответить как можно быстрее. <br />Обычно ответ
+              приходит в течение нескольких дней.
+            </p>
+          </div>
+        </div>
+        <div class="button">
+          <a href="../" class="popup-btn close-popup-btn">
+            Вернуться на сайт
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="popup grey support-message">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <form method="POST" id="support-message-popup" novalidate>
+        <div class="name">Сообщение в поддержку</div>
+        <div class="field-name field-name-main big">
+          Данные для обратной связи
+        </div>
+
+        <!--data:popup_forbidden_words--><!--data:popup_forbidden_words-->
+
+        <div class="field">
+          <div class="field-name">ФИО или название компании</div>
+          <!--data:popup_name_field--><!--data:popup_name_field-->
+          <div class="invalid-feedback" style="display: block"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-name">Контактный номер телефона</div>
+          <!--data:popup_tel_field--><!--data:popup_tel_field-->
+          <div class="invalid-feedback" style="display: block"></div>
+        </div>
+
+        <div class="field field-name-main">
+          <div class="field-name">Адрес электронной почты</div>
+          <!--data:popup_email_field--><!--data:popup_email_field-->
+          <div class="invalid-feedback" style="display: block"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-name big">Сообщение</div>
+          <textarea
+            name="message"
+            class="field-input field-textarea"
+            maxlength="1000"
+            placeholder="Опишите вашу проблему или предложение (не более 1000 символов)."
+          ></textarea>
+          <div class="invalid-feedback" style="display: block"></div>
+        </div>
+
+        <!--data:popup_page_link--><!--data:popup_page_link-->
+        <input type="hidden" name="type" value="support_user" />
+        <!--data:date--><!--data:date-->
+        <!--data:captcha-support--><!--data:captcha-support-->
+        <input type="hidden" name="place" value="Пользовательская часть" />
+
+        <div class="button">
+          <p>
+            Нажимая “Отправить”, я принимаю изложенное в документах,
+            представленных в разделе сайта
+            <span class="bold">“О проекте”</span>.
+          </p>
+          <button
+            type="submit"
+            id="btn-support-message-popup"
+            class="popup-btn"
+          >
+            Отправить
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="popup support-message-end">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="name">Сообщение в поддержку</div>
+      <div class="popup-body">
+        <div class="end__block">
+          <div class="end__title">Спасибо за обращение!</div>
+          <br /><br />
+          <div class="end__text">
+            <p>
+              Мы свяжемся с вами по указанному в обращении номеру телефона или
+              ответим на электронную почту. Как правило, ответ приходит в
+              течение 48 часов, но в отдельных случаях может занимать немного
+              больше времени.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
-	document.querySelectorAll(".faq-question").forEach((button) => {
-		const faqItem = button.parentElement;
-		const faqAnswer = button.nextElementSibling;
+  document.querySelectorAll(".faq-question").forEach((button) => {
+    const faqItem = button.parentElement;
+    const faqAnswer = button.nextElementSibling;
 
-		// Устанавливаем базовые стили через JS
-		faqAnswer.style.overflow = "hidden";
-		faqAnswer.style.maxHeight = "0";
-		faqAnswer.style.transition = "max-height 0.3s ease, padding 0.3s ease";
+    // Устанавливаем базовые стили через JS
+    faqAnswer.style.overflow = "hidden";
+    faqAnswer.style.maxHeight = "0";
+    faqAnswer.style.transition = "max-height 0.3s ease, padding 0.3s ease";
 
-		button.addEventListener("click", () => {
-			const isOpen = faqItem.classList.contains("open");
+    button.addEventListener("click", () => {
+      const isOpen = faqItem.classList.contains("open");
 
-			if (isOpen) {
-				button.style.transition = "border-radius 1.1s ease";
-				// Закрываем
-				const fullHeight = faqAnswer.scrollHeight + "px";
-				faqAnswer.style.maxHeight = fullHeight; // нужно зафиксировать перед анимацией
+      if (isOpen) {
+        button.style.transition = "border-radius 1.1s ease";
+        // Закрываем
+        const fullHeight = faqAnswer.scrollHeight + "px";
+        faqAnswer.style.maxHeight = fullHeight; // нужно зафиксировать перед анимацией
 
-				requestAnimationFrame(() => {
-					faqAnswer.style.maxHeight = "0";
-					faqAnswer.style.paddingTop = "0";
-					faqAnswer.style.paddingBottom = "0";
-					button.style.borderRadius = "16px";
-				});
+        requestAnimationFrame(() => {
+          faqAnswer.style.maxHeight = "0";
+          faqAnswer.style.paddingTop = "0";
+          faqAnswer.style.paddingBottom = "0";
+          button.style.borderRadius = "16px";
+        });
 
-				setTimeout(() => {
-					faqItem.classList.remove("open");
-				}, 100);
-			} else {
-				button.style.transition = "none";
-				// Открываем
-				faqItem.classList.add("open");
+        setTimeout(() => {
+          faqItem.classList.remove("open");
+        }, 100);
+      } else {
+        button.style.transition = "none";
+        // Открываем
+        faqItem.classList.add("open");
 
-				const fullHeight = faqAnswer.scrollHeight + "px";
-				faqAnswer.style.maxHeight = fullHeight;
-				button.style.borderRadius = "16px 16px 0 0";
-			}
-		});
-	});
+        const fullHeight = faqAnswer.scrollHeight + "px";
+        faqAnswer.style.maxHeight = fullHeight;
+        button.style.borderRadius = "16px 16px 0 0";
+      }
+    });
+  });
 
-	document.addEventListener('contextmenu', function (e) {
-		e.preventDefault();
-	});
-	document.addEventListener('selectstart', function (e) {
-		e.preventDefault();
-	});
+  document.addEventListener("contextmenu", function (e) {
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) {
+      return; // разрешаем контекстное меню в полях ввода
+    }
+    e.preventDefault();
+  });
+  document.addEventListener("selectstart", function (e) {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
+        return; // разрешаем выделение текста в полях ввода
+    }
+    e.preventDefault();
+  });
 
-	document.addEventListener('keydown', function (event) {
-		if (event.key === 'PrintScreen') {
-			event.preventDefault();
-			alert("Создание скриншотов на этой странице запрещено.");
-		}
-	});
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "PrintScreen") {
+      event.preventDefault();
+      alert("Создание скриншотов на этой странице запрещено.");
+    }
+  });
 </script>

@@ -10,7 +10,7 @@ $user = get_specialist($_SESSION['user']['id']);
 
 $data['main_info'] = "<div class='block1'>";
 
-$data['main_info'] .= input_photo($user);
+/* $data['main_info'] .= input_photo($user); */
 
 $data['main_info'] .= input_company($user);
 
@@ -135,9 +135,9 @@ function input_company(array $user)
     if ($user['company']) {
         $code = <<<EOF
             <div class="item">
-                <p>Название компании</p>
+                <p>Название студии</p>
                 <input type="hidden" name="company_id" value="{$user['company_id']}">
-                <input type="text" name="company" placeholder="Название компании" value="{$user['company']}" readonly>
+                <input type="text" name="company" placeholder="Название студии" value="{$user['company']}">
             </div>
         EOF;
 
@@ -199,7 +199,7 @@ function input_change_status(array $user)
 function input_foundation(array $user): string
 {
     $placeholder = $user['company'] ? 'Год основания' : 'Опыт работы';
-    $subplaceholder = $user['company'] ? 'Укажите год основания компании' : 'Полных лет практики';
+    $subplaceholder = $user['company'] ? 'Укажите год основания студии' : 'Полных лет практики';
     $max_value = $user['company'] ? intval(date("Y")) : 50;
     $def_value = $user['foundation'] ?? ($user['company'] ? intval(date("Y")) : 1);
     $class = is_null($user['foundation']) ? 'default' : '';
@@ -226,8 +226,8 @@ function input_foundation(array $user): string
 function input_about_block(array $user)
 {
     if ($user['company']) {
-        $title = 'О компании';
-        $descr = 'Расскажите о своей компании, успешно завершенных делах и любимых направлениях деятельности. Любая информация может быть полезна.';
+        $title = 'О студии';
+        $descr = 'Расскажите о своей студии: история, занятия, пространство, философия. Пусть ученики полюбят вас с первых строчек.';
     } else {
         $title = 'О себе';
         $descr = 'Расскажите о своем опыте, успешно завершенных делах и любимых направлениях деятельности. Любая информация может быть полезна.';

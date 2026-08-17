@@ -13,8 +13,30 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/FirstNamesInflection.
 include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/MiddleNamesInflection.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/LastNamesInflection.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/Russian/functions.php';
+?>
+<style>
+    #theme {
+        padding: 0 30px 0 4px;
+        border-radius: 4px;
+        height: 32px;
+        margin-bottom: 24px;
+        font-size: 16px;
+        max-width: 100%;
+    }
+</style>
+<?php
+$requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); // убираем ?utm и прочее
+$requestPath = preg_replace('#/+#', '/', $requestPath);          // убираем повторные слэши
+$requestPath = rtrim($requestPath, '/');                         // убираем конечный слэш (но не первый)
+if ($requestPath === '') $requestPath = '/';
 
-$requestion_arr = explode('/', $_SERVER['REQUEST_URI']);
+// возвращаем первый слэш, если он был
+if ($requestPath[0] !== '/') {
+    $requestPath = '/' . $requestPath;
+}
+
+// теперь делаем explode, как раньше
+$requestion_arr = explode('/', $requestPath);
 $include_ads = $main_page = true;
 $posts = get_actual_posts('', 0, 0, 5, 0);
 $data['breadcrumbs'] = '<span class="curr-page">Журнал</span>';
@@ -290,6 +312,20 @@ if (isset($requestion_arr[2])) {
             if (!$blog) responseRedirect('/');
 
             $specialist = get_specialist($blog['specialist_id']);
+
+            // Проверка: если специалист удалён или не найден — редиректим
+            if (!$specialist || $specialist['deleted'] == 1) {
+                responseRedirect('/');
+            }
+
+            $posts_nolimit = get_blog_posts($blog['id'], 999);
+
+            // Проверка: если нет постов — редиректим
+            if (empty($posts_nolimit)) {
+                responseRedirect('/');
+            }
+
+            $specialist = get_specialist($blog['specialist_id']);
             // заголовок
             $breadcrumbs_title = 'Блог ';
             // Если компания
@@ -394,10 +430,10 @@ if (isset($journal_page)) {
     $menu_page = $single_post['post_type'];
 }
 $data['journal_menu_mobile'] = $data['journal_menu'] = '
-    <li><a href="/journal" ' . ($main_page ? 'class="active"' : '') . '><img src="/assets/img/blog-menu1' . ($main_page ? '-active' : '') . '.svg"> Актуальное</a></li>
-    <li><a href="/journal/news" ' . ($menu_page == 'news' ? 'class="active"' : '') . '><img src="/assets/img/blog-menu2' . ($menu_page == 'news' ? '-active' : '') . '.svg"> Новости</a></li>
-    <li><a href="/journal/articles" ' . ($menu_page == 'articles' ? 'class="active"' : '') . '><img src="/assets/img/blog-menu3' . ($menu_page == 'articles' ? '-active' : '') . '.svg"> Статьи</a></li>
-    <li><a href="/journal/blogs" ' . ($menu_page == 'blogs' ? 'class="active"' : '') . '><img src="/assets/img/blog-menu4' . ($menu_page == 'blogs' ? '-active' : '') . '.svg"> Блоги</a></li>
+    <li><a href="/journal" class="' . ($main_page ? 'active' : '') . ' icon-1">Актуальное</a></li>
+    <li><a href="/journal/news" class="' . ($menu_page == 'news' ? 'active' : '') . ' icon-2">Новости</a></li>
+    <li><a href="/journal/articles" class="' . ($menu_page == 'articles' ? 'active' : '') . ' icon-3">Статьи</a></li>
+    <li><a href="/journal/blogs" class="' . ($menu_page == 'blogs' ? 'active' : '') . ' icon-4">Блоги</a></li>
 ';
 
 $themes = get_blog_filter_themes();
@@ -417,7 +453,7 @@ foreach ($themes as $theme) {
         $selected = ($theme_id == $theme['id']) ? 'selected' : '';
         $data['filter_journal_theme'] .= "<option value='{$theme['slug']}' $selected>{$theme['title']}</option>";
         $data['mobile_filter_journal'] .= "<li class='{$theme['slug']}'" .
-            (!empty($theme['icon']) ? " style='background-image: url(../assets/img/{$theme['icon']});'" : "") . ">
+            (!empty($theme['icon']) ? " style='background-image: url(/assets/img/{$theme['icon']});'" : "") . ">
     <a href='/journal/{$theme['slug']}'>{$theme['title']}</a>
 </li>";
     }
@@ -426,7 +462,7 @@ if (isset($last_theme) && $last_theme != '') {
     $selected = ($theme_id == $last_theme['id']) ? 'selected' : '';
     $data['filter_journal_theme'] .= "<option value='{$last_theme['slug']}' $selected>{$last_theme['title']}</option>";
     $data['mobile_filter_journal'] .= "<li class='{$last_theme['slug']}'" .
-        (!empty($last_theme['icon']) ? " style='background-image: url(../assets/img/{$last_theme['icon']});'" : "") . ">
+        (!empty($last_theme['icon']) ? " style='background-image: url(/assets/img/{$last_theme['icon']});'" : "") . ">
     <a href='/journal/{$last_theme['slug']}'>{$last_theme['title']}</a>
 </li>";
 }
@@ -442,7 +478,7 @@ foreach ($themes as $theme) {
         $selected = ($theme_id == $theme['id']) ? 'selected' : '';
         $data['filter_journal_theme'] .= "<option value='{$theme['slug']}' $selected>{$theme['title']}</option>";
         $data['mobile_filter_journal'] .= "<li class='{$theme['slug']}'" .
-            (!empty($theme['icon']) ? " style='background-image: url(../assets/img/{$theme['icon']});'" : "") . ">
+            (!empty($theme['icon']) ? " style='background-image: url(/assets/img/{$theme['icon']});'" : "") . ">
         <a href='/journal/{$theme['slug']}'>{$theme['title']}</a>
     </li>";
     }
@@ -451,7 +487,7 @@ if (isset($last_theme_exp) && $last_theme_exp != '') {
     $selected = ($theme_id == $last_theme_exp['id']) ? 'selected' : '';
     $data['filter_journal_theme'] .= "<option value='{$last_theme_exp['slug']}' $selected>{$last_theme_exp['title']}</option>";
     $data['mobile_filter_journal'] .= "<li class='{$last_theme_exp['slug']}'" .
-        (!empty($last_theme_exp['icon']) ? " style='background-image: url(../assets/img/{$last_theme_exp['icon']});'" : "") . ">
+        (!empty($last_theme_exp['icon']) ? " style='background-image: url(/assets/img/{$last_theme_exp['icon']});'" : "") . ">
     <a href='/journal/{$last_theme_exp['slug']}'>{$last_theme_exp['title']}</a>
 </li>";
 }
@@ -534,7 +570,7 @@ if ($include_ads) {
         }
         $data['h1_hidden_title'] = '<h1 class="dn">' . $adLine1 . '</h1>';
         $data['top_ads'] = '<div class="top-text"><div class="item1">
-            <img src="/assets/img/' . htmlspecialchars($topAd['image']) . '" class="image">
+            <img src="/assets/img/' . htmlspecialchars($topAd['image']) . '" alt="' . $adLine1 . '" class="image">
             <div class="name">' . $adLine1 . '</div>
             <p>' . $adLine2 . '</p>
             <div class="cat">
@@ -562,7 +598,20 @@ if ($main_page && is_array($news_titles) && $theme_id == 0 && $tag_id == 0) {
 
 $actual_articles = get_actual_posts('articles', 0, 0, 4);
 foreach ($actual_articles as $article) {
-    $data['actual_articles_list'] .= '<a href="/journal/' . $article['alias'] . '" class="item"><div class="item-img_wrapper" style="background-image:url(/uploads/articles/' . $article['photo'] . ');"></div><div><span>' . strip_tags(html_entity_decode($article['title'])) . '</span></div></a>';
+    $article_title_clean = strip_tags(html_entity_decode($article['title']));
+    $alt_text = htmlspecialchars($article_title_clean, ENT_QUOTES, 'UTF-8');
+
+    $data['actual_articles_list'] .= '<a href="/journal/' . $article['alias'] . '" class="item">
+        <div class="item-img_wrapper" style="position: relative; overflow: hidden;">
+            <img src="/uploads/articles/' . $article['photo'] . '" 
+                 alt="' . $alt_text . '" 
+                 loading="lazy" 
+                 style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+        </div>
+        <div>
+            <span>' . $article_title_clean . '</span>
+        </div>
+    </a>';
 }
 
 if (isset($single_post) && isset($journal_page) && str_starts_with($_SERVER['REQUEST_URI'], '/journal/id')) {
@@ -643,8 +692,8 @@ if (isset($blog)) {
         }
         $rating_code .= '</span>';
     }
-
-    if (!isset($single_post)) {
+    $author_posts = get_blog_posts($blog['id'], 999);
+    if (!isset($single_post) && !empty($specialist) && $specialist['deleted'] == 0 && !empty($author_posts)) {
         $data['h1_hidden_title'] = '<h1 class="dn">' . $blog_name . '</h1>';
         if (!empty($specialist['photo']) && file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/avatars/thumb_' . $specialist['photo'])) {
             $specialist['photo_path'] = '/uploads/avatars/thumb_' . $specialist['photo'];
@@ -654,11 +703,18 @@ if (isset($blog)) {
             $specialist['photo_path'] = !empty($specialist['company']) ? '/uploads/avatars/022.webp' : '/uploads/avatars/02.webp';
         }
 
+        $alt_text = htmlspecialchars($blog_name, ENT_QUOTES, 'UTF-8');
+
         $data['blog_info'] = '<div class="author-block">
-            <a href="/specialist/id' . $specialist['id'] . '" class="avatar" style="background-image:url(' . $specialist['photo_path'] . ');"></a>
+            <a href="/studio/id' . $specialist['id'] . '" class="avatar" style="position: relative; overflow: hidden; display: block;">
+                <img src="' . $specialist['photo_path'] . '" 
+                     alt="Аватар ' . $alt_text . '" 
+                     loading="lazy" 
+                     style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+            </a>
             <div class="info">
                 <div class="name">
-                    <a class="blog_name blog_name_author_page" href="/specialist/id' . $specialist['id'] . '">' . $blog_name . '</a>
+                    <a class="blog_name blog_name_author_page" href="/studio/id' . $specialist['id'] . '">' . $blog_name . '</a>
                 </div>
                 <div class="prof">
                     ' . $specialist['classification'] . '
@@ -666,7 +722,7 @@ if (isset($blog)) {
                 <p class="rating_code">' . $rating_code . '</p>
                 ' . ($adress ? ('<div class="adress">' . $adress . '</div>') : '') . '
             </div>
-            <a href="/specialist/id' . $specialist['id'] . '" class="link">Перейти на страницу</a>
+            <a href="/studio/id' . $specialist['id'] . '" class="link">Перейти на страницу</a>
         </div>';
 
         function generateAuthorProfileJsonLd(array $specialist, array $posts = [], array $posts_nolimit): string
@@ -855,11 +911,18 @@ if (isset($single_post)) {
     }
 
     if (isset($blog) && $single_post['post_type'] == 'blogs') {
+        $alt_text = htmlspecialchars($blog_name, ENT_QUOTES, 'UTF-8');
+
         $post_blog_info = '<div class="bottom-block flex">
             <div class="author author-desktop">
-                <div class="author__img-wrapper" style="background-image:url(' . $specialist['photo_path'] . ');"></div>
+                <div class="author__img-wrapper" style="position: relative; overflow: hidden;">
+                    <img src="' . $specialist['photo_path'] . '" 
+                         alt="Аватар автора ' . $alt_text . '" 
+                         loading="lazy" 
+                         style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+                </div>
                 <div>
-                    <p><a class="blog_name" href="/specialist/id' . $specialist['id'] . '">' . $blog_name . '</a></p>
+                    <p><a class="blog_name" href="/studio/id' . $specialist['id'] . '">' . $blog_name . '</a></p>
                     <p class="classification">' . $specialist['classification'] . '</p>
                     <p class="rating_code">' . $rating_code . '</p>
                 </div>
@@ -867,9 +930,14 @@ if (isset($single_post)) {
     
             <!-- Мобильная версия -->
             <div class="author author-mobile">
-                <div class="author__img-wrapper" style="background-image:url(' . $specialist['photo_path'] . ');"></div>
+                <div class="author__img-wrapper" style="position: relative; overflow: hidden;">
+                    <img src="' . $specialist['photo_path'] . '" 
+                         alt="Аватар автора ' . $alt_text . '" 
+                         loading="lazy" 
+                         style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+                </div>
                 <div>
-                    <p class="blog_name_mobile"><a class="blog_name" href="/specialist/id' . $specialist['id'] . '">' . $blog_name . '</a></p>
+                    <p class="blog_name_mobile"><a class="blog_name" href="/studio/id' . $specialist['id'] . '">' . $blog_name . '</a></p>
                     <p class="classification">' . $specialist['classification'] . '</p>
                     <p class="rating_code">' . $rating_code . '</p>
                 </div>
@@ -883,12 +951,43 @@ if (isset($single_post)) {
             <a href="/journal/' . $single_post['service_slug'] . '" class="cat cat_' . $single_post['post_type'] . '"><span>' . $single_post['service_title'] . '</span></a>
             <div class="date">' . date('d.m.Y', strtotime($single_post['date'])) . '</div>
         </div>
-        <div style="margin-bottom: 32px; font-size: 18px; font-weight: 500;">' . $title_clean . '</div>';
+        <div class="single_post_title">' . $title_clean . '</div>';
+
     if ($single_post['photo'] != '' && !is_null($single_post['photo'])) {
-        $data['single_post'] .= '<div class="image lazy-bg" data-bg="/uploads/articles/' . $single_post['photo'] . '"></div>';
+        $alt_text = htmlspecialchars($title_clean, ENT_QUOTES, 'UTF-8');
+
+        // Убираем lazy-bg и вставляем чистый тег img со всеми стилями
+        $data['single_post'] .= '<div class="image" style="position: absolute; overflow: hidden;">
+        <img src="/uploads/articles/' . $single_post['photo'] . '" 
+             alt="' . $alt_text . '" 
+             style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+    </div>';
     }
     if ($single_post['content'] != '' && !is_null($single_post['content'])) {
-        $data['single_post'] .= '<p>' . (htmlspecialchars_decode($single_post['content'])) . '</p>';
+        $html_content = htmlspecialchars_decode($single_post['content']);
+        
+        // Используем DOMDocument для безопасного парсинга HTML
+        $dom = new DOMDocument();
+        
+        // Подавляем предупреждения о некорректном HTML5, чтобы не засорять логи
+        libxml_use_internal_errors(true);
+        
+        // Загружаем контент с указанием UTF-8, чтобы не поплыла кириллица
+        $dom->loadHTML(mb_convert_encoding($html_content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        
+        libxml_clear_errors();
+    
+        // Находим все картинки в тексте
+        $images = $dom->getElementsByTagName('img');
+        foreach ($images as $img) {
+            // Если атрибута alt нет или он пустой string
+            $img->setAttribute('alt', 'Изображение к посту журнала');
+        }
+    
+        // Сохраняем измененный HTML обратно в строку
+        $clean_html = $dom->saveHTML();
+    
+        $data['single_post'] .= '<p>' . $clean_html . '</p>';
     }
     if ($single_post['site_from_link'] != '' && $single_post['site_from_name'] != '') {
         $data['single_post'] .= '<div class="site">
@@ -1130,14 +1229,25 @@ foreach ($posts as $post) {
     }
 
     $post_alias .= '/' . $post['alias'];
+
+    $post_title_clean = strip_tags(html_entity_decode($post['title']));
+    $alt_text = htmlspecialchars($post_title_clean, ENT_QUOTES, 'UTF-8');
+
     $data['posts'] .= '<div class="item2">
     <div class="flex post-data">
         <a href="/journal/' . $post['service_slug'] . '" class="cat_' . $post['post_type'] . '"><span>' . $post['service_title'] . '</span></a>
         <div class="date">' . date('d.m.Y', strtotime($post['date'])) . '</div>
     </div>
-    <a href="' . $post_alias . '" class="name">' . strip_tags(html_entity_decode($post['title'])) . '</a>';
+    <a href="' . $post_alias . '" class="stretched-link"></a>
+    <a href="' . $post_alias . '" class="name">' . $post_title_clean . '</a>';
+
     if ($post['photo'] != '' && !is_null($post['photo'])) {
-        $data['posts'] .= '<a href="' . $post_alias . '" class="image lazy-bg" data-bg="/uploads/articles/' . $post['photo'] . '">
+        // Убрали lazy-bg и добавили хардкорный img
+        $data['posts'] .= '<a href="' . $post_alias . '" class="image" style="display: block; overflow: hidden; position: relative;">
+            <img src="/uploads/articles/' . $post['photo'] . '" 
+                 alt="' . $alt_text . '" 
+                 loading="lazy" 
+                 style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
         </a>';
     }
     if ($post['post_type'] == 'blogs') {
@@ -1171,6 +1281,7 @@ foreach ($posts as $post) {
         $data['posts'] .= '</div>';
     }
     $data['posts'] .= '</div>';
+
     if ($post_number == 2) {
         $postAd = array_filter($journal_banners, function ($banner) {
             return $banner['id'] == 2;

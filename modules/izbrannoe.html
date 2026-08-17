@@ -3,12 +3,13 @@
         display: flex;
         flex-direction: column;
     }
+
     .footer:not(.cabinet) {
         margin-top: 88px;
     }
 </style>
 <script>
-    (function() {
+    (function () {
         const url = new URL(window.location.href);
         const page = url.searchParams.get("page");
         if (page && page !== "1") {
@@ -16,11 +17,11 @@
             window.location.replace(url.toString());
         }
     })();
-    </script>
+</script>
 <h1 class="dn">ИЗБРАННОЕ</h1>
 <div class="navi">
     <div class="wrap">
-        <a href="/">ЮРФАК</a><span>/</span><span class="curr-page">Избранное</span>
+        <a href="/">ЙОГУРТ</a><span>/</span><span class="curr-page">Избранное</span>
     </div>
 </div>
 <div class="wrap" style="flex: 1;">
@@ -28,7 +29,7 @@
         <div class="top-text">
             <h1>Избранное</h1>
             <p class="favorite-page">
-                В данном разделе находятся понравившиеся вам специалисты: юристы и адвокаты, эксперты, нотариусы.
+                В данном разделе находятся понравившиеся вам студии йоги.
             </p>
         </div>
         <!--data:favorite_filter--><!--data:favorite_filter-->

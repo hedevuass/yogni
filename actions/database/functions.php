@@ -443,7 +443,7 @@ function get_service_by_slug(string $slug)
     return mb_strtolower($firstChar) . $then;
 } */
 
-function get_all_service_meta($filter = null, $filter_labels = [], $cityGenitive = '')
+function get_all_service_meta($filter = null, $filter_labels = [], $cityGenitive = '', $cityPrepositional = '')
 {
     global $data_base;
 
@@ -457,114 +457,54 @@ function get_all_service_meta($filter = null, $filter_labels = [], $cityGenitive
 
         foreach ($services as $service) {
             $slug = trim($service['slug']);
-            // Раскодируем и убираем теги
+            
             $title = strip_tags(html_entity_decode($service['meta_title']));
             $description = strip_tags(html_entity_decode($service['meta_description']));
 
-            // 1) Применяем фильтры, если нужно
-            if ($filter && isset($filter_labels[$filter])) {
-                $handled = false;
+            if ($cityGenitive || $cityPrepositional) {
+                
+                // 1) ПРАВИЛА ДЛЯ TITLE (используем разделитель "|" для идеального позиционирования)
+                $titlePatterns = [
+                    '/((?:Частные\s+)?Каталог\s+йога[- ]студий)/iu' => $cityGenitive,
+                    '/((?:Частные\s+)?Студии\s+йоги)/iu'          => $cityGenitive,
+                    // Забирает всё от "Занятия по" до знака "|" или конца строки
+                    '/((?:Частные\s+)?Занятия\s+по\s+[^|]+?)(?=\s*(?:\||$))/iu' => 'в ' . $cityPrepositional
+                ];
 
-                if ($filter === 'company') {
-                    // Юристы и адвокаты
-                    if (mb_stripos($title, 'юристы и адвокаты') === 0) {
-                        $title = 'Юридические компании' . mb_substr($title, mb_strlen('Юристы и адвокаты'));
-                        $description = preg_replace(
-                            '/\bКаталог\s+юристов\s+и\s+адвокатов\b/ui',
-                            'Каталог юридических компаний',
-                            $description
-                        );
-                        $handled = true;
-                    }
-                    // Эксперты
-                    elseif (mb_stripos($title, 'эксперты') === 0) {
-                        $title = 'Экспертные учреждения' . mb_substr($title, mb_strlen('Эксперты'));
-                        $description = preg_replace(
-                            '/\bКаталог\s+экспертов\b/ui',
-                            'Каталог экспертных учреждений',
-                            $description
-                        );
-                        $handled = true;
-                    }
-                    // Fallback: Компании
-                    if (!$handled) {
-                        $title = preg_replace('/^(\S+)/u', 'Компании', $title);
-                        $description = preg_replace(
-                            '/\bКаталог\s+\S+/ui',
-                            'Каталог компаний',
-                            $description,
-                            1
-                        );
-                    }
-                } elseif ($filter === 'private') {
-                    // Частные юристы и адвокаты
-                    if (mb_stripos($title, 'юристы и адвокаты') === 0) {
-                        $rest = mb_substr($title, mb_strlen('Юристы и адвокаты'));
-                        $title = 'Частные юристы и адвокаты' . $rest;
-                        $description = preg_replace(
-                            '/\bКаталог\s+юристов\s+и\s+адвокатов\b/ui',
-                            'Каталог частных юристов и адвокатов',
-                            $description,
-                            1
-                        );
-                        $handled = true;
-                    }
-                    // Частные эксперты
-                    elseif (mb_stripos($title, 'эксперты') === 0) {
-                        $rest = mb_substr($title, mb_strlen('Эксперты'));
-                        $title = 'Частные эксперты' . $rest;
-                        $description = preg_replace(
-                            '/\bКаталог\s+экспертов\b/ui',
-                            'Каталог частных экспертов',
-                            $description,
-                            1
-                        );
-                        $handled = true;
-                    }
-                    // Fallback: Частные <lowercase>
-                    if (empty($handled)) {
-                        if (preg_match('/^(\S+)(\s*)(.*)$/u', $title, $m)) {
-                            $first = mb_strtolower($m[1]);
-                            $sep   = $m[2];
-                            $rest  = $m[3];
-                            $title = 'Частные ' . $first . $sep . $rest;
-                        }
-                        $description = preg_replace_callback(
-                            '/\bКаталог\s+(\S+)/ui',
-                            function ($m) {
-                                return 'Каталог частных ' . mb_strtolower($m[1]);
-                            },
-                            $description,
-                            1
-                        );
+                $titleMatched = false;
+                foreach ($titlePatterns as $pattern => $cityValue) {
+                    if (empty($cityValue)) continue;
+
+                    if (preg_match($pattern, $title)) {
+                        $title = preg_replace($pattern, '$1 ' . $cityValue, $title, 1);
+                        $titleMatched = true;
+                        break; 
                     }
                 }
-            }
-
-            // 2) Вставляем город после ключевых фраз или в конец
-            if ($cityGenitive) {
-                // Список всех ключевых фраз, которые могут быть в начале $title
-                $basePhrases = [
-                    'Юристы и адвокаты',
-                    'Эксперты',
-                    'Нотариусы',
-                    'Юридические компании',
-                    'Экспертные учреждения'
-                ];
-                // собираем паттерн: допускаем возможный «Частные » перед фразой
-                $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
-
-                if (preg_match($regex, $title, $m)) {
-                    $fullPhrase = $m[0];
-                    $title = $fullPhrase
-                        . ' ' . $cityGenitive
-                        . mb_substr($title, mb_strlen($fullPhrase));
-                } else {
+                
+                // Фолбек для TITLE: если совпадений вообще не найдено
+                if (!$titleMatched && $cityGenitive) {
                     $title .= ' ' . $cityGenitive;
                 }
+
+                // 2) ПРАВИЛА ДЛЯ DESCRIPTION (обычный текст, ищем "йоге" + 1 слово стиля)
+                $descPatterns = [
+                    '/((?:Частные\s+)?Каталог\s+йога[- ]студий)/iu' => $cityGenitive,
+                    '/((?:Частные\s+)?Студии\s+йоги)/iu'          => $cityGenitive,
+                    // Захватит "Занятия по...йоге" ИЛИ "Занятия по йоге [Стиль]" (одно слово после)
+                    '/((?:Частные\s+)?Занятия\s+по\s+(?:йоге\s+[\p{L}-]+|.*?йоге))/iu' => 'в ' . $cityPrepositional
+                ];
+
+                foreach ($descPatterns as $pattern => $cityValue) {
+                    if (empty($cityValue)) continue;
+
+                    if (preg_match($pattern, $description)) {
+                        $description = preg_replace($pattern, '$1 ' . $cityValue, $description, 1);
+                        break; 
+                    }
+                }
             }
 
-            // 3) Сохраняем мета
             $result[$slug] = [
                 'title'       => $title,
                 'description' => $description,
@@ -667,7 +607,7 @@ function search_services(string $search)
 {
     global $data_base;
     $search = '%' . $search . '%';
-    $categories = $data_base->selectAll("SELECT * FROM dt_service WHERE title LIKE ? ", [$search]);
+    $categories = $data_base->selectAll("SELECT * FROM dt_service WHERE title LIKE ? AND classification = 3 ", [$search]);
     return $categories;
 }
 
@@ -691,7 +631,7 @@ function set_specialist_specialization(int $specialist_id, int $service_id)
 function set_specialist_rating(int $specialist_id, int $rating = 5)
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_specialist_review (specialist_id, rating)
+    return $data_base->add("INSERT INTO dt_specialist_review_all (specialist_id, rating)
                                     VALUE (?, ?)", [$specialist_id, $rating]);
 }
 
@@ -715,42 +655,53 @@ function get_faq_pro_photo()
 function get_specialist(int $id)
 {
     global $data_base;
-    return $data_base->selectRow("SELECT 
-                                        s.*,
-                                        s.meta_title,
-                                        s.meta_description,
-                                        sc.street,
-                                        sc.house,
-                                        sc.how_to_get,
-                                        sc.coordinates,
-                                        sc.phone,
-                                        sc.other,
-                                        sc.metro as metro_id,
-                                        m.name as metro,
-                                        c.title as classification, 
-                                        city.name as city, 
-                                        se.title as specialization,
-                                        sd.description, 
-                                        sd.foundation, 
-                                        sd.schedule as schedule, 
-                                        sd.document,
-                                        sd.university,
-                                        com.title as company,
-                                        com.classification AS company_classification_id,
-                                        (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) as specialization_count,
-                                        (SELECT COUNT(*) + 1 FROM dt_specialist WHERE rating > s.rating) as rang,
-                                        (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = ? ) as rating,
-                                        (SELECT COUNT(rating) FROM dt_specialist_review WHERE specialist_id = ? ) as count_rating
-                                    FROM dt_specialist s
-                                    LEFT JOIN dt_specialist_contacts sc ON s.id = sc.specialist_id
-                                    LEFT JOIN dt_classification c ON s.classification_id = c.id
-                                    LEFT JOIN dt_specialist_review r ON s.id = r.specialist_id
-                                    LEFT JOIN dt_city city ON s.city_id = city.id
-                                    LEFT JOIN dt_service se ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
-                                    LEFT JOIN dt_specialist_description sd ON s.id = sd.specialist_id
-                                    LEFT JOIN dt_company com ON s.company_id = com.id
-                                    LEFT JOIN dt_metro m ON sc.metro = m.id
-                                    WHERE s.id = ? AND s.deleted = 0", [$id, $id, $id]);
+
+    return $data_base->selectRow("
+        SELECT 
+            s.*,
+            s.meta_title,
+            s.meta_description,
+            sc.street,
+            sc.house,
+            sc.how_to_get,
+            sc.coordinates,
+            sc.phone,
+            sc.other,
+            sc.metro AS metro_id,
+            m.name AS metro,
+            c.title AS classification, 
+            city.name AS city, 
+            se.title AS specialization,
+            sd.description, 
+            sd.foundation, 
+            sd.schedule AS schedule, 
+            sd.document,
+            sd.university,
+            com.title AS company,
+            com.classification AS company_classification_id,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count,
+            (SELECT COUNT(*) + 1 FROM dt_specialist WHERE rating > s.rating) AS rang,
+            (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = ? ) AS rating,
+            (SELECT COUNT(rating) FROM dt_specialist_review WHERE specialist_id = ? ) AS count_rating
+        FROM dt_specialist s
+        LEFT JOIN dt_specialist_contacts sc ON s.id = sc.specialist_id
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city city ON s.city_id = city.id
+        LEFT JOIN dt_service se 
+            ON se.id = (SELECT MAX(service_id) FROM dt_specialist_specialization WHERE specialist_id = s.id)
+        LEFT JOIN dt_specialist_description sd ON s.id = sd.specialist_id
+        LEFT JOIN dt_company com ON s.company_id = com.id
+        LEFT JOIN dt_metro m ON sc.metro = m.id
+        WHERE s.id = ?
+          AND (
+                s.deleted = 0
+                OR (
+                    s.deleted = 1
+                    AND s.deleted_at IS NOT NULL
+                    AND s.deleted_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                )
+          )
+    ", [$id, $id, $id]);
 }
 
 function get_specialists_by_company(int $company_id)
@@ -819,11 +770,11 @@ function get_specialists_by_ids(array $ids)
     $specialists = $data_base->selectAll("
         SELECT s.id, s.name, s.lastname, s.photo,
             IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) AS rating,
-            c.title as classification_title,
-            ci.name as city_name,
-            se.title as specialization,
-            cm.name as metro_name,
-            co.title as company_name,
+            MAX(c.title) as classification_title,
+            MAX(ci.name) as city_name,
+            MAX(se.title) as specialization,
+            MAX(cm.name) as metro_name,
+            MAX(co.title) as company_name,
             (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) as specialization_count
         FROM dt_specialist s
         LEFT JOIN dt_classification c ON s.classification_id = c.id
@@ -895,6 +846,39 @@ function get_specialist_specialization(int $specialist_id)
     return $result;
 }
 
+function get_all_equipment()
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_equipment ORDER BY name ASC");
+}
+
+function get_specialist_equipment(int $specialist_id): array
+{
+    global $data_base;
+    
+    $equipment = $data_base->selectAll(
+        "SELECT * FROM dt_specialist_equipment WHERE specialist_id = ?", 
+        [$specialist_id]
+    );
+
+    $result = [];
+    foreach ($equipment as $item) {
+        // Индексируем по ID оборудования, чтобы удобно проверять через array_key_exists
+        $result[$item['equipment_id']] = $item;
+    }
+
+    return $result;
+}
+
+function get_equipment_by_category(string $category): array
+{
+    global $data_base;
+    return $data_base->selectAll(
+        "SELECT id, name FROM dt_equipment WHERE category = ? ORDER BY name ASC", 
+        [$category]
+    );
+}
+
 // Возвращает все услуги специалсита
 function get_specialist_service(int $specialist_id)
 {
@@ -913,7 +897,7 @@ function get_specialist_reviews(int $specialist_id)
 function get_blog_filter_themes()
 {
     global $data_base;
-    return $data_base->selectAll("SELECT * FROM dt_service WHERE p_id = 0 AND original_id = 0 ORDER BY title");
+    return $data_base->selectAll("SELECT * FROM dt_service WHERE p_id = 0 AND original_id = 0 AND classification = 3 ORDER BY title");
 }
 
 // Возвращает теги блогов
@@ -957,41 +941,21 @@ function get_actual_posts(
     global $data_base;
 
     // Формируем условия WHERE
-    $where_post_type = '';
-    if ($post_type != '') {
-        $where_post_type = " AND ar.post_type='$post_type'";
-    }
-
-    $where_post_theme = '';
-    if ($post_theme != 0) {
-        $where_post_theme = " AND ar.theme_id=$post_theme";
-    }
-
-    $where_post_tag = '';
-    if ($post_tag != 0) {
-        $where_post_tag = " AND ar.id IN (SELECT article_id FROM dt_post_tags WHERE tag_id = $post_tag)";
-    }
-
-    $where_blog = '';
-    if ($blog_id > 0) {
-        $where_blog = " AND ar.blog_id = {$blog_id}";
-    }
-
-    $where_exclude_blog = '';
-    if ($exclude_blog_id > 0) {
-        $where_exclude_blog = " AND (ar.blog_id IS NULL OR ar.blog_id != {$exclude_blog_id})";
-    }
-
-    $where_date = $max_date !== ''
-        ? " AND ar.date <= '{$max_date}'"
-        : '';
+    $where_post_type = $post_type !== '' ? " AND ar.post_type = '{$post_type}'" : '';
+    $where_post_theme = $post_theme !== 0 ? " AND ar.theme_id = {$post_theme}" : '';
+    $where_post_tag = $post_tag !== 0 ? " AND ar.id IN (SELECT article_id FROM dt_post_tags WHERE tag_id = {$post_tag})" : '';
+    $where_blog = $blog_id > 0 ? " AND ar.blog_id = {$blog_id}" : '';
+    $where_exclude_blog = $exclude_blog_id > 0 ? " AND (ar.blog_id IS NULL OR ar.blog_id != {$exclude_blog_id})" : '';
+    $where_date = $max_date !== '' ? " AND ar.date <= '{$max_date}'" : '';
 
     // Находим глобальную минимальную дату для всех постов
     $min_date_query = $data_base->selectRow("
         SELECT MIN(ar.date) AS min_date
         FROM dt_post ar
+        LEFT JOIN dt_specialist s ON ar.author_id = s.id
         WHERE ar.moderation = 0
-        {$where_exclude_blog}
+          AND (s.deleted = 0 OR s.id IS NULL)
+          {$where_exclude_blog}
     ");
 
     $global_min_date = !empty($min_date_query['min_date']) ? $min_date_query['min_date'] : null;
@@ -1007,18 +971,20 @@ function get_actual_posts(
                se.id    AS service_id,
                se.title AS service_title,
                se.slug  AS service_slug
-          FROM dt_post ar
-          LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
-          LEFT JOIN dt_service se ON se.id = ar.theme_id
-         WHERE ar.moderation = 0
-           {$where_post_type}
-           {$where_post_theme}
-           {$where_post_tag}
-           {$where_blog}
-           {$where_exclude_blog}
-           {$where_date}
-         ORDER BY date DESC
-         LIMIT {$start}, {$limit}
+        FROM dt_post ar
+        LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+        LEFT JOIN dt_service se ON se.id = ar.theme_id
+        LEFT JOIN dt_specialist s ON ar.author_id = s.id
+        WHERE ar.moderation = 0
+          AND (s.deleted = 0 OR s.id IS NULL)
+          {$where_post_type}
+          {$where_post_theme}
+          {$where_post_tag}
+          {$where_blog}
+          {$where_exclude_blog}
+          {$where_date}
+        ORDER BY ar.date DESC
+        LIMIT {$start}, {$limit}
     ");
 
     // Проверяем, достигнут ли самый старый пост
@@ -1027,7 +993,6 @@ function get_actual_posts(
         if ($last_post_date <= $global_min_date && count($posts) < $limit) {
             return $posts;
         } elseif ($last_post_date <= $global_min_date) {
-            // Фильтруем посты, чтобы включить только те, что не старше global_min_date
             $filtered_posts = [];
             foreach ($posts as $post) {
                 if ($post['date'] >= $global_min_date) {
@@ -1040,6 +1005,7 @@ function get_actual_posts(
 
     return $posts;
 }
+
 
 function get_actual_posts_main()
 {
@@ -1212,22 +1178,27 @@ function get_active_journal_ad(int $journal_id): ?array
 function get_blog_posts(int $blog_id, int $limit = 5, int $start = 0)
 {
     global $data_base;
-    return $data_base->selectAll("SELECT ar.*,
-                                    se.id as service_id,
-                                    se.title as service_title,
-                                    se.slug as service_slug,
-                                    ar.date
-                                    FROM dt_post ar
-                                    LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
-                                    LEFT JOIN dt_service se ON se.id = ar.theme_id
-                                    WHERE ar.moderation=0 AND ar.blog_id = $blog_id
-                                    ORDER BY ar.date DESC
-                                    LIMIT $start, $limit");
+
+    $limit = (int)$limit;
+    $start = (int)$start;
+
+    return $data_base->selectAll("
+        SELECT ar.*,
+               se.id AS service_id,
+               se.title AS service_title,
+               se.slug AS service_slug,
+               ar.date
+        FROM dt_post ar
+        LEFT JOIN dt_blog bl ON ar.blog_id = bl.id
+        LEFT JOIN dt_service se ON se.id = ar.theme_id
+        LEFT JOIN dt_specialist s ON ar.author_id = s.id
+        WHERE ar.moderation = 0
+          AND ar.blog_id = ?
+          AND s.deleted = 0
+        ORDER BY ar.date DESC
+        LIMIT $start, $limit
+    ", [$blog_id]);
 }
-
-
-
-
 
 // Возвращает записи общего блога
 function get_main_blog_articles(int $theme_id = 0, int $limit = 0, int $start = 0)
@@ -1289,10 +1260,23 @@ function get_blog_articles(int $id, int $theme_id = 0, int $limit = 0, int $star
 }
 
 // Возвращает кол-во записей блога юзера
-function count_blog_articles(int $id)
+function count_blog_articles(int $id, $moderation = null)
 {
     global $data_base;
-    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_post WHERE blog_id = $id AND moderation = 0");
+
+    $and = '';
+    
+    // Обработка moderation: если передан массив или число
+    if (is_array($moderation)) {
+        $mod_values = implode(',', array_map('intval', $moderation));
+        $and .= " AND moderation IN ($mod_values) ";
+    } elseif ($moderation !== null) {
+        $and .= " AND moderation = " . intval($moderation);
+    }
+    // Если $moderation === null, условие по статусу вообще не добавится (посчитает все)
+
+    // Метод ->count() обычно сразу возвращает число, поэтому оставляем обертку вашего фреймворка
+    return $data_base->count("SELECT COUNT(DISTINCT id) FROM dt_post WHERE blog_id = $id $and");
 }
 
 // Возвращает кол-во просмотров всех записей блога юзера
@@ -1364,14 +1348,26 @@ function add_article_views(int $id)
 }
 
 // Создает запись
+// Создает запись
 function create_article(array $data)
 {
     global $data_base;
     $alias = generateAlias($data['title']);
+    
     $article_id = $data_base->add(
-        "INSERT INTO dt_post (blog_id, author_id, theme_id, post_type, title, alias, content, meta_keywords, moderation) VALUES (?, ?, ?, 'blogs', ?, ?, ?, ?, 1)",
-        [$data['blog_id'], $data['author_id'], $data['theme_id'], $data['title'], $alias, $data['content'], $data['keywords']]
+        "INSERT INTO dt_post (blog_id, author_id, theme_id, post_type, title, alias, content, meta_keywords, photo, moderation) VALUES (?, ?, ?, 'blogs', ?, ?, ?, ?, ?, 1)",
+        [
+            $data['blog_id'], 
+            $data['author_id'], 
+            $data['theme_id'], 
+            $data['title'], 
+            $alias, 
+            $data['content'], 
+            $data['keywords'], 
+            $data['photo']
+        ]
     );
+    
     if (check_alias($alias)) {
         $new_alias = $alias . '-' . $article_id;
         $data_base->update("UPDATE dt_post SET alias = ? WHERE id = $article_id", [$new_alias]);
@@ -1385,10 +1381,22 @@ function update_article(int $article_id, array $data)
     global $data_base;
     $theme_id = intval($data['theme_id']);
     $alias = generateAlias($data['title']);
+    
     if (check_alias($alias, $article_id)) {
         $alias = $alias . $article_id;
     }
-    return $data_base->update("UPDATE dt_post SET title = ?, alias = ?, theme_id = $theme_id, content = ?, meta_keywords = ?, moderation = 1 WHERE id =?", [$data['title'], $alias, $data['content'], $data['keywords'], $article_id]);
+    
+    return $data_base->update(
+        "UPDATE dt_post SET title = ?, alias = ?, theme_id = $theme_id, content = ?, meta_keywords = ?, photo = ?, moderation = 1 WHERE id = ?", 
+        [
+            $data['title'], 
+            $alias, 
+            $data['content'], 
+            $data['keywords'], 
+            $data['photo'],
+            $article_id
+        ]
+    );
 }
 
 // Удаляет запись
@@ -1551,6 +1559,69 @@ function get_specialists_by_classification($classification, int $limit, int $sta
     return $specialists;
 }
 
+
+function get_random_recomendations_by_classification($classification, int $limit, int $start = 0, int $metro_id = null)
+{
+    global $data_base;
+    $uri_arr = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+
+    // Определяем фильтр: "private" или "company"
+    $filter = end($uri_arr);
+    $and = '';
+
+    if ($filter === 'company') {
+        $and = 'AND s.company_id IS NOT NULL'; // Только компании
+    } elseif ($filter === 'private') {
+        $and = 'AND s.company_id IS NULL'; // Только частные специалисты
+    }
+
+    // Инициализируем массив строго в том порядке, в каком плейсхолдеры идут в SQL
+    $array = [];
+
+    if (is_int($classification)) {
+        $where = '= ?';
+        $array[] = $classification; // Первый ? — это classification_id (если это число)
+    }
+
+    if (is_array($classification)) {
+        // Если массив, мы вставляем значения прямо в IN, плейсхолдер тут не нужен
+        $where = 'IN (' . implode(',', array_map('intval', $classification)) . ')';
+    }
+
+    // Второй ? — это всегда city_id
+    $array[] = $_SESSION['city']['id'];
+
+    // ТЕПЕРЬ РАБОТАЕТ ДЛЯ ВСЕХ: если передали metro_id, добавляем фильтр
+    if ($metro_id) {
+        $and .= ' AND (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id) = ?';
+        $array[] = $metro_id; // Третий ? — это metro_id
+    }
+
+    $specialists = $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating,
+            c.title AS classification_title,
+            ci.name AS city_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN (SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id)) AS specialization,
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name,
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE s.classification_id $where AND s.deleted = 0 AND s.city_id = ? $and
+        GROUP BY s.id
+        ORDER BY RAND()
+        LIMIT $start, $limit
+    ", $array);
+
+    return $specialists;
+}
 function get_specialists_by_classification_n_block($classification, int $limit, int $start = 0)
 {
     global $data_base;
@@ -1743,8 +1814,17 @@ function get_random_specialists_by_classification(array $classArr, int $limit, a
     return $data_base->selectAll($sql, $params);
 }
 
-function get_specialists_by_classification_with_tariffs($classification, int $limit, int $start = 0, $filter = null, array $metro_ids = [])
-{
+function get_specialists_by_classification_with_tariffs(
+    $classification,
+    int $limit,
+    int $start = 0,
+    $filter = null,
+    array $metro_ids = [],
+    bool $ignore_metro = false,
+    array $selected_amenities = [],
+    array $selected_equipment = [],
+    array $selected_price = []
+) {
     global $data_base;
 
     // Определяем фильтр по компании/частному лицу
@@ -1791,12 +1871,53 @@ function get_specialists_by_classification_with_tariffs($classification, int $li
     $session_metro = array_map('intval', $session_metro);
 
     // Фильтр по метро: POST имеет приоритет, затем сессия
-    $effective_metro = !empty($metro_ids) ? $metro_ids : $session_metro;
-    if (!empty($effective_metro)) {
-        $placeholdersMetro = implode(',', array_fill(0, count($effective_metro), '?'));
-        $andFilter .= ' AND cm.id IN (' . $placeholdersMetro . ')';
-        foreach ($effective_metro as $m) {
-            $params[] = (int) $m;
+    if (!$ignore_metro) {
+        $effective_metro = !empty($metro_ids) ? $metro_ids : $session_metro;
+        if (!empty($effective_metro)) {
+            $placeholdersMetro = implode(',', array_fill(0, count($effective_metro), '?'));
+            $andFilter .= ' AND cm.id IN (' . $placeholdersMetro . ')';
+            foreach ($effective_metro as $m) {
+                $params[] = (int) $m;
+            }
+        }
+    }
+
+    // Фильтр по amenities (удобства) — специалист должен иметь ХОТЯ БЫ ОДНО из выбранных
+    if (!empty($selected_amenities)) {
+        $amenity_ids_str = implode(',', array_map('intval', $selected_amenities));
+        $andFilter .= " AND EXISTS (
+            SELECT 1 FROM dt_specialist_equipment se_am
+            WHERE se_am.specialist_id = s.id
+              AND se_am.equipment_id IN ($amenity_ids_str)
+        )";
+    }
+
+    // Фильтр по equipment (оборудование) — специалист должен иметь ХОТЯ БЫ ОДНО из выбранных
+    if (!empty($selected_equipment)) {
+        $equipment_ids_str = implode(',', array_map('intval', $selected_equipment));
+        $andFilter .= " AND EXISTS (
+            SELECT 1 FROM dt_specialist_equipment se_eq
+            WHERE se_eq.specialist_id = s.id
+              AND se_eq.equipment_id IN ($equipment_ids_str)
+        )";
+    }
+
+    // Фильтр по price (диапазоны)
+    if (!empty($selected_price)) {
+        $price_clauses = [];
+        $price_expr = "(SELECT MIN(price) FROM dt_specialist_service WHERE specialist_id = s.id)";
+
+        foreach ($selected_price as $range) {
+            if ($range === 'under_1000') {
+                $price_clauses[] = "($price_expr <= 1000)";
+            } elseif ($range === '1000_5000') {
+                $price_clauses[] = "($price_expr >= 1000 AND $price_expr <= 5000)";
+            } elseif ($range === 'over_5000') {
+                $price_clauses[] = "($price_expr >= 5000)";
+            }
+        }
+        if (!empty($price_clauses)) {
+            $andFilter .= ' AND (' . implode(' OR ', $price_clauses) . ')';
         }
     }
 
@@ -1889,7 +2010,7 @@ ORDER BY
     tmp.promo_record_id DESC,
     max_tariff DESC,
     tmp.computed_rating DESC,
-    tmp.id DESC
+    tmp.id ASC
 LIMIT {$start}, {$limit};
 ";
 
@@ -1897,7 +2018,67 @@ LIMIT {$start}, {$limit};
     return $data_base->selectAll($sql, $params);
 }
 
+function get_specialists_coordinates_by_ids(array $ids): array
+{
+    global $data_base;
 
+    if (empty($ids)) return [];
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+    return $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.slug,
+            c.title AS classification,
+            co.title AS company,
+            sc.coordinates,
+            sc.street,
+            sc.house,
+            m.name AS metro,
+            city.name AS city,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating,
+            (SELECT COUNT(*) FROM dt_specialist_review WHERE specialist_id = s.id) AS count_rating
+        FROM dt_specialist s
+        LEFT JOIN dt_specialist_contacts sc ON s.id = sc.specialist_id
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        LEFT JOIN dt_metro m ON sc.metro = m.id
+        LEFT JOIN dt_city city ON s.city_id = city.id
+        WHERE s.id IN ($placeholders)
+          AND s.deleted = 0
+          AND sc.coordinates IS NOT NULL
+          AND sc.coordinates != ''
+    ", $ids);
+}
+
+
+
+/**
+ * Подгружает список специализаций для специалистов.
+ * Используется для вывода случайной специализации без изменения исходного поля specialization.
+ *
+ * @param array $specialists Массив специалистов
+ * @return array Массив специалистов с полем specialization_list
+ */
+function loadSpecializationList(array $specialists): array
+{
+    global $data_base;
+
+    foreach ($specialists as &$spec) {
+        $spec['specialization_list'] = $data_base->selectAll(
+            "SELECT s.title
+             FROM dt_specialist_specialization ss
+             JOIN dt_service s ON ss.service_id = s.id
+             WHERE ss.specialist_id = ?",
+            [$spec['id']]
+        );
+    }
+
+    return $specialists;
+}
 
 // Возвращает результат поиска по специалистам (для окна поиска)
 function search_specialists(string $search)
@@ -2040,7 +2221,8 @@ function search_companies(string $search)
         $search = '%' . $search . '%';
     }
     $companies = $data_base->selectAll("SELECT com.*,
-                                        s.id as id_link
+                                        s.id as id_link,
+                                        s.slug as slug_link
                                         FROM dt_company com
                                         LEFT JOIN dt_specialist s ON s.company_id = com.id
                                         WHERE com.title $condition ? AND s.deleted = 0", [$search]);
@@ -2445,8 +2627,68 @@ function get_specialists_by_service(string $services, int $limit, int $start = 0
     return $specialists;
 }
 
-function get_specialists_by_service_with_tariffs(array $classification, string $services, int $limit, int $start = 0, $filter = null)
+// Возвращает случайных специалистов из категории
+function get_random_specialists_by_service(string $services, int $limit, int $start = 0)
 {
+    global $data_base;
+    $uri_arr = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+
+    // Определяем фильтр: "private" или "company"
+    $filter = end($uri_arr);
+    $and = '';
+
+    if ($filter === 'company') {
+        $and = 'AND s.company_id IS NOT NULL'; // Только компании
+    } elseif ($filter === 'private') {
+        $and = 'AND s.company_id IS NULL'; // Только частные специалисты
+    }
+
+    if (!$services)
+        $services = '-1';
+
+    $specialists = $data_base->selectAll("
+        SELECT
+            s.id,
+            s.name,
+            s.lastname,
+            s.photo,
+            IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating, -- Средний рейтинг из отзывов
+            c.title AS classification_title,
+            ci.name AS city_name,
+            (SELECT GROUP_CONCAT(se.title SEPARATOR ', ') FROM dt_service se WHERE se.id IN ($services)) AS specialization, -- Все услуги в одну строку
+            (SELECT GROUP_CONCAT(cm.name SEPARATOR ', ') FROM dt_metro cm WHERE cm.id = (SELECT metro FROM dt_specialist_contacts WHERE specialist_id = s.id)) AS metro_name, -- Метро в одну строку
+            co.title AS company_name,
+            (SELECT COUNT(specialist_id) FROM dt_specialist_specialization WHERE specialist_id = s.id) AS specialization_count
+        FROM dt_specialist s
+        LEFT JOIN dt_classification c ON s.classification_id = c.id
+        LEFT JOIN dt_city ci ON s.city_id = ci.id
+        LEFT JOIN dt_company co ON s.company_id = co.id
+        WHERE EXISTS (
+            SELECT 1
+            FROM dt_specialist_specialization
+            WHERE specialist_id = s.id AND service_id IN ($services)
+        )
+          AND s.city_id = ? $and
+          AND s.deleted = 0
+        GROUP BY s.id
+        ORDER BY RAND()
+        LIMIT $start, $limit
+    ", [$_SESSION['city']['id']]);
+
+    return $specialists;
+}
+
+function get_specialists_by_service_with_tariffs(
+    array $classification,
+    string $services,
+    int $limit,
+    int $start = 0,
+    $filter = null,
+    bool $ignore_metro = false,
+    array $selected_amenities = [],
+    array $selected_equipment = [],
+    array $selected_price = []
+) {
     global $data_base;
 
     // === Original code for obtaining service_ids_str ===
@@ -2501,11 +2743,50 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
     $params[] = $_SESSION['city']['id'];
 
     // Add metro filter if classification includes ID 4 and metro session exists
-    if (in_array(4, $classification, true) && !empty($_SESSION['metro'])) {
+    if (!$ignore_metro && in_array(4, $classification, true) && !empty($_SESSION['metro'])) {
         $metroIds = is_array($_SESSION['metro'])
             ? implode(',', array_map('intval', $_SESSION['metro']))
             : $_SESSION['metro'];
         $andFilter .= ' AND cm.id IN (' . $metroIds . ')';
+    }
+
+    // Фильтр по amenities (удобства) — специалист должен иметь ХОТЯ БЫ ОДНО из выбранных
+    if (!empty($selected_amenities)) {
+        $amenity_ids_str = implode(',', array_map('intval', $selected_amenities));
+        $andFilter .= " AND EXISTS (
+            SELECT 1 FROM dt_specialist_equipment se_am
+            WHERE se_am.specialist_id = s.id
+              AND se_am.equipment_id IN ($amenity_ids_str)
+        )";
+    }
+
+    // Фильтр по equipment (оборудование) — специалист должен иметь ХОТЯ БЫ ОДНО из выбранных
+    if (!empty($selected_equipment)) {
+        $equipment_ids_str = implode(',', array_map('intval', $selected_equipment));
+        $andFilter .= " AND EXISTS (
+            SELECT 1 FROM dt_specialist_equipment se_eq
+            WHERE se_eq.specialist_id = s.id
+              AND se_eq.equipment_id IN ($equipment_ids_str)
+        )";
+    }
+
+    // Фильтр по price (диапазоны — как в старом проекте)
+    if (!empty($selected_price)) {
+        $price_clauses = [];
+        $price_expr = "(SELECT MIN(price) FROM dt_specialist_service WHERE specialist_id = s.id)";
+
+        foreach ($selected_price as $range) {
+            if ($range === 'under_1000') {
+                $price_clauses[] = "($price_expr <= 1000)";
+            } elseif ($range === '1000_5000') {
+                $price_clauses[] = "($price_expr >= 1000 AND $price_expr <= 5000)";
+            } elseif ($range === 'over_5000') {
+                $price_clauses[] = "($price_expr >= 5000)";
+            }
+        }
+        if (!empty($price_clauses)) {
+            $andFilter .= ' AND (' . implode(' OR ', $price_clauses) . ')';
+        }
     }
 
     $sql = "
@@ -2532,6 +2813,12 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
            FROM dt_service se
           WHERE se.id IN ($service_ids_str)
         ) AS specialization,
+        (SELECT GROUP_CONCAT(se_all.title SEPARATOR ', ')
+           FROM dt_service se_all
+          WHERE se_all.id IN (
+              SELECT service_id FROM dt_specialist_specialization WHERE specialist_id = s.id
+          )
+        ) AS all_specializations,
         (SELECT GROUP_CONCAT(cm2.name SEPARATOR ', ')
            FROM dt_metro cm2
           WHERE cm2.id = (
@@ -2559,7 +2846,6 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
             WHERE specialist_id = s.id
               AND moderation = 0
         ) AS has_option,
-        /* Вытаскиваем минимальный sort активного промо для специалиста и выбранных услуг */
         (
         SELECT MIN(pl.sort)
         FROM dt_promo_list pl
@@ -2595,7 +2881,6 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
          WHERE specialist_id = s.id
     )
     WHERE (
-        /* фильтр по специализациям или активному промо */
         (SELECT MAX(service_id)
            FROM dt_specialist_specialization
           WHERE specialist_id = s.id
@@ -2626,7 +2911,8 @@ function get_specialists_by_service_with_tariffs(array $classification, string $
         promo_record_id DESC,
         promo_record_id IS NULL,
         max_tariff DESC,
-        computed_rating DESC
+        computed_rating DESC,
+        s.id ASC
     LIMIT $start, $limit
     ";
 
@@ -3197,7 +3483,6 @@ function get_promo_list(string $service_slug, int $limit = 8)
 
     $specialists = $data_base->selectAll($query, $params);
 
-    // If service_slug is block_top_specialists, handle promo specialists and fill with default random specialists
     if ($service_slug === 'block_top_specialists') {
         $specialists = get_top_specialists_with_promo($specialists, $limit);
     }
@@ -3245,9 +3530,9 @@ function get_top_specialists_with_promo(array $promo_specialists, int $limit = 8
     }
 
     // Calculate remaining specialists needed (target: 4 lawyers, 3 experts, 1 notary)
-    $needed_lawyers = max(0, 4 - $promo_counts['lawyers']);
-    $needed_experts = max(0, 3 - $promo_counts['experts']);
-    $needed_notaries = max(0, 1 - $promo_counts['notaries']);
+    $needed_lawyers = max(0, 0 - $promo_counts['lawyers']);
+    $needed_experts = max(0, 8 - $promo_counts['experts']);
+    $needed_notaries = max(0, 0 - $promo_counts['notaries']);
 
     $default_specialists = [];
 
@@ -3294,18 +3579,18 @@ function get_default_top_specialists(int $limit = 8)
     $specialists = [];
     $used_ids = [];
 
-    // Fetch 4 lawyers
-    $lawyers = fetch_specialists_by_classification($lawyer_classifications, 4, $used_ids);
+    // Fetch 0 lawyers
+    $lawyers = fetch_specialists_by_classification($lawyer_classifications, 0, $used_ids);
     $specialists = array_merge($specialists, $lawyers);
     $used_ids = array_merge($used_ids, array_column($lawyers, 'id'));
 
-    // Fetch 3 experts
-    $experts = fetch_specialists_by_classification($expert_classifications, 3, $used_ids);
+    // Fetch 8 experts
+    $experts = fetch_specialists_by_classification($expert_classifications, 8, $used_ids);
     $specialists = array_merge($specialists, $experts);
     $used_ids = array_merge($used_ids, array_column($experts, 'id'));
 
-    // Fetch 1 notary
-    $notaries = fetch_specialists_by_classification($notary_classifications, 1, $used_ids);
+    // Fetch 0 notary
+    $notaries = fetch_specialists_by_classification($notary_classifications, 0, $used_ids);
     $specialists = array_merge($specialists, $notaries);
 
     // Shuffle specialists to mix them
@@ -3344,6 +3629,7 @@ function fetch_specialists_by_classification(array $classifications, int $count,
         LEFT JOIN dt_company co ON s.company_id = co.id
         WHERE s.classification_id $where
         AND s.city_id = ?
+        AND s.deleted = 0
         $exclude_clause
         AND IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) >= 0
         GROUP BY s.id
@@ -3371,7 +3657,7 @@ function get_alias_from_url()
     $last_segment = end($uri_arr);
 
     // Массив допустимых окончаний
-    $valid_endings = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+    $valid_endings = ['yuristy-i-advokaty', 'yoga-studii', 'notariusy'];
 
     // Если последний элемент в URL соответствует одному из указанных значений и это не alias,
     // добавляем слэш в конец
@@ -3469,7 +3755,7 @@ function get_journal_post_meta($alias)
                     5 => 'юридической компании',
                     6 => 'коллегии адвокатов',
                     7 => 'адвокатского бюро',
-                    8 => 'экспертного учреждения',
+                    8 => 'студии йоги',
                 ];
 
                 if (isset($classificationMap[$specClassId])) {
@@ -3481,16 +3767,16 @@ function get_journal_post_meta($alias)
                 // Определяем имя владельца
                 if ($company) {
                     $ownerName = $company['title'];
-                    $title = "Блог {$phrase} «{$ownerName}» на ЮРФАК-ЖУРНАЛ | ЮРФАК.РУ";
-                    $description = "Авторский блог {$phrase} «{$ownerName}»: интересные случаи из практики, разбор законодательства, профессиональные советы и мнения экспертов.";
+                    $title = "Блог {$phrase} «{$ownerName}» на ЙОГУРТ-ЖУРНАЛ | ЙОГУРТ.РУ";
+                    $description = "Авторский блог {$phrase} «{$ownerName}»: разбор тренировок и медитаций, события, достижения студии и экспертные мнения преподавателей.";
                 } else {
                     $ownerName = morphos\Russian\inflectName($spec['lastname'] . ' ' . $spec['name'], 'родительный');
                     $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
-                    $title = "Блог {$phrase} {$ownerName} на ЮРФАК-ЖУРНАЛ | ЮРФАК.РУ";
-                    $description = "Авторский блог {$phrase} {$ownerName}: интересные случаи из практики, разбор законодательства, профессиональные советы и мнения экспертов.";
+                    $title = "Блог {$phrase} {$ownerName} на ЙОГУРТ-ЖУРНАЛ | ЙОГУРТ.РУ";
+                    $description = "Авторский блог {$phrase} {$ownerName}: разбор тренировок и медитаций, события, достижения студии и экспертные мнения преподавателей.";
                 }
 
-                $keywords = 'авторский блог, экспертное мнение, новости законодательства, судебная практика, правовые советы, экспертные советы';
+                $keywords = 'авторский блог, экспертное мнение, студии йоги, йога, медитации, тренировки';
 
                 return [
                     'title'       => $title,
@@ -3521,7 +3807,7 @@ function get_journal_post_meta($alias)
 
     // 3) Поиск в dt_service
     $service = $data_base->selectRow(
-        "SELECT title, meta_title_journal, meta_description_journal
+        "SELECT title, meta_title_journal, meta_description_journal, meta_keywords_journal
          FROM dt_service WHERE slug = ?",
         [$alias]
     );
@@ -3535,7 +3821,9 @@ function get_journal_post_meta($alias)
                 'description' => !empty($service['meta_description_journal'])
                     ? strip_tags(html_entity_decode($service['meta_description_journal']))
                     : '',
-                'keywords'    => '',
+                'keywords'    => !empty($service['meta_keywords_journal'])
+                    ? strip_tags(html_entity_decode($service['meta_keywords_journal']))
+                    : '',
             ];
         }
     }
@@ -3593,6 +3881,26 @@ function get_specialist_meta($id)
 function get_page_meta($url)
 {
     global $data_base;
+
+    $queryParams = $_GET;
+
+    // Если это страница action — проверяем параметры
+    if ($url === 'action') {
+        if (isset($queryParams['confirmation'])) {
+            return [
+                'title' => 'Завершение подтверждения страницы на сайте | ЙОГУРТ.РУ',
+                'description' => 'Подтверждение страницы на портале студий йоги. Студии с отзывами и рейтингом.',
+                'keywords' => 'йога, йога-студии, студии йоги, записаться на йогу'
+            ];
+        }
+        if (isset($queryParams['recovery'])) {
+            return [
+                'title' => 'Завершение восстановления пароля на сайте | ЙОГУРТ.РУ',
+                'description' => 'Восстановление пароля на портале студий йоги. Студии с отзывами и рейтингом.',
+                'keywords' => 'йога, йога-студии, студии йоги, записаться на йогу'
+            ];
+        }
+    }
 
     // Поиск в dt_pages
     $page = $data_base->selectRow("SELECT title, description, keywords FROM dt_pages WHERE url = ?", [$url]);
@@ -3805,22 +4113,35 @@ function clear_deleted_user_email_by_email(string $email): bool
 {
     global $data_base;
 
-    // Проверяем, есть ли пользователь с таким email и статусом deleted = 1
     $user = $data_base->selectRow(
-        "SELECT id FROM dt_specialist WHERE email = ? AND deleted = 1 LIMIT 1",
+        "SELECT id, deleted_at 
+         FROM dt_specialist 
+         WHERE email = ? 
+           AND deleted = 1 
+           AND deleted_at IS NOT NULL
+         LIMIT 1",
         [$email]
     );
 
-    if ($user) {
-        // Обнуляем email, чтобы новый пользователь мог зарегистрироваться
-        $data_base->update(
-            "UPDATE dt_specialist SET email = '' WHERE id = ?",
-            [$user['id']]
-        );
-        return true;
+    if (!$user) {
+        return false;
     }
 
-    return false;
+    $deletedTs = strtotime($user['deleted_at']);
+
+    // если прошло 30 суток или больше
+    if (time() - $deletedTs < 30 * 24 * 60 * 60) {
+        return false;
+    }
+
+    $data_base->update(
+        "UPDATE dt_specialist 
+         SET email = '' 
+         WHERE id = ?",
+        [$user['id']]
+    );
+
+    return true;
 }
 
 // Выводит id последнего пользователя
@@ -3841,7 +4162,7 @@ function check_hash(string $hash, int $user_id)
 function activate_user(string $hash, int $user_id)
 {
     global $data_base;
-    return $data_base->update("UPDATE dt_specialist SET hash = ?, active = 1, registered_at = NOW()  WHERE id = ?", [$hash, $user_id]);
+    return $data_base->update("UPDATE dt_specialist SET hash = ?, active = 1  WHERE id = ?", [$hash, $user_id]);
 }
 
 // Обновление аватара пользователя
@@ -3850,6 +4171,19 @@ function set_user_avatar(string $image, int $user_id)
     global $data_base;
     return $data_base->update("UPDATE dt_specialist SET photo = ? WHERE id = ?", [$image, $user_id]);
 }
+// Обновление JSON-галереи пользователя
+function set_user_gallery(string $gallery_json, int $user_id)
+{
+    global $data_base;
+    return $data_base->update("UPDATE dt_specialist SET gallery = ? WHERE id = ?", [$gallery_json, $user_id]);
+}
+// Обновление JSON-залов пользователя
+function set_user_rooms(string $rooms_json, int $user_id)
+{
+    global $data_base;
+    return $data_base->update("UPDATE dt_specialist SET rooms = ? WHERE id = ?", [$rooms_json, $user_id]);
+}
+
 // Смена пароля
 function set_new_password(string $new_pass, int $user_id)
 {
@@ -3869,6 +4203,31 @@ function recover_user(int $user_id)
 {
     global $data_base;
     return $data_base->update("UPDATE dt_specialist SET deleted = 0, deleted_at = NULL WHERE id = ?", [$user_id]);
+}
+
+function add_recovery_token(int $user_id): string
+{
+    global $data_base;
+
+    // Генерируем случайный токен
+    $token = bin2hex(random_bytes(16)); // 32-символьная строка
+
+    // Записываем токен в поле recovery_token пользователя
+    $data_base->update(
+        "UPDATE dt_specialist SET recovery_token = ? WHERE id = ?",
+        [$token, $user_id]
+    );
+
+    return $token;
+}
+
+function clear_recovery_token(int $user_id)
+{
+    global $data_base;
+    $data_base->update(
+        "UPDATE dt_specialist SET recovery_token = NULL WHERE id = ?",
+        [$user_id]
+    );
 }
 
 // Возвращает дочернюю страницу раздела faq
@@ -3994,29 +4353,81 @@ function set_review(array $data)
     }
 
     return $data_base->add(
-        "INSERT INTO dt_specialist_review (specialist_id, user_id, rating, review, author, communication) 
-         VALUES (?, ?, ?, ?, ?, ?)",
-        [(int) $data['specialist'], $user_id, (int) $data['rating'], $data['review'], $data['name'], $data['contact']]
+        "INSERT INTO dt_specialist_review_all (specialist_id, user_id, rating, review, author, communication, verification_code, is_active) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            (int) $data['specialist'], 
+            $user_id, 
+            (int) $data['rating'], 
+            $data['review'], 
+            $data['name'], 
+            $data['contact'],
+            $data['v_code'], 
+            0 
+        ]
     );
 }
 
+function check_review_code(int $review_id, string $code)
+{
+    global $data_base;
+    return $data_base->exists("SELECT EXISTS(SELECT 1 FROM dt_specialist_review_all WHERE verification_code = ? AND id = ?)", [$code, $review_id]);
+}
+
+function activate_review(int $review_id) 
+{
+    global $data_base;
+    return $data_base->update("UPDATE dt_specialist_review_all SET is_active = 1 WHERE id = ?", [$review_id]);
+}
 
 // Обновляет основную информацию о специалисте
 function update_specialist(array $data)
 {
     global $data_base;
+    $specialistId = (int) $_SESSION['user']['id'];
+
+    // Если пользователь — компания, слаг строится только из названия компании
+    // (это уже сделала update_company()), тут его трогать нельзя
+    $isCompany = !empty($data['company_id']);
+
+    // 1. Получаем текущие имя, фамилию и слаг из базы для проверки
+    $current = $data_base->selectRow("SELECT name, lastname, slug FROM dt_specialist WHERE id = ?", [$specialistId]);
+
+    // 2. Если изменилось имя/фамилия ИЛИ слага в базе вообще нет — обновляем со слагом
+    // (только для частных специалистов, не для компаний)
+    if (!$isCompany && $current && ($data['name'] !== $current['name'] || $data['lastname'] !== $current['lastname'] || empty($current['slug']))) {
+        
+        $slugBase = trim($data['name'] . ' ' . $data['lastname']);
+        $finalSlug = generateAlias($slugBase) . '-' . $specialistId;
+
+        return $data_base->update("UPDATE dt_specialist SET
+                                        name = ?,
+                                        lastname = ?,
+                                        classification_id = ?,
+                                        city_id = ?,
+                                        slug = ?
+                                    WHERE id = ?", [
+            $data['name'],
+            $data['lastname'],
+            (int) $data['classification'],
+            (int) $data['city_id'],
+            $finalSlug,
+            $specialistId
+        ]);
+    }
+
+    // 3. Если ничего не менялось, обновляем только стандартные поля (слаг не трогаем)
     return $data_base->update("UPDATE dt_specialist SET
-                                                        name = ?,
-                                                        lastname = ?,
-                                                        classification_id = ?,
-                                                        city_id = ?
-                                                    WHERE
-                                                        id = ?", [
+                                    name = ?,
+                                    lastname = ?,
+                                    classification_id = ?,
+                                    city_id = ?
+                                WHERE id = ?", [
         $data['name'],
         $data['lastname'],
         (int) $data['classification'],
         (int) $data['city_id'],
-        (int) $_SESSION['user']['id']
+        $specialistId
     ]);
 }
 
@@ -4041,9 +4452,25 @@ function update_specialist_description(array $data)
 function update_company(string $title, int $id)
 {
     global $data_base;
-    return $data_base->update("UPDATE dt_company SET title = ? WHERE id = ?", [$title, $id]);
-}
 
+    // 1. Получаем текущее название компании и данные специалиста для проверки
+    $currentCompany = $data_base->selectRow("SELECT title FROM dt_company WHERE id = ?", [$id]);
+    $specialist = $data_base->selectRow("SELECT id, slug FROM dt_specialist WHERE company_id = ?", [$id]);
+
+    // 2. Обновляем название компании в её родной таблице
+    $result = $data_base->update("UPDATE dt_company SET title = ? WHERE id = ?", [$title, $id]);
+
+    // 3. Если название изменилось ИЛИ у связанного специалиста нет слага — обновляем слаг в dt_specialist
+    if ($specialist && ($currentCompany && $title !== $currentCompany['title'] || empty($specialist['slug']))) {
+        
+        $specialistId = (int) $specialist['id'];
+        $finalSlug = generateAlias($title) . '-' . $specialistId;
+        
+        $data_base->update("UPDATE dt_specialist SET slug = ? WHERE id = ?", [$finalSlug, $specialistId]);
+    }
+
+    return $result;
+}
 // Проверяет что компания принадлежит пользователю
 function check_company(int $company_id)
 {
@@ -4116,6 +4543,31 @@ function unset_specialist_specializations()
 {
     global $data_base;
     return $data_base->delete("DELETE FROM `dt_specialist_specialization` WHERE specialist_id = ?", [$_SESSION['user']['id']]);
+}
+
+/**
+ * Добавляет удобство или оборудование специалиста в базу данных
+ * 
+ * @param int $specialist_id
+ * @param int $equipment_id
+ * @return mixed
+ */
+function set_specialist_equipment(int $specialist_id, int $equipment_id)
+{
+    global $data_base;
+    return $data_base->add("INSERT INTO dt_specialist_equipment (specialist_id, equipment_id)
+                                    VALUE (?, ?)", [$specialist_id, $equipment_id]);
+}
+
+/**
+ * Удаляет все выбранные удобства и оборудование специалиста
+ * 
+ * @return mixed
+ */
+function unset_specialist_equipment()
+{
+    global $data_base;
+    return $data_base->delete("DELETE FROM `dt_specialist_equipment` WHERE specialist_id = ?", [$_SESSION['user']['id']]);
 }
 
 // Удалет все услуги специалиста
@@ -4258,6 +4710,3 @@ function update_last_modified(): bool
         [$now]
     );
 }
-
-
-

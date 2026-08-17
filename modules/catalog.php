@@ -20,8 +20,9 @@ $data = [];
 // Определяем текущий путь без query-параметров
 $clean_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri_arr = explode('/', trim($clean_path, '/'));
+$uri_arr = array_values(array_filter($uri_arr, 'strlen')); // удаляем пустые и переиндексируем
 
-// Определяем фильтр, если он есть в конце URL
+// Фильтр private/company (если есть в конце)
 $filter = null;
 $last_segment = end($uri_arr);
 if (in_array($last_segment, ['private', 'company'])) {
@@ -29,29 +30,122 @@ if (in_array($last_segment, ['private', 'company'])) {
     $filter_type_url = $last_segment;
     array_pop($uri_arr); // удаляем фильтр из массива
 }
+// Если путь пустой — ставим корень
+if (empty($uri_arr)) {
+    $uri_arr = ['yuristy-i-advokaty'];
+}
 
-// Категория или подкатегория
-$requestion_str = end($uri_arr);
-$requestion = $requestion_str !== '' ? strtok($requestion_str, '?') : 'yuristy-i-advokaty';
+$first = $uri_arr[0];
 
-// Первый сегмент — это родительская категория
-$service_parent_slug = $uri_arr[0] ?? 'yuristy-i-advokaty';
+// Получаем данные из БД по первому сегменту
+$service_parent = get_service_parent_by_slug($first);
+$first_category = get_service_by_slug($first);
 
-// Получаем данные из БД
-$service_parent = get_service_parent_by_slug($service_parent_slug);
+// Если только один сегмент в URL
+if (count($uri_arr) === 1) {
+    if (!$service_parent && !$first_category && !in_array($first, get_catalog_slugs(), true)) {
+        responseRedirect('/404');
+    }
 
-// Проверка существования категории
-$category = get_service_by_slug($requestion);
-if (!$category && !in_array($requestion, get_catalog_slugs(), true)) {
+    if ($service_parent) {
+        $category = null;
+    } else {
+        $category = $first_category;
+        $service_parent = null;
+    }
+} else {
+    // Многосегментный URL — проверяем вложенность
+    if ($service_parent) {
+        $previous_type = 'parent';
+        $category = null;
+    } else {
+        responseRedirect('/404');
+    }
+
+    // Проходим по остальным сегментам
+    foreach (array_slice($uri_arr, 1) as $slug) {
+        $item = get_service_by_slug($slug);
+        if (!$item) {
+            responseRedirect('/404');
+        }
+
+        if ($previous_type === 'parent') {
+            // Для верхнего уровня p_id должен быть 0
+            if ((int)$item['p_id'] !== 0) {
+                responseRedirect('/404');
+            }
+        } else { // предыдущий — категория
+            if ((int)$item['p_id'] !== $previous_id) {
+                responseRedirect('/404');
+            }
+        }
+
+        $category = $item;
+        $previous_type = 'category';
+        $previous_id = (int)$item['id'];
+    }
+}
+
+// Определяем target_category_id
+if (!empty($category)) {
+    $target_category_id = (int)$category['id'];
+} elseif (!empty($service_parent)) {
+    $target_category_id = (int)$service_parent['id'];
+} else {
     responseRedirect('/404');
+}
+
+$selected_amenities = !empty($_GET['amenities']) ? array_filter(array_map('intval', explode(',', $_GET['amenities']))) : [];
+$selected_equipment = !empty($_GET['equipment']) ? array_filter(array_map('intval', explode(',', $_GET['equipment']))) : [];
+$selected_price = !empty($_GET['price']) ? array_filter(explode(',', $_GET['price'])) : [];
+
+// Объединяем всё в единый массив ID, которые должны быть у студии
+$all_required_filters = array_merge($selected_amenities, $selected_equipment);
+
+// --- Настройка для функции получения специалистов ---
+// Формируем строгий $services и $classification_array
+if ($category) {
+    $services = (string)$category['id'];
+    $classification_array = $category['classification_array'] ?? [$category['classification']];
+} elseif ($service_parent) {
+    $child_services = get_services_by_parrent_id((int)$service_parent['id']);
+    if ($child_services) {
+        $services = implode(',', array_column($child_services, 'id'));
+        $classification_array = [];
+        foreach ($child_services as $c) {
+            $classification_array[] = $c['classification'];
+        }
+    } else {
+        $services = (string)$service_parent['id'];
+        $classification_array = [$service_parent['classification']];
+    }
+} else {
+    $services = '';
+    $classification_array = [];
+}
+
+// Получаем специалистов строго по выбранной категории
+$specialists_with_tarrifs = get_specialists_by_service_with_tariffs(
+    $classification_array,
+    $services,
+    $limit ?? 24,
+    $start ?? 0
+);
+
+// Если специалистов нет — массив пустой
+if (!$specialists_with_tarrifs) {
+    $specialists_with_tarrifs = [];
 }
 
 // Данные пагинации
 $start = 0;
 
-$mobile_btn_title = "Выбрать подраздел";
-if (!$category) {
-    $mobile_btn_title = "Выбрать раздел";
+$total_filters_count = count($selected_amenities) + count($selected_equipment) +count($selected_price);
+
+$mobile_btn_title = "Фильтры";
+// Если выбрано больше 0, добавляем общее число в скобках
+if ($total_filters_count > 0) {
+    $mobile_btn_title = "Фильтры ($total_filters_count)";
 }
 $mobile_btn_class = "";
 
@@ -87,6 +181,70 @@ if ($category) {
         cityGenitive: $cityGenitive,
     );
 
+    // Метки фильтров
+    $filter_labels = [
+        'private' => 'Частные',
+        'company' => 'Юридические компании'
+    ];
+
+    // Собираем h1
+    $h1 = $category
+        ? $vars['h1'] . ' «' . $category['title'] . '»'
+        : $vars['h1'];
+
+    // Если есть фильтр — модифицируем h1
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            // ваша существующая логика
+            $h1 = $filter_labels[$filter]
+                . ' '
+                . mb_strtolower(mb_substr($h1, 0, 1))
+                . mb_substr($h1, 1);
+        } else { // company
+            // 1) Юристы и адвокаты
+            if (mb_stripos($h1, 'Юристы и адвокаты') === 0) {
+                $h1 = preg_replace(
+                    '/^Юристы и адвокаты/ui',
+                    $filter_labels[$filter],
+                    $h1
+                );
+            }
+            // 2) Студии йоги
+            elseif (mb_stripos($h1, 'Студии йоги') === 0) {
+                $h1 = preg_replace(
+                    '/^Студии йоги/ui',
+                    'Студии йоги',
+                    $h1
+                );
+            }
+            // (при необходимости можно добавить здесь и другие секции)
+        }
+    }
+    if ($cityGenitive) {
+        $basePhrases = [
+            'Юристы и адвокаты',
+            'Студии йоги',
+            'Нотариусы',
+            'Юридические компании',
+            'Студии йоги'
+        ];
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
+
+        if (preg_match($regex, $h1, $m)) {
+            $full = $m[0];
+            $rest = mb_substr($h1, mb_strlen($full));
+            $h1   = $full . ' ' . $cityGenitive . $rest;
+        } else {
+            // Если ни одна ключевая фраза не найдена, добавляем город в конец
+            $h1 .= ' ' . $cityGenitive;
+        }
+    }
+
     $pre_list_text = $vars['pre_list'] . " по направлению";
 
     // меню-фильтр для мобилки
@@ -105,7 +263,7 @@ if ($category) {
         // Если подкатегорий нет, формируем строку с только текущими услугами
         $services = $category['id'];
         $mobile_links = get_services_by_classification($category['classification'], 0);
-        $mobile_btn_class = " hidden";
+        $mobile_btn_class = "";
     } else {
         // Если есть подкатегории, добавляем их в список услуг
         /* $services = $list = implode(',', array_keys((array)$links)) . ',' . $category['id']; */
@@ -115,7 +273,20 @@ if ($category) {
     $count = count_specialists_by_service($category['classification_array'], $services);
 
     $specialists = get_specialists_by_service($services, $limit, $start);
-    $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start);
+    $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start, null, false, $selected_amenities, $selected_equipment, $selected_price);
+    $specialists_with_tarrifs = loadSpecializationList($specialists_with_tarrifs);
+    
+    // Формирование JSON LD
+    $jsonld_limit = 20;
+    $jsonld_start = ($page - 1) * $jsonld_limit;
+
+    // Получаем специалистов для JSON-LD
+    $specialists_jsonld = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $jsonld_limit, $jsonld_start);
+    $specialists_without_limit = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start);
+    $specialists_to_map = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start, null, true);
+
+    $data['catalog_specialists'] = block_catalog($specialists_with_tarrifs);
+    $data['catalog_specialists_mob'] = block_mobile($specialists_with_tarrifs);
 
     /* $specialists_with_tarrifs = getCachedData(
         'catalog_by_service', 
@@ -129,14 +300,6 @@ if ($category) {
             );
         }
     ); */
-
-    // Формирование JSON LD
-    $jsonld_limit = 20;
-    $jsonld_start = ($page - 1) * $jsonld_limit;
-
-    // Получаем специалистов для JSON-LD
-    $specialists_jsonld = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $jsonld_limit, $jsonld_start);
-    $specialists_without_limit = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start);
 
     // Формируем заголовок с фильтром, если есть
     $categoryTitle = $category['title'];
@@ -198,9 +361,9 @@ if (!$category) {
 
     $slugs = [
         3 => [
-            'slug'  => 'experty',
+            'slug'  => 'yoga-studii',
             'class' => 'find_expert',
-            'text'  => 'Все ' . mb_strtolower($service_parent['title'] ?? 'эксперты')
+            'text'  => 'Все ' . mb_strtolower($service_parent['title'] ?? 'Студии йоги')
         ],
         'default' => [
             'slug'  => 'yuristy-i-advokaty',
@@ -227,7 +390,11 @@ if (!$category) {
 
     // Заголовок кнопки (если нужно)
     if ($classification['id'] == 3) {
-        $mobile_btn_title = "Вид экспертизы";
+        $mobile_btn_title = "Фильтры";
+        if ($total_filters_count > 0) {
+            $mobile_btn_title = "Фильтры ($total_filters_count)";
+        }
+        $mobile_btn_class = "";
     }
 
     // Собираем <li>
@@ -266,6 +433,67 @@ if (!$category) {
         cityGenitive: $cityGenitive
     );
 
+    // Метки фильтров
+    $filter_labels = [
+        'private' => 'Частные',
+        'company' => 'Юридические компании'
+    ];
+
+    // Собираем h1
+    $h1 = $category
+        ? $vars['h1'] . ' «' . $category['title'] . '»'
+        : $vars['h1'];
+
+    // Если есть фильтр — модифицируем h1
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            // ваша существующая логика
+            $h1 = $filter_labels[$filter]
+                . ' '
+                . mb_strtolower(mb_substr($h1, 0, 1))
+                . mb_substr($h1, 1);
+        } else { // company
+            // 1) Юристы и адвокаты
+            if (mb_stripos($h1, 'Юристы и адвокаты') === 0) {
+                $h1 = preg_replace(
+                    '/^Юристы и адвокаты/ui',
+                    $filter_labels[$filter],
+                    $h1
+                );
+            }
+            // 2) Студии йоги
+            elseif (mb_stripos($h1, 'Студии йоги') === 0) {
+                $h1 = preg_replace(
+                    '/^Студии йоги/ui',
+                    'Студии йоги',
+                    $h1
+                );
+            }
+            // (при необходимости можно добавить здесь и другие секции)
+        }
+    }
+    if ($cityGenitive) {
+        $basePhrases = [
+            'Студии йоги',
+            'Занятия по йоге'
+        ];
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
+
+        if (preg_match($regex, $h1, $m)) {
+            $full = $m[0];
+            $rest = mb_substr($h1, mb_strlen($full));
+            $h1   = $full . ' ' . $cityGenitive . $rest;
+        } else {
+            // Если ни одна ключевая фраза не найдена, добавляем город в конец
+            $h1 .= ' ' . $cityGenitive;
+        }
+    }
+
     $category_mob = false;
     $mobile_filter_class = "";
 
@@ -275,7 +503,19 @@ if (!$category) {
 
     $count = count_specialists_by_classification($vars['classification']);
     $specialists = get_specialists_by_classification($vars['classification'], $limit, $start);
-    $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($vars['classification'], $limit, $start);
+    $specialists_with_tarrifs = get_specialists_by_classification_with_tariffs($vars['classification'], $limit, $start, null, [], false, $selected_amenities, $selected_equipment, $selected_price);
+    $specialists_with_tarrifs = loadSpecializationList($specialists_with_tarrifs);
+    // Формирование JSON LD
+    $jsonld_limit = 20;
+    $jsonld_start = ($page - 1) * $jsonld_limit;
+
+    // Получаем специалистов для JSON-LD
+    $specialists_jsonld = get_specialists_by_classification_with_tariffs($vars['classification'], $jsonld_limit, $jsonld_start);
+    $specialists_without_limit = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start);
+    $specialists_to_map = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start, null, [], true);
+
+    $data['catalog_specialists'] = block_catalog($specialists_with_tarrifs, false, true);
+    $data['catalog_specialists_mob'] = block_mobile($specialists_with_tarrifs, false, true);
 
     /* $specialists_with_tarrifs = getCachedData(
         'catalog_by_classification', 
@@ -288,14 +528,6 @@ if (!$category) {
             );
         }
     ); */
-
-    // Формирование JSON LD
-    $jsonld_limit = 20;
-    $jsonld_start = ($page - 1) * $jsonld_limit;
-
-    // Получаем специалистов для JSON-LD
-    $specialists_jsonld = get_specialists_by_classification_with_tariffs($vars['classification'], $jsonld_limit, $jsonld_start);
-    $specialists_without_limit = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start);
 
     // CollectionPage JSON-LD
     echo generateSpecialistsCollectionPageJsonLd(
@@ -326,47 +558,197 @@ if (!$category) {
     );
 }
 
+$get_amenities = !empty($_GET['amenities']) ? explode(',', $_GET['amenities']) : [];
+$get_equipment = !empty($_GET['equipment']) ? explode(',', $_GET['equipment']) : [];
+$get_price = !empty($_GET['price']) ? explode(',', $_GET['price']) : [];
 
-$data['catalog_mobile_filter'] = '<div class="big-mobile-popup mobile-subcat-block' . $mobile_filter_class . '">
-                                        <a class="close"></a>
-                                        <div class="subcat__section-title">' . $mobile_filter_title . '</div>
-                                        <ul class="menu-links-mobile">' . $first_cat;
+$all_amenities = get_equipment_by_category('amenity');
+$all_equipment = get_equipment_by_category('equipment');
 
-// Получаем текущие параметры URL
-$current_params = $_SERVER['QUERY_STRING']; // Получаем строку параметров, например, "specialist=true&company=true"
+$price_options = [
+    ['id' => 'under_1000', 'name' => "Менее 1000 ₽"],
+    ['id' => '1000_5000',  'name' => "1000 ₽ - 5000 ₽"],
+    ['id' => 'over_5000',  'name' => "Более 5000 ₽"]
+];
 
-foreach ($mobile_links as $link) {
-    $class_link = get_classification_link($link['classification']);
-    // Формируем базовую ссылку для подраздела
-    $url = '/' . $class_link . '/' . ($category_mob ? $category_mob['slug'] . '/' : '') . $link["slug"];
+$data['catalog_mobile_filter'] = '
+<div class="big-mobile-popup mobile-subcat-block filter-popup-flex ' . $mobile_filter_class . '">
+    <div class="mobile-filter-main-body">
+        <a class="close"></a>
 
-    // Если есть параметры в текущем URL, добавляем их в ссылку
-    /* if (!empty($current_params)) {
-        $url .= '?' . $current_params;
-    } */
-
-    // Если в названии ссылки есть слово 'прочие', мы добавляем её отдельно
-    if (mb_stripos($link['title'], 'прочие') !== false) {
-        $last_link = '<li class="' . $link["slug"] . '"><a href="' . $url . '">' . $link["title"] . '</a></li>';
-    } else {
-        $data['catalog_mobile_filter'] .= '<li class="' . $link["slug"] . '"' .
-            (!empty($link['icon']) ? ' style="background-image: url(../assets/img/' . $link['icon'] . ');"' : '') . '>
-    <a href="' . $url . '">' . $link["title"] . '</a>
-</li>';
-    }
+        <div class="mobile-filter-section mobile-filter-section-amenity">
+            <div class="mobile-filter-title">Удобства в студии</div>
+            <div class="mobile-filter-list custom-select-scroll">';
+foreach ($all_amenities as $item) {
+    $checked = in_array($item['id'], $get_amenities) ? 'checked' : '';
+    $data['catalog_mobile_filter'] .= '
+                <label class="dropdown-item">
+                    <span>' . htmlspecialchars($item['name']) . '</span>
+                    <input type="checkbox" class="mob-amenity-ch" value="' . $item['id'] . '" ' . $checked . '>
+                </label>';
 }
+$data['catalog_mobile_filter'] .= '
+            </div>
+        </div>
 
-if (isset($last_link) && $last_link != '') {
-    $data['catalog_mobile_filter'] .= $last_link;
+        <div class="mobile-filter-section mobile-filter-section-equipment">
+            <div class="mobile-filter-title">Оборудование в студии</div>
+            <div class="mobile-filter-list custom-select-scroll">';
+foreach ($all_equipment as $item) {
+    $checked = in_array($item['id'], $get_equipment) ? 'checked' : '';
+    $data['catalog_mobile_filter'] .= '
+                <label class="dropdown-item">
+                    <span>' . htmlspecialchars($item['name']) . '</span>
+                    <input type="checkbox" class="mob-equipment-ch" value="' . $item['id'] . '" ' . $checked . '>
+                </label>';
 }
+$data['catalog_mobile_filter'] .= '
+            </div>
+        </div>
 
-$data['catalog_mobile_filter'] .= '</ul></div>';
+        <div class="mobile-filter-section mobile-filter-section-price">
+            <div class="mobile-filter-title">Стоимость занятия</div>
+            <div class="mobile-filter-list custom-select-scroll">';
+foreach ($price_options as $item) {
+    $checked = in_array($item['id'], $get_price) ? 'checked' : '';
+    $data['catalog_mobile_filter'] .= '
+                <label class="dropdown-item">
+                    <span>' . htmlspecialchars($item['name']) . '</span>
+                    <input type="checkbox" class="mob-price-ch" value="' . $item['id'] . '" ' . $checked . '>
+                </label>';
+}
+$data['catalog_mobile_filter'] .= '
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="dropdown-divider"></div>
+    <div class="mobile-filter-footer">
+        <button type="button" class="btn-confirm-mobile">Подтвердить</button>
+        <button type="button" class="btn-reset-mobile">Сбросить</button>
+    </div>
+</div>';
+
+$map_ids_json = "'" . implode(',', array_column($specialists_to_map, 'id')) . "'";
+
+$h1_map = $h1 . ' с учетом заданных фильтров';
+
+$data['popup_map'] = '
+    <div class="popup map">
+        <div class="bg"></div>
+        <div class="window">
+            <div class="close"></div>
+            <div class="reg">
+                <div class="name">' . $h1_map . '</div>
+                <div class="mmap">
+                    <div id="catalog_map" style="width: 100%; height: 60vh; min-height: 350px; max-height: 700px;"></div>
+                    
+                    <script src="https://api-maps.yandex.ru/2.1/?apikey=129a1c0b-f07a-49fa-96f8-abd7d687e8e9&lang=ru_RU" type="text/javascript"></script>
+                   <script type="text/javascript">
+                        var myMap; 
+                        var allPoints = [];
+                        var allPlacemarks = {};
+                        var isMapDataLoaded = false;
+                        var updateTimer = null;
+
+                        ymaps.ready(function () {
+                            myMap = new ymaps.Map("catalog_map", {
+                                center: [55.751244, 37.618423],
+                                zoom: 10,
+                                controls: ["zoomControl", "fullscreenControl"]
+                            }, {
+                                searchControlProvider: "yandex#search",
+                                balloonPanelMaxMapArea: 0
+                            });
+
+                            var clusterer = new ymaps.Clusterer({
+                                preset: "islands#invertedOrangeClusterIcons",
+                                clusterIconColor: "#F2606C",
+                                groupByCoordinates: false
+                            });
+                            myMap.geoObjects.add(clusterer);
+
+                            function groupPoints(points) {
+                                var grouped = {};
+                                points.forEach(function(p) {
+                                    var k = p.lat + "_" + p.lng;
+                                    if (!grouped[k]) grouped[k] = { lat: p.lat, lng: p.lng, items: [] };
+                                    grouped[k].items.push(p);
+                                });
+                                return grouped;
+                            }
+
+                            // Привязываем функции к window, чтобы они точно были доступны везде
+                            window.updateVisible = function() {
+                                var bounds = myMap.getBounds();
+                                var latMin = bounds[0][0], latMax = bounds[1][0];
+                                var lngMin = bounds[0][1], lngMax = bounds[1][1];
+
+                                var visible = allPoints.filter(function(p) {
+                                    return p.lat >= latMin && p.lat <= latMax
+                                        && p.lng >= lngMin && p.lng <= lngMax;
+                                });
+
+                                var grouped = groupPoints(visible);
+                                var toAdd = [];
+
+                                Object.keys(grouped).forEach(function(k) {
+                                    if (allPlacemarks[k]) return;
+                                    var g = grouped[k];
+                                    var content = g.items.map(function(p) {
+                                        return "<div style=\"margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px;\">" +
+                                            "<a href=\"" + p.url + "\" style=\"color:#000;text-decoration:none;font-weight:500;\">" + p.balloon + "</a>" +
+                                            "</div>";
+                                    }).join("");
+
+                                    var pm = new ymaps.Placemark([g.lat, g.lng], {
+                                        balloonContent: "<div style=\"max-height:150px;min-width:200px;overflow-y:auto;padding-right:10px;\">" + content + "</div>"
+                                    }, {
+                                        preset: "islands#icon",
+                                        iconColor: "#F2606C"
+                                    });
+
+                                    allPlacemarks[k] = pm;
+                                    toAdd.push(pm);
+                                });
+
+                                if (toAdd.length) clusterer.add(toAdd);
+                            };
+
+                            window.loadMapData = function() {
+                                if (isMapDataLoaded) return;
+
+                                $.post("/actions/blocks/get_map_points.php", {
+                                    ids: ' . $map_ids_json . '
+                                }, function(points) {
+                                    if (!points || !points.length) return;
+                                    allPoints = points;
+                                    isMapDataLoaded = true;
+                                    window.updateVisible();
+
+                                    myMap.events.add("boundschange", function() {
+                                        clearTimeout(updateTimer);
+                                        updateTimer = setTimeout(window.updateVisible, 300);
+                                    });
+                                }, "json");
+                            };
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+';
 
 
 // кнопкa для мобилки
-$data['mobile_filter_btn'] = '<button class="btn btn__mobile-filters' . $mobile_btn_class . '">' .
+$data['mobile_filter_btn'] = '<div class="mobile-controls-wrapper">
+<button class="btn btn__mobile-filters' . $mobile_btn_class . '">' .
     $mobile_btn_title . '<i><img src="/assets/img/mobile-filters-btn.svg" alt=""></i>
-</button>';
+</button>
+<button class="map-button map-button-catalog"><img class="map-image-default" src="/assets/img/map.svg" alt=""></button>
+</div>';
 
 // Промоблок
 $filter_type = 'all'; // По умолчанию показываем всех
@@ -383,8 +765,28 @@ if (isset($_GET['company']) && $_GET['company'] === 'true') {
 
 $data['pre_list'] = pre_list($pre_list_text);
 
-// Список специалистов
-$data['catalog_specialists'] = block($specialists_with_tarrifs);
+$journal_banners = get_journal_banners();
+
+$filteredBanners = array_filter($journal_banners, function ($banner) {
+    return in_array($banner['id'], [6]);
+});
+
+foreach ($filteredBanners as $index => $banner) {
+    if ($banner['id'] == 6) {
+        // HTML для первого баннера
+        $sixth_banner = '
+        <a href="' . htmlspecialchars($banner['link']) . '" class="banner">
+            <img src="/assets/img/' . htmlspecialchars($banner['image']) . '" alt="Первый боковой баннер журнала">
+            <div class="text">
+                <p class="title">' . htmlspecialchars_decode($banner['title']) . '</p>
+                <p class="subtitle">' . htmlspecialchars_decode($banner['description']) . '</p>
+                <button>' . htmlspecialchars_decode($banner['button_text']) . '</button>
+            </div>
+        </a>';
+    }
+}
+
+$data['sixth_banner'] = '<div class="sticky-banner">' . $sixth_banner . '</div>';
 
 // Пагинация
 /* $data['pagination'] = block_pagination($count, $limit_for_pagination, $page, $link_for_pagination, $list ?? $vars); */
@@ -398,6 +800,60 @@ $filter = match ((int)$category['classification']) {
     4, [4]           => 'notary',
 };
 
+$randId = 'id' . bin2hex(random_bytes(6));
+
+$data['specialist_popup'] .= <<<EOF
+<div class="popup write">
+  <div class="bg"></div>
+  <div class="window middle">
+      <div class="close"></div>
+      <div class="reg">
+          <div class="name">Форма записи</div>
+          <div class="form">
+                <div class="field">
+                    <input class="inp" name="name" maxlength="30" type="text" placeholder="Ваше имя (не более 30 символов)" />
+                    <div class="invalid-feedback"></div>
+                </div>
+              <div class="field">
+                  <input type="text" class="phone-input-reg" name="contactInfo" placeholder="Номер вашего телефона для связи" />
+                  <div class="invalid-feedback"></div>
+                  <input type="hidden" id="specialist_mail" value="{$email}">
+                  <input type="hidden" name="specialist_id" id="specialist_id" value="{$specialist_id}">
+              </div>
+              <div class="field captcha-field">
+                <div class="captcha-row">
+                    <div class="captcha-left">
+                    <img id="captcha" src="/libs/securimage/securimage_show.php?id={$randId}" alt="CAPTCHA" aria-hidden="false" />
+                    <button type="button" id="captcha_refresh" class="captcha-refresh" title="Обновить каптчу" aria-label="Обновить каптчу">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M21 12a9 9 0 10-3.2 6.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    </div>
+
+                    <div class="captcha-right">
+                    <label class="captcha-label" for="captcha_code">Подтвердите, что вы не робот</label>
+                    <input class="captcha-input" id="captcha_code" name="captcha_code" type="text" placeholder="Введите цифры" autocomplete="off" />
+                    <input type="hidden" id="captcha_captcha_id" name="captcha_id" value="{$randId}" />
+                    </div>
+                </div>
+                <div class="captcha-error"></div>
+                </div>
+
+              <div class="button">
+                  <p>
+                      Нажимая “Отправить”, я принимаю изложенное в документах,
+                      представленных в разделе сайта “О проекте”.
+                  </p>
+                  <button id="send_message_to_specialist" class="popup-btn">Отправить</button>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+EOF;
+
 // Устанавливаем title
 $HTML = html_replace([
     'title' => $title,
@@ -407,6 +863,10 @@ $HTML = html_replace([
 
 
 $HTML = html_explode($data, $HTML);
+
+// Подставляем попап карты
+$HTML_ = explode('<!--data:popup_map-->', $HTML, 3);
+$HTML = $HTML_[0] . "<!--data:popup_map-->{$data['popup_map']}<!--data:popup_map-->" . $HTML_[2];
 
 // Подставляем меню-фильтр для мобилки
 $HTML_ = explode('<!--data:catalog_mobile_filter-->', $HTML, 3);
@@ -496,11 +956,11 @@ function top_text(
                     $h1
                 );
             }
-            // 2) Эксперты
-            elseif (mb_stripos($h1, 'Эксперты') === 0) {
+            // 2) Студии йоги
+            elseif (mb_stripos($h1, 'Студии йоги') === 0) {
                 $h1 = preg_replace(
-                    '/^Эксперты/ui',
-                    'Экспертные учреждения',
+                    '/^Студии йоги/ui',
+                    'Студии йоги',
                     $h1
                 );
             }
@@ -524,7 +984,7 @@ function top_text(
                 $description
             );
 
-            // Частные эксперты
+            // Частные Студии йоги
             $description = preg_replace(
                 '/\bэкспертов\b/ui',
                 'частных экспертов',
@@ -542,7 +1002,7 @@ function top_text(
             // Каталог экспертных учреждений
             $description = preg_replace(
                 '/\bэкспертов\b/ui',
-                'экспертные учреждения',
+                'Студии йоги',
                 $description
             );
         }
@@ -550,13 +1010,15 @@ function top_text(
 
     if ($cityGenitive) {
         $basePhrases = [
-            'Юристы и адвокаты',
-            'Эксперты',
-            'Нотариусы',
-            'Юридические компании',
-            'Экспертные учреждения'
+            'Студии йоги',
+            'Занятия по йоге'
         ];
-        $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
 
         if (preg_match($regex, $h1, $m)) {
             $full = $m[0];
@@ -630,9 +1092,9 @@ function get_mobile(array $category): array
         if (in_array($category['classification'], [1, 2, 3, 5, 6, 7, 8]) && !$category['p_id']) {
             $array = get_services_by_classification($category['classification'], 0);
             if ($category['classification'] == 3 || $category['classification'] == 8) {
-                $mobile['first_cat'] = '<li class="find_expert"><a href="/experty">Все эксперты</a></li>';
+                $mobile['first_cat'] = '<li class="find_expert"><a href="/yoga-studii">Все Студии йоги</a></li>';
             } else {
-                $mobile['first_cat'] = '<li class="find_lawyer"><a href="/yuristy-i-advokaty">Все юристы и адвокаты</a></li>';
+                /*  $mobile['first_cat'] = '<li class="find_lawyer"><a href="/yuristy-i-advokaty">Все юристы и адвокаты</a></li>'; */
             }
             $mobile['btn_class'] = ' hidden';
         } else {
@@ -668,9 +1130,9 @@ function vars(
             'юристы',
             'адвокаты',
             'нотариусы',
-            'эксперты',
+            'Студии йоги',
             'юридические компании',
-            'экспертные учреждения',
+            'Студии йоги',
             'специалисты',
             'компании',
             'организации',
@@ -731,10 +1193,10 @@ function vars(
             3 => [
                 'title'       => $service_parent['title'],
                 'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
-                'slug'        => 'experty',
+                'slug'        => 'yoga-studii',
                 'description' => $service_parent['meta_description'],
                 'keywords'    => $service_parent['meta_keywords'],
-                'h1'          => 'Эксперты по направлению ',
+                'h1'          => 'Студии йоги по направлению ',
                 'block'       => 2,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
             ],
@@ -753,10 +1215,10 @@ function vars(
 
     if ($requestion) {
         $vars = match ($requestion) {
-            'experty' => [
+            'yoga-studii' => [
                 'title'             => $service_parent['title'],
                 'meta_title'        => add_city_to_text($service_parent['meta_title'], $cityGenitive),
-                'slug'              => 'experty',
+                'slug'              => 'yoga-studii',
                 'description'       => $service_parent['meta_description'],
                 'keywords'          => $service_parent['meta_keywords'],
                 'h1'                => $service_parent['title'],
@@ -867,10 +1329,10 @@ function generateSpecialistsCollectionPageJsonLd(
                     $filter_labels[$filter],
                     $h1
                 );
-            } elseif (mb_stripos($h1, 'Эксперты') === 0) {
+            } elseif (mb_stripos($h1, 'Студии йоги') === 0) {
                 $h1 = preg_replace(
-                    '/^Эксперты/ui',
-                    'Экспертные учреждения',
+                    '/^Студии йоги/ui',
+                    'Студии йоги',
                     $h1
                 );
             }
@@ -879,13 +1341,15 @@ function generateSpecialistsCollectionPageJsonLd(
 
     if ($cityGenitive) {
         $basePhrases = [
-            'Юристы и адвокаты',
-            'Эксперты',
-            'Нотариусы',
-            'Юридические компании',
-            'Экспертные учреждения'
+            'Студии йоги',
+            'Занятий по йоге'
         ];
-        $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
 
         if (preg_match($regex, $h1, $m)) {
             $full = mb_strtolower($m[0]);
@@ -995,6 +1459,56 @@ function generateCatalogBreadcrumbsJsonLd(array $vars, array $category = null, ?
         PHP_EOL . '</script>';
 }
 
+function buildH1Title(
+    ?array $category,
+    array $vars,
+    ?string $filter = null,
+    ?string $cityGenitive = null
+): string {
+    $filter_labels = [
+        'private' => 'Частные',
+        'company' => 'Юридические компании'
+    ];
+
+    $h1 = $category
+        ? $vars['h1'] . ' «' . $category['title'] . '»'
+        : $vars['h1'];
+
+    if ($filter && isset($filter_labels[$filter])) {
+        if ($filter === 'private') {
+            $h1 = $filter_labels[$filter]
+                . ' '
+                . mb_strtolower(mb_substr($h1, 0, 1))
+                . mb_substr($h1, 1);
+        } else {
+            if (mb_stripos($h1, 'Юристы и адвокаты') === 0) {
+                $h1 = preg_replace('/^Юристы и адвокаты/ui', $filter_labels[$filter], $h1);
+            } elseif (mb_stripos($h1, 'Студии йоги') === 0) {
+                $h1 = preg_replace('/^Студии йоги/ui', 'Студии йоги', $h1);
+            }
+        }
+    }
+
+    if ($cityGenitive) {
+        $basePhrases = ['Студии йоги', 'Занятия по йоге'];
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
+        if (preg_match($regex, $h1, $m)) {
+            $full = $m[0];
+            $rest = mb_substr($h1, mb_strlen($full));
+            $h1 = $full . ' ' . $cityGenitive . $rest;
+        } else {
+            $h1 .= ' ' . $cityGenitive;
+        }
+    }
+
+    return $h1;
+}
+
 /**
  * Генерация JSON-LD для списка специалистов (ItemList)
  */
@@ -1033,10 +1547,10 @@ function generateSpecialistsItemListJsonLd(
                     $filter_labels[$filter],
                     $categoryTitle
                 );
-            } elseif (mb_stripos($categoryTitle, 'Эксперты') === 0) {
+            } elseif (mb_stripos($categoryTitle, 'Студии йоги') === 0) {
                 $categoryTitle = preg_replace(
-                    '/^Эксперты/ui',
-                    'Экспертные учреждения',
+                    '/^Студии йоги/ui',
+                    'Студии йоги',
                     $categoryTitle
                 );
             }
@@ -1045,13 +1559,15 @@ function generateSpecialistsItemListJsonLd(
 
     if ($cityGenitive) {
         $basePhrases = [
-            'Юристы и адвокаты',
-            'Эксперты',
-            'Нотариусы',
-            'Юридические компании',
-            'Экспертные учреждения'
+            'Студии йоги',
+            'Занятия по йоге'
         ];
-        $regex = '/^(?:Частные\s+)?(' . implode('|', array_map('preg_quote', $basePhrases)) . ')/iu';
+        $escapedPhrases = array_map(function ($phrase) {
+            return preg_replace('/\s+/', '\s+', preg_quote($phrase));
+        }, $basePhrases);
+
+        // Убираем ^, чтобы искать фразу в любом месте строки, и оборачиваем всё в общую группу
+        $regex = '/((?:Частные\s+)?(?:' . implode('|', $escapedPhrases) . '))/iu';
         if (preg_match($regex, $categoryTitle, $m)) {
             $full = $m[0];
             $rest = mb_substr($categoryTitle, mb_strlen($full));
@@ -1075,7 +1591,7 @@ function generateSpecialistsItemListJsonLd(
             $description = preg_replace('/\bэкспертов\b/ui', 'частных экспертов', $description, 1);
         } else {
             $description = preg_replace('/\b(лучших\s+)?юристов\s+и\s+адвокатов\b/ui', 'юридические компании', $description);
-            $description = preg_replace('/\bэкспертов\b/ui', 'экспертные учреждения', $description);
+            $description = preg_replace('/\bэкспертов\b/ui', 'Студии йоги', $description);
         }
     }
 
@@ -1138,10 +1654,14 @@ function generateSpecialistsItemListJsonLd(
         PHP_EOL . '</script>';
 }
 
-$isCategoryPage = ($requestion === $service_parent_slug);
-$categorySlug = $isCategoryPage
-    ? ($service_parent['base_slug'] ?? $requestion)
-    : $requestion;
+if (!empty($category) && !empty($category['slug'])) {
+    $categorySlug = $category['slug'];
+} elseif (!empty($service_parent) && !empty($service_parent['slug'])) {
+    // Если категории нет — берём родителя
+    $categorySlug = $service_parent['slug'];
+} else {
+    $categorySlug = ''; // на всякий случай
+}
 
 ?>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -1155,9 +1675,15 @@ $categorySlug = $isCategoryPage
         let metro_ids = <?= json_encode($_SESSION['metro'] ?? []) ?>;
         let filter = <?= $filter !== null ? "'" . addslashes($filter) . "'" : 'null' ?>;
         let filter_type_url = <?= $filter_type_url !== null ? "'" . addslashes($filter_type_url) . "'" : 'null' ?>;
+        
+        let selected_amenities = <?= json_encode($selected_amenities ?? []) ?>;
+        let selected_equipment = <?= json_encode($selected_equipment ?? []) ?>;
+        let selected_price = <?= json_encode($selected_price ?? []) ?>;
+
+        let hasMore = true; // флаг, что есть ещё специалисты
 
         function checkAndLoad() {
-            if (loading || hadError) return;
+            if (loading || hadError || !hasMore) return;
 
             const triggerEl = document.getElementById('load-trigger');
             if (!triggerEl) return;
@@ -1166,10 +1692,8 @@ $categorySlug = $isCategoryPage
             const triggerTop = rect.top;
             const viewportHeight = window.innerHeight;
 
-            // Если #load-trigger в зоне [низа экрана - 800px, низа экрана + 200px]
-            if (triggerTop <= viewportHeight + 800 && triggerTop >= viewportHeight - 800) {
+            if (triggerTop <= viewportHeight + 3200 && triggerTop >= viewportHeight - 800) {
                 const lazyBgs = document.querySelectorAll('.lazy-bg');
-
                 if ('IntersectionObserver' in window) {
                     const observer = new IntersectionObserver((entries, obs) => {
                         entries.forEach(entry => {
@@ -1185,10 +1709,8 @@ $categorySlug = $isCategoryPage
                     }, {
                         rootMargin: "0px 0px 200px 0px"
                     });
-
                     lazyBgs.forEach(el => observer.observe(el));
                 } else {
-                    // fallback: сразу подставляем фоновое изображение
                     lazyBgs.forEach(el => {
                         const bg = el.dataset.bg;
                         if (bg) el.style.backgroundImage = `url('${bg}')`;
@@ -1206,26 +1728,37 @@ $categorySlug = $isCategoryPage
                         slug: categorySlug,
                         filter: filter,
                         filter_type_url: filter_type_url,
-                        metro_ids: metro_ids
+                        metro_ids: metro_ids,
+                        selected_amenities: selected_amenities,
+                        selected_equipment: selected_equipment,
+                        selected_price: selected_price
                     },
                     dataType: 'json',
                     success: function(response) {
-                        if (response.html && response.html.trim() !== '') {
-                            $('.grid_flex').append(response.html);
+                        // создаём временный контейнер
+                        let temp = document.createElement('div');
+                        if (response.html_desktop) temp.innerHTML = response.html_desktop;
+                        const hasDesktopItems = temp.querySelectorAll('.item').length > 0;
+
+                        temp.innerHTML = ''; // очистим
+                        if (response.html_mobile) temp.innerHTML = response.html_mobile;
+                        const hasMobileItems = temp.querySelectorAll('.item').length > 0;
+
+                        if (hasDesktopItems || hasMobileItems) {
+                            if (hasDesktopItems) $('.comp-catalog').last().after(response.html_desktop);
+                            if (hasMobileItems) $('.mobile-catalog').last().after(response.html_mobile);
                             start += limit;
                             loading = false;
                         } else {
-                            // Больше специалистов нет — отключаем дальнейшие проверки
+                            hasMore = false;
                             $(window).off('scroll', onScrollHandler);
                         }
+
+                        initSpecSliders();
                     },
                     error: function() {
-                        // 1) Устанавливаем флаг, чтобы больше не пытаться
                         hadError = true;
-                        // 2) Отключаем обработчик scroll, чтобы не было новых запросов
                         $(window).off('scroll', onScrollHandler);
-                        // 3) Показываем alert только один раз
-                        /* alert('Ошибка загрузки, проверьте подключение к интернету.'); */
                         loading = false;
                     }
                 });

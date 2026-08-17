@@ -1,119 +1,552 @@
 <style>
-	@media screen and (max-width: 768px) {
-		#create-note-form {
-			padding-top: 30px;
-		}
-	}
+  @media screen and (max-width: 768px) {
+    #create-note-form {
+      padding-top: 30px;
+    }
+  }
 </style>
 <form class="create-note-block main-part" id="create-note-form">
-	<div class="field">
-		<div class="field-name">Раздел</div>
-		<select class="sel" id="blog_theme" name="theme">
-			<!--data:themes--><!--data:themes-->
-		</select>
-		<!--data:themes_mobile--><!--data:themes_mobile-->
-	</div>
-	<!-- <div class="field">
+  <div class="field">
+    <div class="field-name">Раздел</div>
+    <select class="sel" id="blog_theme" name="theme">
+      <!--data:themes--><!--data:themes-->
+    </select>
+    <!--data:themes_mobile--><!--data:themes_mobile-->
+  </div>
+  <!-- <div class="field">
 		<div class="field-name">Ключевые слова</div>
 		<div class="keywords"> -->
-	<!--data:keywords--><!-- data:keywords-->
-	<!-- </div>
+  <!--data:keywords--><!-- data:keywords-->
+  <!-- </div>
 	</div> -->
-	<div class="field">
-		<div class="field-name">Заголовок</div>
-		<!--data:title_input--><!--data:title_input-->
-	</div>
-	<div class="field">
-		<div class="field-name">Текст</div>
-		<!--data:content--><!--data:content-->
-	</div>
-	<!--data:blog_id_input--><!--data:blog_id_input-->
-	<!--data:edit_input--><!--data:edit_input-->
-	<button type="submit">Опубликовать</button>
+  <div class="field">
+    <div class="field-name">Обложка</div>
+    <!--data:main_image_input--><!--data:main_image_input-->
+  </div>
+  <div class="field">
+    <div class="field-name">Заголовок</div>
+    <!--data:title_input--><!--data:title_input-->
+  </div>
+  <div class="field">
+    <div class="field-name">Текст</div>
+    <!--data:content--><!--data:content-->
+  </div>
+  <!--data:blog_id_input--><!--data:blog_id_input-->
+  <!--data:edit_input--><!--data:edit_input-->
+  <button type="submit">Опубликовать</button>
 </form>
 
 <div class="popup create-article-popup" data-link-id="">
-	<div class="bg"></div>
-	<div class="window middle">
-		<div class="close"></div>
-		<div class="delete-article">
-			<p>Запись в блоге успешно опубликована. Модерация занимает до 24 часов, после чего ваш пост появится в
-				публичном доступе.</p>
-		</div>
-		<!--data:blog_id_input--><!--data:blog_id_input-->
-	</div>
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="delete-article">
+      <p>
+        Запись в блоге успешно опубликована. Модерация занимает до 24 часов,
+        после чего ваш пост появится в публичном доступе.
+      </p>
+    </div>
+    <!--data:blog_id_input--><!--data:blog_id_input-->
+  </div>
 </div>
 
 <div class="cabinet-popup" id="article-popup-service">
-	<div class="popup__close"></div>
-	<div class="popup__title">Раздел для размещения</div>
-	<div class="popup__body">
-		<ul>
-			<!--data:themes_list_mobile--><!--data:themes_list_mobile-->
-		</ul>
-	</div>
+  <div class="popup__close"></div>
+  <div class="popup__title">Раздел для размещения</div>
+  <div class="popup__body">
+    <ul>
+      <!--data:themes_list_mobile--><!--data:themes_list_mobile-->
+    </ul>
+  </div>
 </div>
 
 <div class="popup banner-popup" id="forbidden-popup">
-	<div class="bg"></div>
-	<div class="window middle">
-		<div class="close"></div>
-		<div class="reg">
-			<div class="popup-body">
-				<form method="POST" id="forbidden-popup-form">
-					<div class="name">
-						Запрет публикации
-					</div>
-					<div class="popup-content forbidden-popup-content">
-						<div class="forbidden-popup-text">
-							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
-							<span id="forbidden-words-list"></span>.
-							<br><br>С правилами сайта вы можете ознакомиться
-							на странице <a href="https://urfaq.ru/o-proekte">«О проекте»</a>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="reg">
+      <div class="popup-body">
+        <form method="POST" id="forbidden-popup-form">
+          <div class="name">Запрет публикации</div>
+          <div class="popup-content forbidden-popup-content">
+            <div class="forbidden-popup-text">
+              Контент, который вы хотите опубликовать, содержит запрещенные
+              слова и элементы:
+              <span id="forbidden-words-list"></span>. <br /><br />С правилами
+              сайта вы можете ознакомиться на странице
+              <a href="/o-proekte">«О проекте»</a>.
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script src="/assets/tinymce/tinymce.min.js"></script>
+
 <script>
-	document.addEventListener('DOMContentLoaded', function () {
-	  // Делегируем beforeinput — работает, даже если textarea появляется динамически
-	  document.addEventListener('beforeinput', function (e) {
-		// Проверка, что событие от нужного textarea
-		if (!e.target || !e.target.matches || !e.target.matches('textarea[name="content"]')) return;
-	
-		// Ищем конкретно вставку перевода строки
-		if (e.inputType === 'insertLineBreak') {
-		  e.preventDefault();
-		  e.stopPropagation();
-	
-		  const ta = e.target;
-		  // Если элемент не в фокусе или не поддерживает selectionStart, ставим фокус
-		  if (typeof ta.selectionStart === 'undefined') {
-			ta.focus();
+  document.addEventListener("DOMContentLoaded", function () {
+    const togglePageLoader = (show) => {
+      console.log("Лоадер вызван со статусом:", show);
+      let overlay = document.getElementById("tinymce-upload-overlay");
+
+      if (show) {
+        if (!overlay) {
+          overlay = document.createElement("div");
+          overlay.id = "tinymce-upload-overlay";
+          overlay.innerHTML = `
+        <div style="text-align: center;">
+          <div class="upload-spinner"></div>
+          <div style="margin-top: 15px; font-size: 16px; font-weight: 500; color: #ffffff !important;">Загрузка и обработка изображения...</div>
+        </div>
+      `;
+
+          // Стили оверлея
+          Object.assign(overlay.style, {
+            position: "fixed",
+            top: "0px",
+            left: "0px",
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: "999999999",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#ffffff",
+            pointerEvents: "all",
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          });
+
+          const style = document.createElement("style");
+          style.innerHTML = `
+        .upload-spinner {
+          border: 4px solid rgba(255, 255, 255, 0.15) !important;
+          border-radius: 50% !important;
+          border-top: 4px solid #3b82f6 !important;
+          width: 50px !important;
+          height: 50px !important;
+          animation: spin-loader 1s linear infinite !important;
+          margin: 0 auto !important;
+        }
+        @keyframes spin-loader {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+          document.head.appendChild(style);
+          document.body.appendChild(overlay);
+          console.log("Элемент лоадера успешно создан и добавлен в DOM");
+        }
+        overlay.style.setProperty("display", "flex", "important");
+      } else {
+        if (overlay) {
+          overlay.style.setProperty("display", "none", "important");
+          console.log("Лоадер скрыт");
+        }
+      }
+    };
+
+    if (typeof tinymce !== "undefined") {
+      // Инициализация основного поля ТЕКСТА
+      tinymce.init({
+        selector: 'textarea[name="content"]',
+        language: "ru",
+        language_url: "/assets/tinymce/langs/ru.js",
+        height: 450,
+        force_br_newlines: false,
+        force_p_newlines: true,
+        forced_root_block: "p",
+        plugins: "lists code",
+        paste_as_text: false,
+
+        // Умная обработка вставки (без лишних пустых строк и с разбивкой на <p>)
+        paste_preprocess: function (plugin, args) {
+          let content = args.content;
+
+          // 1. Превращаем двойные и одиночные переносы строк в абзацы
+          content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
+          content = content.replace(/<br\s*\/?>/gi, "</p><p>");
+
+          // 2. Список разрешенных тегов пользовательской части
+          const allowedTags = "p|br|ul|ol|li|h1|h2|h3|blockquote|img";
+
+          // 3. Вычищаем запрещенный HTML-мусор
+          const regex = new RegExp(
+            `<(?!\\/?(${allowedTags})(\\s|>))[^>]+>`,
+            "gi"
+          );
+
+          args.content = content
+            .replace(regex, "")
+            .replace(/&nbsp;/g, " ")
+            .replace(/<p>\s*<\/p>/g, "") // Удаляем пустые абзацы
+            .trim();
+        },
+
+        toolbar_mode: "sliding",
+        toolbar:
+          "undo redo h2 h3 blockquote bullist numlist bold italic underline strikethrough quickimage",
+        menubar: false,
+        elementpath: false,
+        branding: false,
+        relative_urls: false,
+        remove_script_host: false,
+        convert_urls: false,
+
+        content_css:
+          "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap",
+        content_style: `
+		  body, p, h1, h2, h3, div, span, blockquote {
+			  font-family: Roboto, sans-serif !important;
+			  font-size: 14px !important;
 		  }
-	
-		  // Получаем позиции
-		  const start = ta.selectionStart ?? ta.value.length;
-		  const end = ta.selectionEnd ?? start;
-	
-		  const before = ta.value.substring(0, start);
-		  const after = ta.value.substring(end);
-	
-		  // Вставляем двойной перенос строк (\n\n)
-		  ta.value = before + "\n\n" + after;
-	
-		  const newPos = start + 2;
-		  ta.selectionStart = ta.selectionEnd = newPos;
-	
-		  // Для ситуаций с привязанными визуализациями — триггерим input
-		  ta.dispatchEvent(new Event('input', { bubbles: true }));
-		  console.log('beforeinput handled: inserted double newline at', start);
-		}
-	  }, true);
+		  blockquote {
+			  border-left: 3px solid #F8A3AA;
+			  margin-left: 1.5rem;
+			  padding-left: 1rem;
+			  font-style: italic;
+		  }
+		  img {
+			  width: 100% !important; 
+			  height: auto !important;
+			  aspect-ratio: 16 / 9 !important; 
+			  object-fit: cover !important; 
+			  border-radius: 16px !important; 
+			  display: block !important; 
+			  margin: 10px 0 !important;
+		  }
+		  `,
+
+        font_family_formats:
+          "Roboto=Roboto, sans-serif;Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;",
+        font_size_formats:
+          "8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 24pt 36pt 48pt",
+        block_formats:
+          "Header 1=h1; Header 2=h2; Header 3=h3; Paragraph=p; Blockquote=blockquote",
+
+        style_formats: [
+          { title: "Header 1", block: "h1" },
+          { title: "Header 2", block: "h2" },
+          { title: "Header 3", block: "h3" },
+          { title: "Paragraph", block: "p" },
+          { title: "Blockquote", block: "blockquote" },
+        ],
+
+        image_title: true,
+        image_description: true,
+        automatic_uploads: true,
+        file_picker_types: "image",
+        image_dimensions: false,
+
+        // Загрузчик картинок (для Drag-and-Drop и копирования)
+        images_upload_handler: function (blobInfo, success, failure, progress) {
+          // Включаем лоадер при стандартной загрузке TinyMCE
+          togglePageLoader(true);
+
+          var isV6 = parseInt(tinymce.majorVersion) >= 6;
+          var uploadUrl = "/mukadhoha96/actions/posts/upload_img.php";
+          var formData = new FormData();
+          formData.append("file", blobInfo.blob(), blobInfo.filename());
+
+          const removeLocalImages = () => {
+            if (tinymce.activeEditor) {
+              const doc = tinymce.activeEditor.getDoc();
+              doc.querySelectorAll("img").forEach((img) => {
+                if (
+                  img.src.startsWith("blob:") ||
+                  img.src.startsWith("data:")
+                ) {
+                  img.remove();
+                }
+              });
+            }
+          };
+
+          const handleResponse = (res) => {
+            return res.json().then(
+              (data) => {
+                if (res.ok) {
+                  return data;
+                } else {
+                  return Promise.reject(
+                    data.error || "Ошибка сервера: " + res.status
+                  );
+                }
+              },
+              () => Promise.reject("Ошибка сервера: " + res.status)
+            );
+          };
+
+          if (isV6) {
+            return new Promise(function (resolve, reject) {
+              fetch(uploadUrl, { method: "POST", body: formData })
+                .then(handleResponse)
+                .then((result) => {
+                  togglePageLoader(false); // Выключаем лоадер
+                  if (result.location) {
+                    resolve(result.location);
+                  } else {
+                    reject("Сервер не вернул адрес изображения");
+                  }
+                })
+                .catch((err) => {
+                  togglePageLoader(false); // Выключаем при ошибке
+                  removeLocalImages();
+                  alert(err);
+                  reject(err);
+                });
+            });
+          } else {
+            fetch(uploadUrl, { method: "POST", body: formData })
+              .then(handleResponse)
+              .then((result) => {
+                togglePageLoader(false); // Выключаем лоадер
+                if (result.location) {
+                  success(result.location);
+                } else {
+                  failure("Сервер не вернул адрес изображения");
+                }
+              })
+              .catch((err) => {
+                togglePageLoader(false); // Выключаем при ошибке
+                removeLocalImages();
+                alert(err);
+                failure(err);
+              });
+          }
+        },
+
+        setup: function (editor) {
+          // Эмуляция maxlength="7500"
+          editor.on("keyup change input", function () {
+            const textLen = editor.getContent({ format: "text" }).trim().length;
+            const feedback = document.querySelector(
+              'textarea[name="content"] ~ .invalid-feedback'
+            );
+            if (feedback) {
+              feedback.style.display = textLen > 7500 ? "block" : "none";
+            }
+          });
+
+          // 1. Создаем скрытый инпут
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.accept = "image/*";
+          fileInput.style.display = "none";
+          document.body.appendChild(fileInput);
+
+          // 2. Слушаем выбор файла кастомной кнопки
+          fileInput.addEventListener("change", function () {
+            if (this.files && this.files[0]) {
+              // СЮДА ДОБАВЛЯЕМ ВКЛЮЧЕНИЕ ЛОАДЕРА!
+              togglePageLoader(true);
+
+              const file = this.files[0];
+              var formData = new FormData();
+              formData.append("file", file, file.name);
+              var uploadUrl = "/mukadhoha96/actions/posts/upload_img.php";
+
+              fetch(uploadUrl, { method: "POST", body: formData })
+                .then((res) => {
+                  return res
+                    .json()
+                    .then((data) => {
+                      return { ok: res.ok, data: data };
+                    })
+                    .catch(() => {
+                      return {
+                        ok: false,
+                        data: { error: "Некорректный ответ сервера" },
+                      };
+                    });
+                })
+                .then((result) => {
+                  if (result.ok && result.data.location) {
+                    editor.insertContent(
+                      `<img src="${result.data.location}" alt="${file.name}" />`
+                    );
+                  } else {
+                    alert(
+                      result.data.error ||
+                        "Ошибка сервера при загрузке изображения"
+                    );
+                  }
+                })
+                .catch((err) => {
+                  alert("Ошибка связи с сервером при загрузке изображения.");
+                })
+                .finally(() => {
+                  // СЮДА ДОБАВЛЯЕМ ВЫКЛЮЧЕНИЕ ЛОАДЕРА!
+                  togglePageLoader(false);
+                  fileInput.value = "";
+                });
+            }
+          });
+
+          // 3. Регистрируем кнопку quickimage
+          editor.ui.registry.addButton("quickimage", {
+            icon: "image",
+            tooltip: "Вставить изображение",
+            onAction: function () {
+              fileInput.click();
+            },
+          });
+        },
+      });
+
+      const tooltipObserver = new MutationObserver(() => {
+        const tooltip = document.querySelector(".tox-tooltip__body");
+        if (tooltip && tooltip.textContent.includes("(")) {
+          tooltip.textContent = tooltip.textContent.replace(/\s*\(.*?\)/g, "");
+        }
+      });
+
+      tooltipObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+
+      const form = document.getElementById("create-note-form");
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          tinymce.triggerSave();
+
+          const titleInput = document.querySelector('input[name="title"]');
+          const contentTextarea = document.querySelector(
+            'textarea[name="content"]'
+          );
+
+          const titleLen = titleInput ? titleInput.value.trim().length : 0;
+          const contentLen =
+            tinymce
+              .get(contentTextarea.id)
+              ?.getContent({ format: "text" })
+              .trim().length ||
+            (contentTextarea ? contentTextarea.value.length : 0);
+
+          if (titleLen > 65 || contentLen > 7500) {
+            e.preventDefault();
+            alert(
+              "Пожалуйста, исправьте ошибки валидации. Превышена длина текста."
+            );
+          }
+        });
+      }
+    } else {
+      console.error("TinyMCE не загружен. Проверьте путь к файлу.");
+    }
+
+    // Делегируем beforeinput — работает, даже если textarea появляется динамически
+    /* document.addEventListener('beforeinput', function (e) {
+			// Проверка, что событие от нужного textarea
+			if (!e.target || !e.target.matches || !e.target.matches('textarea[name="content"]')) return;
+
+			// Ищем конкретно вставку перевода строки
+			if (e.inputType === 'insertLineBreak') {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const ta = e.target;
+				// Если элемент не в фокусе или не поддерживает selectionStart, ставим фокус
+				if (typeof ta.selectionStart === 'undefined') {
+					ta.focus();
+				}
+
+				// Получаем позиции
+				const start = ta.selectionStart ?? ta.value.length;
+				const end = ta.selectionEnd ?? start;
+
+				const before = ta.value.substring(0, start);
+				const after = ta.value.substring(end);
+
+				// Вставляем двойной перенос строк (\n\n)
+				ta.value = before + "\n\n" + after;
+
+				const newPos = start + 2;
+				ta.selectionStart = ta.selectionEnd = newPos;
+
+				// Для ситуаций с привязанными визуализациями — триггерим input
+				ta.dispatchEvent(new Event('input', { bubbles: true }));
+				console.log('beforeinput handled: inserted double newline at', start);
+			}
+		}, true);
 	});
-	</script>
-	
+
+	(function () {
+		function htmlToPlainText(html) {
+			if (!html) return "";
+			const doc = new DOMParser().parseFromString(html, "text/html");
+			const out = [];
+
+			function emit(s) { if (s) out.push(s); }
+
+			function walk(node) {
+				if (node.nodeType === Node.TEXT_NODE) {
+					let text = node.nodeValue
+						.replace(/\u00A0/g, " ")
+						.replace(/[\r\n\t]+/g, " ")
+						.replace(/[ ]{2,}/g, " ");
+					emit(text);
+					return;
+				}
+				if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+				const tag = node.tagName.toLowerCase();
+
+				if (tag === "br") {
+					emit("\n");
+					return;
+				}
+
+				const isBlock = tag === "p" || tag === "div" || tag === "section" || tag === "article" || tag === "li" || /^h[1-6]$/.test(tag);
+
+				Array.from(node.childNodes).forEach(walk);
+
+				if (isBlock) {
+					emit("\n\n");
+				}
+			}
+
+			walk(doc.body);
+
+			let text = out.join("");
+			text = text.replace(/\n{3,}/g, "\n\n"); // Схлопываем лишние пустые строки
+			text = text.trim(); // Убираем пробелы и переносы по краям
+			return text;
+		}
+
+		function insertTextAtTextarea(ta, text) {
+			const s = ta.selectionStart ?? ta.value.length;
+			const e = ta.selectionEnd ?? s;
+			if (ta.setRangeText) ta.setRangeText(text, s, e, "end");
+			else ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+			ta.dispatchEvent(new Event("input", { bubbles: true }));
+		}
+
+		function handle(ta, html, plain) {
+			let out = html ? htmlToPlainText(html) : "";
+			if (!out.trim()) out = plain || "";
+			if (out) insertTextAtTextarea(ta, out);
+		}
+
+		document.addEventListener("paste", e => {
+			const ta = e.target;
+			if (!ta?.matches?.('textarea[name="content"]')) return;
+			e.preventDefault();
+			const dt = e.clipboardData;
+			handle(ta, dt.getData("text/html"), dt.getData("text/plain"));
+		}, true);
+
+		document.addEventListener("drop", e => {
+			const ta = e.target;
+			if (!ta?.matches?.('textarea[name="content"]')) return;
+			e.preventDefault();
+			const dt = e.dataTransfer;
+			handle(ta, dt.getData("text/html"), dt.getData("text/plain"));
+		}, true); */
+  });
+</script>

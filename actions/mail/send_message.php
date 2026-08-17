@@ -11,7 +11,12 @@ $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
     if (!empty($social['link'])) {
-        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+
+        if ($social['alt'] === 'Telegram') {
+            continue;
+        }
+
+        $image_src = 'https://yogni.ru/assets/img/login-parol/';
         $height = 24;
         $width = 30;
 
@@ -21,12 +26,17 @@ foreach ($socials as $social) {
                 $height = 24;
                 $width = 30;
                 break;
-            case 'Telegram':
+            /* case 'Telegram':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 24;
+                break; */
+            case 'Vk':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'Vk':
+            case 'MAX':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
@@ -58,26 +68,71 @@ foreach ($socials as $social) {
 
 $social_html .= '</tr>';
 
+
+$forbidden_words = getForbiddenWords();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $securimage = new Securimage();
+
+    $fields_to_check = ['name', 'contactInfo', 'message'];
+
+    $errors = [];
+
+    foreach ($_POST as $key => $value) {
+        if (in_array($key, $fields_to_check)) {
+            $foundItems = containsForbiddenWords($value, $forbidden_words);
+
+            if ($foundItems) {
+                $elements = [];
+                $words = [];
+
+                foreach ($foundItems as $item) {
+                    if ($item['type'] === 'element') {
+                        $elements[] = '"' . $item['value'] . '"';
+                    } elseif ($item['type'] === 'word') {
+                        $words[] = '"' . $item['value'] . '"';
+                    }
+                }
+
+                if (!empty($elements) && !empty($words)) {
+                    $allItems = array_unique(array_merge($elements, $words));
+                    $errors[$key][] = 'Обнаружены запрещённые слова и элементы: ' . implode(', ', $allItems) . '.';
+                } elseif (!empty($elements)) {
+                    $uniqueElements = array_unique($elements);
+                    $errors[$key][] = 'Обнаружены запрещённые элементы: ' . implode(', ', $uniqueElements) . '.';
+                } elseif (!empty($words)) {
+                    $uniqueWords = array_unique($words);
+                    $errors[$key][] = 'Обнаружены запрещённые слова: ' . implode(', ', $uniqueWords) . '.';
+                }
+            }
+        }
+
+        $data[$key] = clean_elem_form($value);
+    }
 
     $captchaCode = $_POST['captcha_code'] ?? '';
     $captchaId   = $_POST['captcha_id'] ?? null;
 
-    $errors = [];
-
     // Проверка капчи
-    if (!$captchaCode) {
-        $errors['captcha_error'] = 'Введите код с картинки.';
+    /* if (!$captchaCode) {
+        $errors['captcha_error'] = 'Введите цифры с картинки.';
     } elseif (!$captchaId || !$securimage->check($captchaCode, $captchaId)) {
         $errors['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
-    }
+    } */
 
     // Проверка остальных полей
     $email       = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
     $name        = htmlspecialchars($_POST['name'] ?? '');
     $contactInfo = htmlspecialchars($_POST['contactInfo'] ?? '');
     $message     = htmlspecialchars($_POST['message'] ?? '');
+    $specialist_name = htmlspecialchars($_POST['specialist_name'] ?? '');
+
+    $message = trim($message ?? '');
+
+    $messageHtml = '';
+    if ($message !== '') {
+        $messageHtml = '<br>Сообщение: ' . htmlspecialchars($message, ENT_QUOTES);
+    }
 
     if (empty($name)) {
         $errors['name'] = 'Укажите ваше имя';
@@ -91,9 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['contactInfo'] = 'Укажите контактные данные';
     }
 
-    if (empty($message)) {
+    /* if (empty($message)) {
         $errors['message'] = 'Введите сообщение';
-    }
+    } */
 
     // Если есть ошибки, возвращаем их все сразу
     if (!empty($errors)) {
@@ -101,12 +156,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $result = add_user_request(
+    /* $result = add_user_request(
         (int) $_POST['specialist_id'],
         $_POST['name'],
         $_POST['contactInfo'],
         $_POST['message']
-    );
+    ); */
 
     // Определяем, email или телефон
     if (filter_var($contactInfo, FILTER_VALIDATE_EMAIL)) {
@@ -223,10 +278,10 @@ mso-hide:all;
             <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
             <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                 <tbody><tr class="es-mobile-hidden" style="border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/client_request.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/client_request.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                 </tr><!--[if !mso]><!-- -->
                 <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/client_request_mob.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/client_request_mob.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                 </tr><!--<![endif]-->
             </tbody></table></td>
             </tr>
@@ -242,7 +297,7 @@ mso-hide:all;
                 <td class="es-m-txt-l" align="left" style="padding:0;Margin:0"><h2 style="Margin:0;line-height:22px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:18px;font-style:normal;font-weight:normal;color:#373737">Детали клиентского запроса</h2></td>
                 </tr>
                 <tr style="border-collapse:collapse">
-                <td class="es-m-txt-l es-m-p15b" align="left" style="padding:0;Margin:0;padding-top:30px;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Имя: $name<br>$contactDetail <br>Сообщение: $message</h3></td>
+                <td class="es-m-txt-l es-m-p15b" align="left" style="padding:0;Margin:0;padding-top:30px;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Имя: $name<br>$contactDetail $messageHtml</h3></td>
                 </tr>
                 <tr style="border-collapse:collapse">
                 <td class="es-m-txt-l es-m-p15b" align="left" style="padding:0;Margin:0;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Свяжитесь с клиентом по указанным в запросе данным.</h3></td>
@@ -279,7 +334,7 @@ mso-hide:all;
                 <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                 </tr>
                     <tr style="border-collapse:collapse">
-                    <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                    <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
                     </tr>
                 </tbody></table></td>
             </tr>

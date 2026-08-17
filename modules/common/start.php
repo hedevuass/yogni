@@ -3,6 +3,22 @@
 session_cache_limiter('');
 session_start();
 
+// Если сессия пустая но есть кука с ID избранных — восстанавливаем сессию
+if (empty($_SESSION['favorite']['all']) && !empty($_COOKIE['fav_ids'])) {
+    $raw = $_COOKIE['fav_ids'];
+    $ids = array_values(array_unique(array_filter(array_map('intval', explode(',', $raw)))));
+    if (!empty($ids)) {
+        // Определяем категории через БД не нужно — просто кладём в all,
+        // функции block_catalog читают только all для fav_class
+        $_SESSION['favorite'] = [
+            'lawyers'  => [],
+            'experts'  => [],
+            'notaries' => [],
+            'all'      => $ids,
+        ];
+    }
+}
+
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $lastModifiedRow = get_last_modified();
 $lastModified = $lastModifiedRow ? strtotime($lastModifiedRow['last_modified']) : time();
@@ -14,14 +30,23 @@ if (!is_array($metroData)) {
     $metroData = explode(',', (string)$metroData);
 }
 
-// Формируем ETag с учетом статуса пользователя
-$etag = md5($lastModified . implode(',', $metroData) . $isUser);
+// Формируем ETag с учетом статуса пользователя и состояния избранного
+$favHash = md5(json_encode($_SESSION['favorite'] ?? []));
+$etag = md5($lastModified . implode(',', $metroData) . $isUser . $favHash);
+
+// --- 0а. Сброс кэша после обновления избранного ---
+if (!empty($_COOKIE['fav_updated'])) {
+    setcookie('fav_updated', '', time() - 1, '/');
+    header("Cache-Control: no-store, no-cache, must-revalidate");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+}
 
 // --- 0. URL, для которых кэш всегда запрещён ---
 $noCacheUris = [
     '/izbrannoe',
     '/search',
-    '/moy_urfaq',
+    '/moy_yogoort',
     '/404',
     '/action',
 ];
@@ -30,21 +55,43 @@ if (in_array($requestUri, $noCacheUris, true)) {
     header("Cache-Control: no-store, no-cache, must-revalidate");
     header("Pragma: no-cache");
     header("Expires: 0");
-    return;
 }
 
 // --- 1. Специальная логика для /notariusy ---
 if ($requestUri === '/notariusy') {
     if ($isUser === 'user') {
-        // авторизованный — никогда не кэшируем
         header("Cache-Control: no-store, no-cache, must-revalidate");
         header("Pragma: no-cache");
         header("Expires: 0");
     } else {
-        // гость — можно кэшировать
         header("ETag: \"$etag\"");
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
         header("Vary: Cookie, Accept-Encoding");
+        header("Cache-Control: private, max-age=300, must-revalidate, no-cache");
+
+        if (!empty($_SERVER['HTTP_IF_NONE_MATCH'])) {
+            $clientEtags = explode(',', $_SERVER['HTTP_IF_NONE_MATCH']);
+            foreach ($clientEtags as $cEtag) {
+                $cEtag = trim($cEtag, " \"");
+                $cEtag = preg_replace('/-gzip$/', '', $cEtag);
+                if ($cEtag === $etag) {
+                    header('HTTP/1.1 304 Not Modified');
+                    exit; // только здесь блокируем вывод, если ETag совпал
+                }
+            }
+        }
+    }
+}
+
+// --- 2. Общая логика для всех остальных страниц ---
+if (!in_array($requestUri, $noCacheUris, true) && $requestUri !== '/notariusy') {
+    if ($isUser === 'user') {
+        header("Cache-Control: no-store, no-cache, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+    } else {
+        header("ETag: \"$etag\"");
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
         header("Cache-Control: private, max-age=300, must-revalidate, no-cache");
 
         if (!empty($_SERVER['HTTP_IF_NONE_MATCH'])) {
@@ -59,33 +106,19 @@ if ($requestUri === '/notariusy') {
             }
         }
     }
-    return; // завершаем, чтобы не выполнять общий блок
 }
 
-// --- 2. Общая логика для всех остальных страниц ---
-if ($isUser === 'user') {
-    // авторизованный
-    header("Cache-Control: no-store, no-cache, must-revalidate");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-} else {
-    // гость
-    header("ETag: \"$etag\"");
-    header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
-    header("Cache-Control: private, max-age=300, must-revalidate, no-cache");
 
-    if (!empty($_SERVER['HTTP_IF_NONE_MATCH'])) {
-        $clientEtags = explode(',', $_SERVER['HTTP_IF_NONE_MATCH']);
-        foreach ($clientEtags as $cEtag) {
-            $cEtag = trim($cEtag, " \"");
-            $cEtag = preg_replace('/-gzip$/', '', $cEtag);
-            if ($cEtag === $etag) {
-                header('HTTP/1.1 304 Not Modified');
-                exit;
-            }
-        }
-    }
-}
+// Синхронизируем сессию в localStorage и куку fav_ids (без reload)
+$favInline = json_encode($_SESSION['favorite'] ?? ['lawyers'=>[],'experts'=>[],'notaries'=>[],'all'=>[]], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+$favInlineScript = "<script>(function(){
+  var s={$favInline};
+  if(s&&s.all&&s.all.length){
+    localStorage.setItem('favorite',JSON.stringify(s));
+    document.cookie='fav_ids='+s.all.join(',')+';path=/;max-age=31536000';
+  }
+})();</script>";
+$HTML = str_replace('<!--favInline-->', $favInlineScript, $HTML);
 
 
 // Путь к фавиконкам
@@ -113,11 +146,10 @@ $filter_labels = [
     'company' => 'Юридические лица'
 ];
 
-// Разбираем URL без GET-параметров
-$requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$url_parts = explode('/', trim($requestPath, '/'));
+// Разбираем URL без параметров
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$url_parts = explode('/', trim($path, '/'));
 
-// Определяем фильтр и alias
 $last = end($url_parts);
 $filter = in_array($last, array_keys($filter_labels)) ? $last : null;
 
@@ -137,10 +169,8 @@ if (empty($alias)) {
 $section = $url_parts[0] ?? 'index';
 
 // Дефолтные мета-данные
-$default_meta = get_page_meta('index');
-$default_meta = get_page_meta('journal');
-
-$category_meta = array_merge($default_meta, get_all_service_meta($filter, $filter_labels, $cityGenitive));
+$service_meta = get_all_service_meta($filter, $filter_labels, $cityGenitive, $cityPrepositional);
+$category_meta = $service_meta; // если есть другие — можешь потом объединить
 
 // Основная логика получения мета-данных
 function resolve_meta($alias, $section, $category_meta, $cityName, $cityPrepositional)
@@ -156,15 +186,18 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
 
     if ($url == '/search') {
         return [
-            'title'       => 'Найденные специалисты каталога юридических и экспертных услуг | ЮРФАК.РУ',
-            'description' => 'Найденные пользователем на портале юристы, адвокаты, эксперты и нотариусы.',
-            'keywords'    => 'юристы, адвокаты, эксперты, нотариусы',
+            'title'       => 'Найденные специалисты каталога студий йоги | ЙОГУРТ.РУ',
+            'description' => 'Найденные пользователем на портале йога-студии.',
+            'keywords'    => 'йога, йога-студии, студии йоги, записаться на йогу',
         ];
     }
 
     // Приоритет 2: Категории (включая dt_service_parent)
-    if (isset($category_meta[$alias]))
-        return $category_meta[$alias];
+    $alias_clean = explode('?', $alias)[0]; // убираем ?параметры из alias
+
+    if (isset($category_meta[$alias_clean])) {
+        return $category_meta[$alias_clean];
+    }
 
     // Приоритет 3: Страница
     $meta = get_page_meta($alias);
@@ -182,7 +215,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
     }
 
     // Приоритет 4: Специалист
-    if ($section == 'specialist') {
+    if ($section == 'studio') {
 
         if (preg_match('/^id(\d+)$/', $alias, $matches)) {
             $specialist = get_specialist((int) $matches[1]);
@@ -200,6 +233,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
         $ownerName  = $hasCompany
             ? $specialist['company']
             : trim($specialist['name'] . ' ' . $specialist['lastname']);
+        $metroName  = $specialist['metro'] ? ", м. {$specialist['metro']}" : "";
 
         // карта фраз по classification_id
         $classificationTitleMap = [
@@ -210,7 +244,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             5 => 'Юридическая компания',
             6 => 'Коллегия адвокатов',
             7 => 'Адвокатское бюро',
-            8 => 'Экспертное учреждение',
+            8 => 'Студия йоги',
         ];
 
         // старая карта для description (родительный падеж)
@@ -222,7 +256,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             5 => 'юридической компании',
             6 => 'коллегии адвокатов',
             7 => 'адвокатского бюро',
-            8 => 'экспертного учреждения',
+            8 => 'студии йоги',
         ];
 
         $cid = (int) $specialist['classification_id'];
@@ -254,9 +288,9 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
 
         // Если есть компания — с кавычками, иначе — без
         if ($hasCompany) {
-            $title = "{$titlePrefix} «{$ownerName}»{$ratingText}, г. {$cityName} | ЮРФАК.РУ";
+            $title = "{$titlePrefix} «{$ownerName}»{$ratingText}, г. {$cityName}$metroName | ЙОГУРТ.РУ";
         } else {
-            $title = "{$titlePrefix} {$ownerName}{$ratingText}, г. {$cityName} | ЮРФАК.РУ";
+            $title = "{$titlePrefix} {$ownerName}{$ratingText}, г. {$cityName}$metroName | ЙОГУРТ.РУ";
         }
 
         // description остаётся по прежнему, но с картой в родительном
@@ -266,7 +300,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
         if (in_array($titleCode, [5, 6, 7], true)) {
             // корпоративные: юр. компания / коллегия / бюро
             $phrase = $classificationMap[$titleCode];
-            $description = "Услуги {$phrase} «{$ownerName}»: подготовка документов, досудебное урегулирование споров, представительство в суде, консультация. Цены, контакты.";
+            $description = "Услуги {$phrase} «{$ownerName}»$metroName. Консультация и полный спектр правовых услуг. Цены, контакты, отзывы.";
         } elseif (in_array($titleCode, [1, 2], true)) {
             // индивидуальные юрист / адвокат
             $lastname = str_replace(' ', '', $specialist['lastname']);
@@ -274,18 +308,18 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             $phrase = $classificationMap[$titleCode];
             $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
             $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
-            $description = "Услуги {$phrase} {$ownerName}: подготовка документов, досудебное урегулирование споров, представительство в суде, консультация. Цены, контакты.";
+            $description = "Услуги {$phrase} {$ownerName}$metroName. Консультация и полный спектр правовых услуг. Цены, контакты, отзывы.";
         } elseif (in_array($titleCode, [3, 8], true)) {
             if ($titleCode === 8) {
                 // экспертное учреждение
-                $description = "Услуги экспертного учреждения «{$ownerName}»: строительные, медицинские, автотехнические, почерковедческие и другие виды экспертиз. Заключение для суда и страховых компаний. Цены, контакты.";
+                $description = "Записаться на занятие йогой в студию «{$ownerName}»$metroName на yogoort.ru! Описание, фото, отзывы, контакты, расписание, запись онлайн.";
             } else {
                 $lastname = str_replace(' ', '', $specialist['lastname']);
                 $name = str_replace(' ', '', $specialist['name']);
                 $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
                 $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
                 // индивидуальный эксперт
-                $description = "Услуги эксперта {$ownerName}: строительные, медицинские, автотехнические, почерковедческие и другие виды экспертиз. Заключение для суда и страховых компаний. Цены, контакты.";
+                $description = "Услуги эксперта {$ownerName}$metroName. Различные виды исследований. Заключение для суда и страховых компаний. Цены, контакты, отзывы.";
             }
         } elseif ($titleCode === 4) {
             $lastname = str_replace(' ', '', $specialist['lastname']);
@@ -293,11 +327,11 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             $ownerName = morphos\Russian\inflectName($lastname . ' ' . $name, 'родительный');
             $ownerName = implode(' ', array_reverse(explode(' ', $ownerName)));
             // нотариус
-            $description = "Услуги нотариуса {$ownerName}: разработка и удостоверение документов, открытие наследства, свидетельствование верности перевода документов и прочие нотариальные действия. Цены, контакты.";
+            $description = "Услуги нотариуса {$ownerName}$metroName. Консультация и полный перечень нотариальных услуг и действий. Цены, контакты, отзывы.";
         } else {
             // универсальный фолбэк
             $phrase = $classificationMap[$titleCode] ?? 'специалиста';
-            $description = "Услуги {$phrase} «{$ownerName}»: подготовка документов, досудебное урегулирование споров, представительство в суде, консультация. Цены, контакты.";
+            $description = "Услуги {$phrase} «{$ownerName}»$metroName. Цены, контакты, отзывы.";
         }
 
         // ключевые слова — в зависимости от классификации
@@ -306,7 +340,7 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             $keywords = 'юрист, адвокат, поиск адвоката, поиск юриста, юридические услуги, помощь юриста, юридическая помощь, юридическая консультация, помощь адвоката';
         } elseif (in_array($titleCode, [3, 8], true)) {
             // Эксперты и экспертные учреждения
-            $keywords = 'независимая экспертиза, заказать экспертизу, экспертные исследования, судебная экспертиза, экспертные заключения, проведение экспертиз, специалисты-эксперты';
+            $keywords = 'йога, йога-студии, студии йоги, записаться на йогу, йога Москва';
         } elseif ($titleCode === 4) {
             // Нотариусы
             $keywords = 'нотариус, заверение документов, нотариальная контора, нотариальные услуги, нотариальные действия, оформление доверенности, наследственные дела';
@@ -315,11 +349,30 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
             $keywords = 'юрист, адвокат, юридические услуги, помощь юриста, консультация';
         }
 
+        $domain = 'https://yogni.ru'; // Укажите ваш основной домен с протоколом
 
+        // 1. Определение файла аватарки / фото
+        if (!empty($specialist['photo'])) {
+            $photoFile = $specialist['photo'];
+            $photoPath = "/uploads/specialists/{$photoFile}"; // Укажите реальный путь к фото
+        } else {
+            $photoFile = $hasCompany ? '022.webp' : '02.webp';
+            $photoPath = "/assets/img/{$photoFile}"; // Укажите реальный путь к дефолтным картинкам
+        }
+    
+        // 2. Формируем АБСОЛЮТНЫЙ URL картинки
+        $ogImage = $domain . $photoPath;
+    
+        // 3. Формируем АБСОЛЮТНЫЙ og:url с поддержкой slug
+        $studioSlug = !empty($specialist['slug']) ? $specialist['slug'] : 'id' . $specialist['id'];
+        $ogUrl = "{$domain}/studio/{$studioSlug}";
+    
         return [
             'title'       => $title,
             'description' => $description,
             'keywords'    => $keywords,
+            'og_image'    => $ogImage,
+            'og_url'      => $ogUrl,
         ];
     }
 

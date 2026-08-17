@@ -10,7 +10,12 @@ $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
   if (!empty($social['link'])) {
-    $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+    
+    if ($social['alt'] === 'Telegram') {
+      continue;
+    }
+    
+    $image_src = 'https://yogni.ru/assets/img/login-parol/';
     $height = 24;
     $width = 30;
 
@@ -20,12 +25,17 @@ foreach ($socials as $social) {
         $height = 24;
         $width = 30;
         break;
-      case 'Telegram':
+     /*  case 'Telegram':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break; */
+      case 'Vk':
         $image_src .= $social['image'];
         $height = 24;
         $width = 24;
         break;
-      case 'Vk':
+      case 'MAX':
         $image_src .= $social['image'];
         $height = 24;
         $width = 24;
@@ -57,6 +67,8 @@ foreach ($socials as $social) {
 
 $social_html .= '</tr>';
 
+$forbidden_words = getForbiddenWords();
+
 if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['password'])) {
   $securimage = new Securimage();
 
@@ -65,21 +77,62 @@ if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['p
   if ($classification <= 4) { // специалист
     $captchaCode = $_POST['captcha_code'] ?? '';
     $captchaId = $_POST['captcha_id2'] ?? null;
+    $fields_to_check = ['name', 'lastname'];
   } else { // компания
     $captchaCode = $_POST['captcha_code_registration_company'] ?? '';
     $captchaId = $_POST['captcha_id_registration_company'] ?? null;
-  }
-
-  // собираем данные из формы
-  foreach ($_POST as $key => $value) {
-    $data[$key] = clean_elem_form($value);
+    $fields_to_check = ['name', 'lastname', 'company'];
   }
 
   $json = ['error' => []];
+  $data = [];
+
+  // Сначала проверяем исходный текст на запрещённые элементы и слова
+  foreach ($fields_to_check as $field) {
+    $rawValue = $_POST[$field] ?? '';
+
+    if (!empty($rawValue)) {
+      $foundItems = containsForbiddenWords($rawValue, $forbidden_words);
+
+      if ($foundItems) {
+        $elements = [];
+        $words = [];
+
+        foreach ($foundItems as $item) {
+          if ($item['type'] === 'element') {
+            $elements[] = '"' . $item['value'] . '"';
+          } elseif ($item['type'] === 'word') {
+            $words[] = '"' . $item['value'] . '"';
+          }
+        }
+
+        if (!empty($elements) && !empty($words)) {
+          $allItems = array_unique(array_merge($elements, $words));
+          $json['error'][$field][] = 'Обнаружены запрещённые слова и элементы: ' . implode(', ', $allItems) . '.';
+        } elseif (!empty($elements)) {
+          $uniqueElements = array_unique($elements);
+          $json['error'][$field][] = 'Обнаружены запрещённые элементы: ' . implode(', ', $uniqueElements) . '.';
+        } elseif (!empty($words)) {
+          $uniqueWords = array_unique($words);
+          $json['error'][$field][] = 'Обнаружены запрещённые слова: ' . implode(', ', $uniqueWords) . '.';
+        }
+      }
+    }
+
+    // Потом очищаем для хранения/дальнейшей работы
+    $data[$field] = clean_elem_form($rawValue);
+  }
+
+  // Остальные поля формы очищаем
+  foreach ($_POST as $key => $value) {
+    if (!isset($data[$key])) { // чтобы не перезаписать проверенные поля
+      $data[$key] = clean_elem_form($value);
+    }
+  }
 
   // проверка капчи
   if (!$captchaCode) {
-    $json['error']['captcha_error'] = 'Введите код с картинки.';
+    $json['error']['captcha_error'] = 'Введите цифры с картинки';
   } elseif (!$securimage->check($captchaCode, $captchaId)) {
     $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
   }
@@ -90,9 +143,9 @@ if (isset($_POST['classification']) && isset($_POST['email']) && isset($_POST['p
 
   $pattern = '/^((\+?7|8)(?!95[4-7]|99[08]|907|94[^09]|336)([348]\d|9[0-6789]|7[0247])\d{8}|\+?(99[^4568]\d{7,11}|994\d{9}|9955\d{8}|996[57]\d{8}|9989\d{8}|380[34569]\d{8}|375[234]\d{8}|372\d{7,8}|37[0-4]\d{8}))$/';
   if ($data['phone']) {
-    $data['phone'] = preg_replace("/[^0-9]/", '', $data['phone']);
-    if (substr($data['phone'], 0, 1) == 8) $data['phone'][0] = 7;
-    if (!preg_match($pattern, $data['phone'])) $json['error']['phone'] = 'Некорректный номер телефона';
+    if (!preg_match('/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/', $data['phone'])) {
+      $json['error']['phone'] = 'Некорректный номер телефона';
+    }
   } else $json['error']['phone'] = 'Укажите номер телефона';
 
   if ($data['email']) {
@@ -254,10 +307,10 @@ a[x-apple-data-detectors] {
                   <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
                    <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                      <tr class="es-mobile-hidden" style="border-collapse:collapse">
-                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                      </tr><!--[if !mso]><!-- -->
                      <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                      </tr><!--<![endif]-->
                    </table></td>
                  </tr>
@@ -311,7 +364,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
                          </tr>
                         </tbody>
                      </table></td>
@@ -454,10 +507,10 @@ a[x-apple-data-detectors] {
                   <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
                    <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                      <tr class="es-mobile-hidden" style="border-collapse:collapse">
-                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                     <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6249.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                      </tr><!--[if !mso]><!-- -->
                      <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                      <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/group_6252.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                      </tr><!--<![endif]-->
                    </table></td>
                  </tr>
@@ -511,7 +564,7 @@ a[x-apple-data-detectors] {
                          <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                          </tr>
                          <tr style="border-collapse:collapse">
-                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                         <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
                          </tr>
                         </tbody>
                      </table></td>
@@ -550,7 +603,7 @@ EOF;
         $spec = get_specialists_by_company($company['id']);
         if ($spec) {
           $classification = get_classification($spec['classification_id']);
-          $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+          $response .= '<a href="/studio/id' . $spec['id'] . '">';
           $response .= $company['title'] . ', ';
           $response .= mb_strtolower($classification['title']) . '</a>';
         }
@@ -566,7 +619,7 @@ EOF;
         $response = '<b>Возможно ваша страница уже существует.<br>Найдены совпадения:</b><div class="users-links">';
         foreach ($specialists as $spec) {
           $classification = get_classification($spec['classification_id']);
-          $response .= '<a href="/specialist/id' . $spec['id'] . '">';
+          $response .= '<a href="/studio/id' . $spec['id'] . '">';
           $response .= $spec['name'] . ' ' . $spec['lastname'] . ', ';
           $response .= mb_strtolower($classification['title']) . '</a>';
         }

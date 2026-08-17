@@ -183,7 +183,7 @@ $(function () {
     $("body, html").animate({ scrollTop: top - extraHeight }, 800);
   });
 
-  $(".company-page .company-write").click(function () {
+  $(".company-write").click(function () {
     $(".popup.write").fadeIn();
     $("body").addClass("hid");
   });
@@ -641,10 +641,12 @@ $(function () {
     }
 
     localStorage.setItem("favorite", JSON.stringify(favorite));
+    // Синхронизируем куку fav_ids для серверного рендера
+    document.cookie = 'fav_ids=' + favorite.all.join(',') + ';path=/;max-age=31536000';
 
     $.post("/actions/set_favorite.php", { favorite: favorite, company_page: true })
       .done(function () {
-        $(".company-fav").toggleClass("active");
+        $(btn).toggleClass("active");
       });
   });
 

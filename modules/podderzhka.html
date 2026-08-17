@@ -1,7 +1,7 @@
 <div style="margin: 0px;" class="heading__mobile support-heading"><a href="/cabinet/"></a><div class="text">Поддержка</div></div>
 <div class="support-block">
-	<p class="support-top-text">Мы постарались собрать самые популярные вопросы в <a href="/cabinet/faq">разделе FAQ</a>.<br><br>
-		Если это не помогло, напишите нам на почту <a class="blue-link" href="mailto:support@urfaq.ru">support@urfaq.ru</a>, указав в обращении id своего профиля. Мы свяжемся с вами в ближайшее время и обязательно поможем!</p>
+	<p class="support-top-text">Мы постарались собрать решения самых популярных проблем в разделе "Частые вопросы".<br><br>
+		Если это не помогло - заполните и отправьте <a class="custom-link support-message-button" href="#">форму обращения в службу поддержки</a>. Мы свяжемся с вами в ближайшее время и обязательно поможем!</p>
 	<ul>
 		<!-- <li><div class="open-popup" style="background-image: url(/assets/img/cabinet/support-questuions.svg);">Общие вопросы по работе сервиса</div></li>
 		<li><div class="open-popup" style="background-image: url(/assets/img/cabinet/support-payment.svg);">Оплата и отчётность</div></li>
@@ -64,3 +64,122 @@
 		</div>
 	</div>
 </div>
+
+<div class="popup grey support-message">
+	<div class="bg"></div>
+	<div class="window middle">
+	  <div class="close"></div>
+	  <div class="reg">
+		<form method="POST" id="support-message-popup-lk" novalidate>
+		  <div class="name">Сообщение в поддержку</div>
+		  <div class="popup-body">
+			<div class="field-name field-name-main big">
+			  Данные для обратной связи
+			</div>
+  
+			<!--data:popup_forbidden_words--><!--data:popup_forbidden_words-->
+  
+			<div class="field">
+			  <div class="field-name">ФИО или название компании</div>
+			  <!--data:popup_name_field--><!--data:popup_name_field-->
+			  <div class="invalid-feedback" style="display: block"></div>
+			</div>
+  
+			<div class="field">
+			  <div class="field-name">Контактный номер телефона</div>
+			  <!--data:popup_tel_field--><!--data:popup_tel_field-->
+			  <div class="invalid-feedback" style="display: block"></div>
+			</div>
+  
+			<div class="field field-name-main">
+			  <div class="field-name">Адрес электронной почты</div>
+			  <!--data:popup_email_field--><!--data:popup_email_field-->
+			  <div class="invalid-feedback" style="display: block"></div>
+			</div>
+  
+			<div class="field">
+			  <div class="field-name big">Сообщение</div>
+			  <textarea
+				name="message"
+				class="field-input field-textarea"
+				maxlength="1000"
+				placeholder="Опишите вашу проблему или предложение (не более 1000 символов)."
+			  ></textarea>
+			  <div class="invalid-feedback" style="display: block"></div>
+			</div>
+  
+			<!--data:popup_page_link--><!--data:popup_page_link-->
+			<input type="hidden" name="type" value="support" />
+			<!--data:date--><!--data:date-->
+			<input type="hidden" name="place" value="Личный кабинет" />
+  
+			<div class="button">
+			  <button
+				type="submit"
+				id="btn-support-message-popup"
+				class="popup-btn"
+			  >
+				Отправить
+			  </button>
+			  <p>
+				Нажимая “Отправить”, я принимаю изложенное в документах,
+				представленных в разделе сайта
+				<span class="bold">“О проекте”</span>.
+			  </p>
+			</div>
+		  </div>
+		</form>
+	  </div>
+	</div>
+  </div>
+  
+  <div class="popup support-message-end">
+	<div class="bg"></div>
+	<div class="window middle">
+	  <div class="close"></div>
+	  <div class="reg">
+		<div class="popup-body">
+		  <div class="end__block">
+			<i class="convert"><img src="/assets/img/cabinet/convert.svg" /></i>
+			<div class="end__title">Спасибо за обращение!</div>
+			<div class="end__text">
+			  <p>
+				Мы свяжемся с вами по указанному в обращении номеру телефона или
+				ответим на электронную почту.
+			  </p>
+			  <p>
+				Как правило, ответ приходит в течение 48 часов, но в отдельных
+				случаях может занимать немного больше времени.
+			  </p>
+			</div>
+		  </div>
+		  <div class="button">
+			<button class="popup-btn close-popup-btn">Продолжить</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+  </div>
+  
+  <div class="popup banner-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+	  <div class="close"></div>
+	  <div class="reg">
+		<div class="popup-body">
+		  <form method="POST" id="forbidden-popup-form">
+			<div class="name">Запрет публикации</div>
+			<div class="popup-content forbidden-popup-content">
+			  <div class="forbidden-popup-text">
+				Контент, который вы хотите опубликовать, содержит запрещенные
+				слова и элементы:
+				<span id="forbidden-words-list"></span>. <br /><br />С правилами
+				сайта вы можете ознакомиться на странице
+				<a href="/o-proekte">«О проекте»</a>.
+			  </div>
+			</div>
+		  </form>
+		</div>
+	  </div>
+	</div>
+  </div>

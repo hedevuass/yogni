@@ -10,6 +10,17 @@ if (isset($_GET['recovery']) || isset($_GET['confirmation'])) {
 		unset($_SESSION['user']);
 		responseRedirect('/moy-urfaq');
 	}
+	if (isset($_GET['recovery'])) {
+		$user = get_specialist($specialist_id);
+		$token = clean_elem_form($_GET['token'] ?? '');
+		if ($user['recovery_token'] !== $token || empty($token)) {
+			// Токен не валиден или уже использован
+			responseRedirect('/action?recovery');
+			exit;
+		}
+		recover_user($specialist_id);
+		clear_recovery_token($user['id']);
+	}
 } else {
 	$user_id = $_SESSION['user']['id'];
 	$email = get_email_by_id($user_id);
@@ -73,4 +84,3 @@ $HTML = html_explode([
 
 $HTML_ = explode('<!--data:content-confirm-->', $HTML, 3);
 $HTML = $HTML_[0] . "<!--data:content-confirm-->{$data['content-confirm']}<!--data:content-confirm-->" . $HTML_[2];
-

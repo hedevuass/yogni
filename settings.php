@@ -45,6 +45,8 @@ define('DB_DATABASE', $_ENV['DB_DATABASE']);
 define('DB_USERNAME', $_ENV['DB_USERNAME']);
 define('DB_PASSWORD', $_ENV['DB_PASSWORD']);
 
+define('APP_SECRET_KEY', $_ENV['APP_SECRET_KEY']);
+
 // Город по умолчанию
 if (!isset($_SESSION['city'])) $_SESSION['city'] = [
 	'id' 		=> 365,
@@ -53,7 +55,7 @@ if (!isset($_SESSION['city'])) $_SESSION['city'] = [
 
 // Админская часть приложения
 $settings = [
-    'admin_href' => '/dicfacducfer1113/',
+    'admin_href' => '/mukadhoha96/',
 	'favicon' => '/uploads/fav-icon/favicon.png',
 ];
 

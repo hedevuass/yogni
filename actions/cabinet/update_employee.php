@@ -16,40 +16,36 @@ if (isset($_POST['company_id'])) {
     foreach ($data['name'] as $key => $name) {
         if (!$name && !$data['lastname'][$key] && !$data['post'][$key] && !isset($_FILES[$key]) && !isset($employees[$key])) continue;
         if (!$name) {
-            $json['error'][$key] = 'Укажите имя.';
+            $json['error'][$key] = 'Укажите имя';
             continue;
         }
         if (!$data['lastname'][$key]) {
-            $json['error'][$key] = 'Укажите фамилию.';
+            $json['error'][$key] = 'Укажите фамилию';
             continue;
         }
         if (!$data['post'][$key]) {
-            $json['error'][$key] = 'Укажите должность.';
+            $json['error'][$key] = 'Укажите должность';
             continue;
         }
-        if (!isset($_FILES[$key]) && !isset($employees[$key])) {
-            $json['error'][$key] = 'Файл слишком большой (максимальный размер - до 5 МБ).';
+        if ($data['is_mobile'] == "true" && isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
+            $img_name = $data['mobile_loaded'][$key];
+        } else if (!isset($_FILES[$key]) && !isset($employees[$key])) {
+            $json['error'][$key] = 'Загрузите изображение';
             continue;
         } else if (!isset($_FILES[$key]) && isset($employees[$key])) {
             $img_name = $employees[$key]['photo'];
         } else {
-            if ($data['is_mobile'] == "true" && isset($data['mobile_loaded'])) {
-                if (isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
-                    $img_name = $data['mobile_loaded'][$key];
-                }
+            $uniq = uniqid();
+            $image = load_image_webp(
+                $_FILES[$key],
+                'employee',
+                "employee_{$_SESSION['user']['id']}_{$uniq}"
+            );
+            if (isset($image['error'])) {
+                $json['error'][$key] = $image['error'];
+                continue;
             } else {
-                $uniq = uniqid();
-                $image = load_image_webp(
-                    $_FILES[$key],
-                    'employee',
-                    "employee_{$_SESSION['user']['id']}_{$uniq}"
-                );
-                if (isset($image['error'])) {
-                    $json['error'][$key] = $image['error'];
-                    continue;
-                } else {
-                    $img_name = $image['name'];
-                }
+                $img_name = $image['name'];
             }
         }
         $new_employees[$key] = [

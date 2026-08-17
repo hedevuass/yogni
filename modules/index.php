@@ -8,17 +8,20 @@ $data = get_actual_services();
 $lastModifiedBlockRow = get_last_modified();
 $lastModifiedBlock = $lastModifiedBlockRow ? strtotime($lastModifiedBlockRow['last_modified']) : time();
 
-$lawyers = getCachedData('specialists_lawyers_' . $lastModifiedBlock, 600, function() {
+$lawyers = getCachedData('specialists_lawyers_' . $lastModifiedBlock, 600, function () {
     return get_specialists_by_classification_n_block([1, 2, 5, 6, 7], 8);
 });
-$data['index_lawyers'] = block($lawyers);
+// Подгружаем массив всех специализаций для корректного рандома
+$lawyers = loadSpecializationList($lawyers);
+$data['index_lawyers'] = block($lawyers, false, true);
 
-$experts = getCachedData('specialists_experts_' . $lastModifiedBlock, 600, function() {
+$experts = getCachedData('specialists_experts_' . $lastModifiedBlock, 600, function () {
     return get_specialists_by_classification_n_block([3, 8], 8);
 });
-$data['index_experts'] = block($experts);
+$experts = loadSpecializationList($experts);
+$data['index_experts'] = block($experts, false, true);
 
-$notaries = getCachedData('specialists_notaries_' . $lastModifiedBlock, 600, function() {
+$notaries = getCachedData('specialists_notaries_' . $lastModifiedBlock, 600, function () {
     return get_specialists_by_classification_n_block([4], 8);
 });
 $data['index_notaries'] = block($notaries);
@@ -29,13 +32,13 @@ $data['city_genitive'] = $_SESSION['city_genitive'];
 
 $topLinks = [
     'top_link_lawyer' => 'yuristy-i-advokaty',
-    'top_link_expert' => 'experty',
+    'top_link_expert' => 'yoga-studii',
     'top_link_notarius' => 'notariusy',
 ];
 
 $h2TopLinks = [
     'top_link_lawyer_h2' => 'yuristy-i-advokaty',
-    'top_link_expert_h2' => 'experty',
+    'top_link_expert_h2' => 'yoga-studii',
     'top_link_notarius_h2' => 'notariusy',
 ];
 
@@ -120,7 +123,7 @@ foreach ($first_banners as $slide) {
                         </div>
                         <a href="'
             . ($specId
-                ? '/specialist/id' . $specId
+                ? '/studio/id' . $specId
                 : htmlspecialchars($slide['button_link'])
             )
             . '" class="btn btn__main-slide">'
@@ -168,7 +171,7 @@ foreach ($second_banners as $slide) {
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
     // URL для перехода — на страницу специалиста, если есть ID, иначе на общий link
     $targetLink = $specId
-        ? '/specialist/id' . $specId
+        ? '/studio/id' . $specId
         : ($slide['link'] ?: '#');
 
     $data['second_slider'] .= '
@@ -218,7 +221,7 @@ $data['second_slider'] .= '
 
 $third_banners = get_banner(3);
 
-$data['third_slider'] = '
+/* $data['third_slider'] = '
 <div class="banner__wrapper">
     <div class="swiper" id="banner3">
         <div class="swiper-wrapper">';
@@ -237,7 +240,7 @@ foreach ($third_banners as $slide) {
 
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
     $targetLink = $specId
-        ? '/specialist/id' . $specId
+        ? '/studio/id' . $specId
         : ($slide['link'] ?: '#');
 
     $data['third_slider'] .= '
@@ -281,7 +284,7 @@ $data['third_slider'] .= '
             <img src="assets/img/banner-next.svg" alt="next">
         </div>
     </div>
-</div>';
+</div>'; */
 
 $fourth_banners = get_banner(4);
 
@@ -308,7 +311,7 @@ foreach ($fourth_banners as $slide) {
 
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
     $targetLink = $specId
-        ? '/specialist/id' . $specId
+        ? '/studio/id' . $specId
         : ($slide['link'] ?: '#');
 
     $data['fourth_slider'] .= '
@@ -362,20 +365,25 @@ foreach ($fifth_banner as $slide) {
     $button_link = htmlspecialchars_decode($slide['button_link']);
     $description = json_decode($slide['description'], true);
     $image = $slide['image'];
+    $alt_banner = htmlspecialchars(strip_tags($title), ENT_QUOTES, 'UTF-8');
 
     // Создаем HTML для каждого слайда
     $data['fifth_banner'] .= '
-        <div class="top-banner lazy-bg" data-bg="../assets/img/' . htmlspecialchars($image) . '">
-				<span class="name">
-					' . $title . '
-				</span>
-				<span class="p">
-                    <p>' . $description['line1'] . '</p>
-                    <p>' . $description['line2'] . '</p>
-                    <p>' . $description['line3'] . '</p>
-                </span>
-				<a href="' . $button_link . '">' . $button_text . '</a>
-			</div>';
+        <div class="top-banner">
+    <img src="../assets/img/' . htmlspecialchars($image) . '" alt="' . $alt_banner . '" class="banner-bg">
+    
+    <div class="banner-content">
+        <span class="name">
+            ' . $title . '
+        </span>
+        <span class="p">
+            <p>' . $description['line1'] . '</p>
+            <p>' . $description['line2'] . '</p>
+            <p>' . $description['line3'] . '</p>
+        </span>
+        <a href="' . $button_link . '">' . $button_text . '</a>
+    </div>
+</div>';
 }
 
 $sixth_banner = get_banner(6);
@@ -388,22 +396,28 @@ foreach ($sixth_banner as $slide) {
     $description = json_decode($slide['description'], true);
     $image = $slide['image'];
 
+    $alt_sidebar_banner = htmlspecialchars(strip_tags($title), ENT_QUOTES, 'UTF-8');
+
     $data['sixth_banner'] .= '
         <a href="' . $link . '" class="banner-sidebar">
             <div class="sticky">
-                <div class="banner lazy-bg" data-bg="../assets/img/' . htmlspecialchars($image) . '">
-                    <div class="name">
-                        ' . $title . '
-                    </div>
-                    <p>' . $subtitle . '</p>
-                    <ul>
-                        <li>' . $description['line1'] . '</li>
-                        <li>' . $description['line2'] . '</li>
-                        <li>' . $description['line3'] . '</li>
-                        <li>' . $description['line4'] . '</li>
-                    </ul>
-                    <div class="button">
-                        <span>' . $button_text . '</span>
+                <div class="banner">
+                    <img src="../assets/img/' . htmlspecialchars($image) . '" alt="' . $alt_sidebar_banner . '" class="banner-bg" loading="lazy">
+                    
+                    <div class="banner-content">
+                        <div class="name">
+                            ' . $title . '
+                        </div>
+                        <p>' . $subtitle . '</p>
+                        <ul>
+                            <li>' . $description['line1'] . '</li>
+                            <li>' . $description['line2'] . '</li>
+                            <li>' . $description['line3'] . '</li>
+                            <li>' . $description['line4'] . '</li>
+                        </ul>
+                        <div class="button">
+                            <span>' . $button_text . '</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -429,17 +443,29 @@ $data['posts'] = '';
 $posts = get_actual_posts_main();
 foreach ($posts as $post) {
     $post_alias = '/journal/' . $post['alias'];
+    $post_title_clean = strip_tags(html_entity_decode($post['title']));
+    $alt_text = htmlspecialchars($post_title_clean, ENT_QUOTES, 'UTF-8');
+
     $data['posts'] .= '<div class="item2">
     <div class="flex post-data">
-        <a href="/journal/' . $post['post_type'] . '" class="cat_' . $post['post_type'] . '"><span>' . $post['service_title'] . '</span></a>
+        <a href="/journal/' . $post['service_slug'] . '" class="cat_' . $post['post_type'] . '"><span>' . $post['service_title'] . '</span></a>
         <div class="date">' . date('d.m.Y', strtotime($post['date'])) . '</div>
     </div>
-    <a href="' . $post_alias . '" class="name">' . strip_tags(html_entity_decode($post['title'])) . '</a>';
+    <a href="' . $post_alias . '" class="stretched-link"></a>
+    <a href="' . $post_alias . '" class="name">' . $post_title_clean . '</a>';
+    
     if ($post['photo'] != '' && !is_null($post['photo'])) {
-        $data['posts'] .= '<a href="' . $post_alias . '" class="image" style="background-image: url(/uploads/articles/' . $post['photo'] . ');">
-    </a>';
+        // Заменяем фон на полноценный <img> с жесткими инлайн-стилями
+        $data['posts'] .= '<a href="' . $post_alias . '" class="image" style="display: block; overflow: hidden; position: relative;">
+            <img src="/uploads/articles/' . $post['photo'] . '" 
+                 alt="' . $alt_text . '" 
+                 loading="lazy" 
+                 style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+        </a>';
     }
+    
     $data['posts'] .= '<a class="content cut-text" href="' . $post_alias . '">' . strip_tags(html_entity_decode($post['content'])) . '</a>';
+    
     $article_tags = get_article_tags($post['id']);
     if ($post['post_type'] != 'blogs' && $article_tags) {
         $data['posts'] .= '<div class="tags">';
@@ -454,7 +480,20 @@ foreach ($posts as $post) {
 $data['actual_articles_list'] = '';
 $actual_articles = get_actual_posts('articles', 0, 0, 4);
 foreach ($actual_articles as $article) {
-    $data['actual_articles_list'] .= '<a href="/journal/' . $article['alias'] . '" class="item"><div class="item-img_wrapper" style="background-image:url(/uploads/articles/' . $article['photo'] . ');"></div><div><span>' . strip_tags(html_entity_decode($article['title'])) . '</span></div></a>';
+    $article_title_clean = strip_tags(html_entity_decode($article['title']));
+    $alt_text = htmlspecialchars($article_title_clean, ENT_QUOTES, 'UTF-8');
+
+    $data['actual_articles_list'] .= '<a href="/journal/' . $article['alias'] . '" class="item">
+        <div class="item-img_wrapper" style="position: relative; overflow: hidden;">
+            <img src="/uploads/articles/' . $article['photo'] . '" 
+                 alt="' . $alt_text . '" 
+                 loading="lazy" 
+                 style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
+        </div>
+        <div>
+            <span>' . $article_title_clean . '</span>
+        </div>
+    </a>';
 }
 
 $HTML = html_explode($data, $HTML);
@@ -604,7 +643,7 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
                     $types[] = 'Юристы и адвокаты';
                     break;
                 case 'experts':
-                    $types[] = 'эксперты';
+                    $types[] = 'студии йоги';
                     break;
                 case 'notaries':
                     $types[] = 'нотариусы';
@@ -649,7 +688,7 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
             "position" => $i + 1,
             "item" => [
                 "@type" => "LegalService",
-                "url" => full_url('specialist/id' . ($spec['id'] ?? '')),
+                "url" => full_url('studio/id' . ($spec['id'] ?? '')),
                 "image" => full_url('/uploads/avatars/' . ($spec['photo'] ?? '')),
                 "name" => $name,
                 "additionalType" => $spec['classification_title'] ?? '',
@@ -703,7 +742,7 @@ function generateHomePageWebSiteJsonLd(): string
             ],
             "contactPoint" => [
                 "@type" => "ContactPoint",
-                "email" => "info@urfaq.ru",
+                "email" => "info@yogoort.ru",
                 "availableLanguage" => "Russian"
             ],
         ],

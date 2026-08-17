@@ -3,44 +3,49 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 
 $data = [];
 
-if (!isset($_GET['reg']) && !isset($_GET['confirmation'])) responseRedirect('/');
+if (!isset($_GET['reg']) && !isset($_GET['confirmation']) && !isset($_GET['recovery'])) responseRedirect('/');
 
 //Социальные сети
 $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
-    if (!empty($social['link'])) {
-        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
-        $height = 24; 
+  if (!empty($social['link'])) {
+
+    if ($social['alt'] === 'Telegram') {
+      continue;
+    }
+
+    $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+    $height = 24;
+    $width = 30;
+
+    switch ($social['alt']) {
+      case 'Youtube':
+        $image_src .= $social['image'];
+        $height = 24;
         $width = 30;
-        
-        switch ($social['alt']) {
-          case 'Youtube':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 30;
-              break;
-          case 'Telegram':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 24;
-              break;
-          case 'Vk':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 24;
-              break;
-          case 'Yandex':
-              $image_src .= $social['image'];
-              $height = 24;
-              $width = 24;
-              break;
-          default:
-              $image_src .= $social['image'];
-              break;
-      }
-        
-        $social_html .= '
+        break;
+      /* case 'Telegram':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break; */
+      case 'Vk':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'Yandex':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      default:
+        $image_src .= $social['image'];
+        break;
+    }
+
+    $social_html .= '
             <td align="center" valign="top" style="padding:0;Margin:0;padding-right:15px">
                 <a target="_blank" href="' . htmlspecialchars($social['link']) . '" 
                    style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px">
@@ -52,29 +57,32 @@ foreach ($socials as $social) {
                          style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic">
                 </a>
             </td>';
-    }
+  }
 }
 
 $social_html .= '</tr>';
 
 if (isset($_GET['reg'])) {
-    $data['title'] = 'Завершение регистрации';
-    $user_id = clean_elem_form($_GET['user_id']);
-    $hash = clean_elem_form($_GET['hash']);
-    if (check_hash($hash, $user_id)) {
-        $specialist = get_specialist($user_id);
-        if ($specialist['active'] == 1) responseRedirect('/');
+  $data['title'] = 'Завершение регистрации';
+  $user_id = clean_elem_form($_GET['user_id']);
+  $hash = clean_elem_form($_GET['hash']);
+  if (check_hash($hash, $user_id)) {
+    $specialist = get_specialist($user_id);
+    if (empty($specialist['name'])) {
+      unset($_SESSION['user_id']);
+    }
+    if ($specialist['active'] == 1) responseRedirect('/');
 
-        $hash = md5($user_id . bin2hex(random_bytes(15)));
+    $hash = md5($user_id . bin2hex(random_bytes(15)));
 
-        $activate = activate_user($hash, $user_id);
+    $activate = activate_user($hash, $user_id);
 
-        if ($activate) {
-            $mail_title = 'ЮРФАК - успешная регистрация';
-            $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
-            $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-            $link_url .= '/cabinet?confirmation&user_id=' . $user_id.'&hash='.$hash;
-            $mail_body = <<<EOF
+    if ($activate) {
+      $mail_title = 'ЮРФАК - успешная регистрация';
+      $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
+      $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+      $link_url .= '/cabinet?successfullconfirmation&user_id=' . $user_id . '&hash=' . $hash;
+      $mail_body = <<<EOF
             <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0">
              <head>
               <meta charset="UTF-8">
@@ -242,27 +250,34 @@ if (isset($_GET['reg'])) {
 
                  </body></html>
             EOF;
-            if (send_mail_smtp($specialist['email'], $mail_title, $mail_body)) {
-              responseRedirect(((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'].'?show_login');
-              // $data['after_mail_content'] = 'Регистрация прошла успешно, вы можете авторизоваться.';
-            }
-            else $data['after_mail_content'] = 'Регистрация прошла успешно, вы можете авторизоваться, но письмо о подтвержденной регистрации не было отправлено Вам на почту.';
-        } else $data['after_mail_content'] = 'Подтверждение регистрации временно недоступно!';
-    } else {
-        $data['after_mail_content'] = 'Электронная почта уже была подтверждена ранее.';
-    }
+      if (send_mail_smtp($specialist['email'], $mail_title, $mail_body)) {
+        responseRedirect(((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '?show_login');
+        // $data['after_mail_content'] = 'Регистрация прошла успешно, вы можете авторизоваться.';
+      } else $data['after_mail_content'] = 'Регистрация прошла успешно, вы можете авторизоваться, но письмо о подтвержденной регистрации не было отправлено Вам на почту.';
+    } else $data['after_mail_content'] = 'Подтверждение регистрации временно недоступно!';
+  } else {
+    $data['after_mail_content'] = 'Электронная почта уже была подтверждена ранее.';
+  }
 }
 
 if (isset($_GET['confirmation'])) {
-    $mail_title = 'ЮРФАК - успешное подтверждение прав';
-    $user_id = clean_elem_form($_GET['user_id']);
-    $email = clean_elem_form($_GET['email']);
-    $specialist = get_specialist($user_id);
-    $hash = $specialist['hash'];
-    $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
-    $link_url = $site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-    $link_url .= '/cabinet?confirmation&user_id=' . $user_id.'&hash='.$hash;
-    $mail_body = <<<EOF
+  $data['title'] = 'Завершение подтверждения страницы';
+  $data['after_mail_content'] = 'Доступ к странице уже был подтвержден ранее.';
+  $mail_title = 'ЮРФАК - успешное подтверждение прав';
+  $user_id = clean_elem_form($_GET['user_id']);
+  $email = clean_elem_form($_GET['email']);
+  $specialist = get_specialist($user_id);
+  if (!$specialist) {
+    unset($_SESSION['user']);
+    $data['title'] = 'Завершение подтверждения страницы';
+    $data['after_mail_content'] = 'Доступ к странице уже был подтвержден ранее.';
+  } else {
+    if (empty($specialist['password']) || $specialist['active'] != 1) {
+      $hash = $specialist['hash'];
+      $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
+      $link_url = $site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+      $link_url .= '/cabinet?successfullconfirmation&user_id=' . $user_id . '&hash=' . $hash;
+      $mail_body = <<<EOF
             <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0">
              <head>
               <meta charset="UTF-8">
@@ -431,11 +446,21 @@ if (isset($_GET['confirmation'])) {
                  </body></html>
             EOF;
 
-    $activate = activate_user($hash, $user_id);
-    if ($activate) {
-        if (send_mail_smtp($email, $mail_title, $mail_body)) responseRedirect('/cabinet/login-i-parol?confirmation&hash='.$hash.'&user_id='.$user_id);
+      $activate = activate_user($hash, $user_id);
+      if ($activate) {
+        if (send_mail_smtp($email, $mail_title, $mail_body)) responseRedirect('/cabinet/login-i-parol?confirmation&hash=' . $hash . '&user_id=' . $user_id);
         else responseRedirect('/');
-    } else responseRedirect('/');
+      } else responseRedirect('/');
+    } else {
+      $data['title'] = 'Завершение подтверждения страницы';
+      $data['after_mail_content'] = 'Доступ к странице уже был подтвержден ранее.';
+    }
+  }
+}
+
+if (isset($_GET['recovery'])) {
+  $data['title'] = 'Завершение восстановления пароля';
+  $data['after_mail_content'] = 'Пароль к странице уже был изменен. В случае утери пароля заполните форму восстановления пароля для получения доступа к странице.';
 }
 
 $data['city_genitive'] = '';

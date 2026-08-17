@@ -1,8 +1,8 @@
 	<!--data:mobile_bottom_header--><!--data:mobile_bottom_header-->
 	<header class="topbar__wrapper">
 		<div class="topbar flex wrap">
-			<a class="city">
-				<!--data:city--><!--data:city-->
+			<a class="city" style="pointer-events: none; cursor: default;">
+ 				<!--data:city--><!--data:city-->
 			</a>
 			<ul class="menu2 flex">
 				<li><a href="/o-proekte">О проекте</a></li>
@@ -14,11 +14,11 @@
 	<header class="mobile-header">
 		<div class="wrap">
 			<div class="flex mobile-header__wrapper">
-				<a class="city">
+				<a class="city" style="pointer-events: none; cursor: default;">
 					<!--data:city--><!--data:city-->
 				</a>
 				<div class="mobile-header__title">
-					<a href="/"><span class="orange">ЮР</span>ФАК</a>
+					<a class="logo" href="/"><img class="logo-img" src="/assets/img/logo/yoga_logo.svg"><span>ЙОГУРТ</span></a>
 				</div>
 				<a class="menu-button2"></a>
 				<i class="search__btn"></i>
@@ -30,13 +30,13 @@
 		<div class="wrap">
 			<div class="flex header__first-line">
 				<div class="logo-wrap flex">
-					<a class="logo" href="/"><span class="orange">ЮР</span>ФАК</a> – Dura lex, sed lex*
+					<a class="logo" href="/"><img class="logo-img" src="/assets/img/logo/yoga_logo.svg"><span>ЙОГУРТ</span></a> <span class="after_logo-text">- Каталог студий йоги</span>
 				</div>
 				<a class="site-menu__btn"></a>
 				<div class="search__box">
 					<form action="" class="search__form">
 						<div class="search__wrap">
-							<input type="text" name="search" class="search__input" autocomplete="off" placeholder="Найти юристов, адвокатов, экспертов, нотариусов, услуги, разделы права...">
+							<input type="text" name="search" class="search__input" autocomplete="off" placeholder="Найти студии, направления, преподавателей...">
 							<div class="search__btn"><i></i></div>
 						</div>
 					</form>
@@ -53,9 +53,9 @@
 			</div>
 			<div class="flex header__second-line">
 				<ul class="menu1">
-					<li><a href="/yuristy-i-advokaty"><!--data:menu1_lawyer--><!--data:menu1_lawyer--></a></li>
-					<li><a href="/experty"><!--data:menu1_expert--><!--data:menu1_expert--></a></li>
-					<li><a href="/notariusy"><!--data:menu1_notarius--><!--data:menu1_notarius--></a></li>
+					<li class="dn"><a href="/yuristy-i-advokaty"><!--data:menu1_lawyer--><!--data:menu1_lawyer--></a></li>
+					<li><a href="/yoga-studii"><!--data:menu1_expert--><!--data:menu1_expert--></a></li>
+					<li class="dn"><a href="/notariusy"><!--data:menu1_notarius--><!--data:menu1_notarius--></a></li>
 					<li><a href="/journal">Журнал</a></li>
 					<!--data:social_links_header--><!--data:social_links_header-->
 				</ul>
@@ -74,7 +74,7 @@
 			<div class="close"></div>
 			<button class="search__find-btn" disabled>Найти</button>
 			<div class="search__wrap">
-				<input type="text" class="search-input" id="search-query" placeholder="Например: семейный юрист" autocomplete="off">
+				<input type="text" class="search-input" id="search-query" placeholder="Например: хатха-йога" autocomplete="off">
 				<div class="clear-search__wrap">
 					<span class="clear-search">Очистить</span>
 				</div>

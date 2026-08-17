@@ -4,88 +4,88 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/functions.php';
 
 update_last_modified();
-/* if (isset($_POST['favorite'])) {
-    session_start();
-    $_SESSION['favorite'] = json_decode($_POST['favorite']);
-    if (isset($_POST['company_page']) && $_POST['company_page']) {
-        responseJson(true);
-    }
-    if (isset($_POST['specialization']) && $_POST['specialization']) {
-        $specialization = $_POST['specialization'];
-        $ids = $_SESSION['favorite']->{$specialization};
-        if(empty($ids)) {
-            $json['specialists'] = "Не найдено избранных специалистов/компаний.";
-            $count = 0;
-        } else {
-            $specialists =  get_specialists_by_ids($ids, 16, 0);
-            $count = count_specialists_by_ids($ids); 
-            $json['specialists'] = $specialists ? block($specialists) : false;
-            if (count($specialists) >= 16) {
-                $json['pagination'] = block_pagination_fav($count, 16, 1, $specialization);
-            }
-        }
 
-        $json['page'] = 2;
+session_start();
+setcookie('fav_updated', '1', 0, '/', '', false, false);
 
-        responseJson($json);
-    }
-    return false;
-} */
-if (isset($_POST['favorite'])) {
-    session_start();
-    $_SESSION['favorite'] = $_POST['favorite']; // убрали json_decode()
+function normalizeFavorite($fav) {
+    $out = [
+        'lawyers'  => [],
+        'experts'  => [],
+        'notaries' => [],
+        'all'      => []
+    ];
 
-    if (isset($_POST['company_page']) && $_POST['company_page']) {
-        responseJson(true);
+    if (!is_array($fav)) {
+        return $out;
     }
 
-    if (isset($_POST['specialization']) && $_POST['specialization']) {
-        $specializations = $_POST['specialization'];
-        if (!is_array($specializations)) {
-            $specializations = [$specializations];
+    foreach ($out as $k => $v) {
+        if (isset($fav[$k]) && is_array($fav[$k])) {
+            $out[$k] = array_values(array_unique(array_map('intval', $fav[$k])));
         }
-
-        $ids = [];
-        if (!empty($_SESSION['favorite']['all'])) {
-            $ids = $_SESSION['favorite']['all'];
-        } else {
-            foreach ($specializations as $specialization) {
-                if (!empty($_SESSION['favorite'][$specialization])) {
-                    $ids = array_merge($ids, $_SESSION['favorite'][$specialization]);
-                }
-            }
-        }
-
-        $count = count($ids);
-
-        if (empty($ids)) {
-            $json['specialists'] = "Не найдено избранных специалистов/компаний.";
-            $count = 0;
-        } else {
-            $specialists = get_specialists_by_ids($ids); // без лимита
-            $foundById = [];
-            foreach ($specialists as $s) {
-                $foundById[(int)$s['id']] = $s;
-            }
-
-            $ordered = [];
-            foreach ($ids as $id) {
-                $id = (int)$id;
-                if (isset($foundById[$id])) {
-                    $ordered[] = $foundById[$id];
-                    if (count($ordered) >= 16) break; // лимит
-                }
-            }
-
-            $json['specialists'] = block($ordered);
-            if ($count > 16) { // показываем пагинацию только если больше 16
-                $json['pagination'] = block_pagination_fav($count, 16, 1, implode(',', $specializations));
-            }
-        }
-
-        $json['page'] = 2;
-        responseJson($json);
     }
 
-    return false;
+    return $out;
 }
+
+if (isset($_POST['favorite'])) {
+    $_SESSION['favorite'] = normalizeFavorite($_POST['favorite']);
+}
+
+if (!empty($_POST['company_page'])) {
+    responseJson(true);
+}
+
+if (!empty($_POST['specialization'])) {
+
+    $specializations = $_POST['specialization'];
+    if (!is_array($specializations)) {
+        $specializations = [$specializations];
+    }
+
+    $ids = $_SESSION['favorite']['all'] ?? [];
+    $ids = array_reverse($ids);
+    $count = count($ids);
+
+    if ($count === 0) {
+        responseJson([
+            'specialists' => 'Не найдено избранных студий.',
+            'page' => 2
+        ]);
+    }
+
+    $specialists = get_specialists_by_ids($ids);
+    $found = [];
+
+    foreach ($specialists as $s) {
+        $found[(int)$s['id']] = $s;
+    }
+
+    $ordered = [];
+    foreach ($ids as $id) {
+        $id = (int)$id;
+        if (isset($found[$id])) {
+            $ordered[] = $found[$id];
+            if (count($ordered) >= 16) break;
+        }
+    }
+
+    $json = [
+        'specialists' => block($ordered),
+        'page' => 2
+    ];
+
+    if ($count > 16) {
+        $json['pagination'] = block_pagination_fav(
+            $count,
+            16,
+            1,
+            implode(',', $specializations)
+        );
+    }
+
+    responseJson($json);
+}
+
+responseJson(false);

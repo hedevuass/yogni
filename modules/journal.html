@@ -26,11 +26,11 @@
 <!--data:h1_hidden_title--><!--data:h1_hidden_title-->
 <div class="navi">
 	<div class="wrap">
-		<a href="/">ЮРФАК</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
+		<a href="/">ЙОГУРТ</a><span>/</span><!--data:breadcrumbs--><!--data:breadcrumbs-->
 	</div>
 </div>
 <button class="journal-filter-button">
-    <img src="../assets/img/filter2.svg" alt="">
+    <img src="/assets/img/filter2.svg" alt="">
     <span>Выбрать тему</span>
 </button>
 <div class="blog-page">
@@ -38,7 +38,7 @@
 		<div class="left-sidebar">
 			<div class="sticky">
 				<div class="top-name">
-					ЮРФАК: <span>ЖУРНАЛ</span>
+					ЙОГУРТ: <span>ЖУРНАЛ</span>
 				</div>
 				<ul>
 					<!--data:journal_menu--><!--data:journal_menu-->
@@ -112,7 +112,7 @@
 			const viewportHeight = window.innerHeight;
 
 			// Условие: trigger в зоне [viewportHeight - 800, viewportHeight + 200]
-			if (triggerTop <= viewportHeight + 800 && triggerTop >= viewportHeight - 800) {
+			if (triggerTop <= viewportHeight + 2200 && triggerTop >= viewportHeight - 800) {
 				const lazyBgs = document.querySelectorAll('.lazy-bg');
 
                 if ('IntersectionObserver' in window) {
@@ -154,6 +154,7 @@
 					success: function (response) {
 						if (response.posts && response.posts.trim() !== '') {
 							$('.main-content').append(response.posts);
+							applyClamping();
 							start += response.loaded_count; // Увеличиваем start на фактическое количество постов
 							hasMorePosts = response.has_more_posts; // Обновляем флаг
 							loading = false;

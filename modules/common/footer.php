@@ -22,7 +22,7 @@ if (isset($_SESSION['user'])) {
 }
 
 // обрабатывает год в футере
-$data['year'] = date('Y', strtotime('NOW'));
+/* $data['year'] = '2020'; */
 
 // Обрабатывает список городов для popup
 $cities = get_cities_for_popup();
@@ -51,18 +51,25 @@ EOF;
 $social_links = get_all_social();
 $data['social_links'] = '<ul class="footer__social">';
 foreach ($social_links as $social) {
-    $data['social_links'] .= '<li><a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a></li>';
+    if ($social['alt'] === 'Telegram') {
+        continue;
+    }
+
+    $data['social_links'] .= '<li><a target="_blank" href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a></li>';
 }
 $data['social_links'] .= '</ul>';
 
 //Мобильные
 $data['social_links_mobile'] = '<div class="flex social__wrapper">';
 foreach ($social_links as $social) {
-    $data['social_links_mobile'] .= '<a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
+    if ($social['alt'] === 'Telegram') {
+        continue;
+    }
+    $data['social_links_mobile'] .= '<a target="_blank" href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
 }
 $data['social_links_mobile'] .= '</div>';
 
-$slugs = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+$slugs = [/* 'yuristy-i-advokaty',  */'yoga-studii'/* , 'notariusy' */];
 
 $data['mobile_service_parent'] = '<div class="m2__section"><ul>';
 
@@ -70,12 +77,12 @@ foreach ($slugs as $slug) {
     $service = get_service_parent_catalog($slug);
     if ($service) {
         $class = [
-            'yuristy-i-advokaty' => 'lawyer',
-            'experty' => 'expert',
-            'notariusy' => 'notarius'
+            /* 'yuristy-i-advokaty' => 'lawyer', */
+            'yoga-studii' => 'expert',
+            /* 'notariusy' => 'notarius' */
         ][$slug];
 
-        $style = ' style="background-image: url(../assets/img/' . htmlspecialchars($service['icon']) . '); background-size: 16px 14px;"';
+        $style = ' style="background-image: url(/assets/img/' . htmlspecialchars($service['icon']) . '); background-size: 16px 14px;"';
         $title = htmlspecialchars($service['title']);
         $url = '/' . $slug;
 
@@ -101,21 +108,21 @@ $data['footer_mobile_menu'] .= '<li><a href="/journal">Журнал</a></li>';
 $data['footer_mobile_menu'] .= '</ul>';
 
 $items = [
-    'first_lawyer' => [
+    /* 'first_lawyer' => [
         'slug' => 'yuristy-i-advokaty',
         'class' => 'find_lawyer',
         'text' => 'Все юристы и адвокаты'
-    ],
+    ], */
     'first_expert' => [
-        'slug' => 'experty',
+        'slug' => 'yoga-studii',
         'class' => 'find_expert',
-        'text' => 'Все эксперты'
+        'text' => 'Все студии йоги'
     ],
-    'first_notarius' => [
+    /* 'first_notarius' => [
         'slug' => 'notariusy',
         'class' => 'find_notarius',
         'text' => 'Все нотариусы'
-    ],
+    ], */
 ];
 
 // Генерация трёх блоков
@@ -128,7 +135,7 @@ foreach ($items as $key => $item) {
     $text = $title ? 'Все ' . mb_strtolower($title) : $item['text'];
 
     $style = $icon
-        ? ' style="background-image: url(https://urfaq.ru/assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
+        ? ' style="background-image: url(https://yogni.ru/assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
         : '';
 
     $data[$key] = '<li class="' . $item['class'] . '"' . $style . '><a href="/' . $item['slug'] . '">' . htmlspecialchars($text) . '</a></li>';
@@ -187,7 +194,7 @@ foreach ($items as $key => $item) {
 
 $footer_titles = [
     'desctop_footer_lawyers_title' => 'yuristy-i-advokaty',
-    'desctop_footer_experts_title' => 'experty',
+    'desctop_footer_experts_title' => 'yoga-studii',
     'desctop_footer_notarius_title' => 'notariusy',
 ];
 
@@ -208,7 +215,6 @@ foreach ($footer_titles as $data_key => $slug) {
 $services = get_services_for_menu();
 
 foreach ($services as $key => $service) {
-    // Если юрист или адвокат
     // Если юрист или адвокат
     if ($key == 1 || $key == 2) {
         // Обнуляем вывод
@@ -233,7 +239,7 @@ foreach ($services as $key => $service) {
             // Собираем колонки в один массив
             $columns = [$col1, $col2, $col3, $col4];
 
-            // Оборачиваем всё в общий контейнер (например)
+            // Оборачиваем всё в общий контейнер 
             $data['desctop_menu_lawyers'] .= '<div class="desktop-menu-lawyers">';
 
             // Генерируем каждую колонку
@@ -249,9 +255,9 @@ foreach ($services as $key => $service) {
 <p class="$single"><a href="/yuristy-i-advokaty/{$parrent['slug']}">{$parrent['title']}</a></p>
 EOF;
 
-                    // Мобильное меню (как у вас было)
+                    // Мобильное меню
                     $data['mobile_menu_lawyers'] .= '<li class="' . $parrent["slug"] . '"' .
-                        (!empty($parrent['icon']) ? ' style="background-image: url(../assets/img/' . $parrent['icon'] . ');"' : '') . '>
+                        (!empty($parrent['icon']) ? ' style="background-image: url(/assets/img/' . $parrent['icon'] . ');"' : '') . '>
                 <a href="/yuristy-i-advokaty/' . $parrent["slug"] . '">' . $parrent["title"] . '</a></li>';
 
                     // Дочерние элементы
@@ -272,32 +278,65 @@ EOF;
                     }
                 }
 
-                $data['desctop_menu_lawyers'] .= '</div>'; // Закрыли .nav
+                $data['desctop_menu_lawyers'] .= '</div>';
             }
 
-            $data['desctop_menu_lawyers'] .= '</div>'; // Закрыли .desktop-menu-lawyers
+            $data['desctop_menu_lawyers'] .= '</div>';
         }
     }
 
     if ($key == 3) {
-        $last_cat = '';
+        $last_cat = null;
+        $total = count($service[0]);
 
-        foreach ($service[0] as $child) {
-            $style = !empty($child['icon']) ? ' style="background-image: url(../assets/img/' . $child['icon'] . ');"' : '';
-
-            if (mb_stripos($child['title'], 'прочие') !== false) {
-                $last_cat = $child;
-            } else {
-                $data['menu_expertise'] .= "<li><a href='/experty/{$child['slug']}'>{$child['title']}</a></li>";
-                $data['mobile_menu_expertise'] .= '<li class="' . $child["slug"] . '"' . $style . '><a href="/experty/' . $child["slug"] . '">' . $child["title"] . '</a></li>';
+        if ($total > 0) {
+            // Отделяем "прочие" в отдельную переменную
+            $filtered_items = [];
+            foreach ($service[0] as $child) {
+                if (mb_stripos($child['title'], 'прочие') !== false) {
+                    $last_cat = $child;
+                } else {
+                    $filtered_items[] = $child;
+                }
             }
-        }
 
-        if (isset($last_cat) && $last_cat != '') {
-            $style = !empty($last_cat['icon']) ? ' style="background-image: url(../assets/img/' . $last_cat['icon'] . ');"' : '';
+            // Четко режем на 3 колонки: первые 8, следующие 8, и остаток (как раз 5)
+            $col1 = array_slice($filtered_items, 0, 8);
+            $col2 = array_slice($filtered_items, 8, 8);
+            $col3 = array_slice($filtered_items, 16);
 
-            $data['menu_expertise'] .= "<li><a href='/experty/{$last_cat['slug']}'>{$last_cat['title']}</a></li>";
-            $data['mobile_menu_expertise'] .= "<li class='{$last_cat['slug']}'{$style}><a href='/experty/{$last_cat['slug']}'>{$last_cat['title']}</a></li>";
+            $col1_html = '';
+            $col2_html = '';
+            $col3_html = '';
+
+            // Первая колонка (8 элементов)
+            foreach ($col1 as $child) {
+                $col1_html .= "<li><a href='/yoga-studii/{$child['slug']}'>{$child['title']}</a></li>";
+                $data['mobile_menu_expertise'] .= '<li class="' . $child["slug"] . '"' . (!empty($child['icon']) ? ' style="background-image: url(/assets/img/' . $child['icon'] . ');"' : '') . '><a href="/yoga-studii/' . $child["slug"] . '">' . $child["title"] . '</a></li>';
+            }
+
+            // Вторая колонка (8 элементов)
+            foreach ($col2 as $child) {
+                $col2_html .= "<li><a href='/yoga-studii/{$child['slug']}'>{$child['title']}</a></li>";
+                $data['mobile_menu_expertise'] .= '<li class="' . $child["slug"] . '"' . (!empty($child['icon']) ? ' style="background-image: url(/assets/img/' . $child['icon'] . ');"' : '') . '><a href="/yoga-studii/' . $child["slug"] . '">' . $child["title"] . '</a></li>';
+            }
+
+            // Третья колонка (оставшиеся 5 элементов)
+            foreach ($col3 as $child) {
+                $col3_html .= "<li><a href='/yoga-studii/{$child['slug']}'>{$child['title']}</a></li>";
+                $data['mobile_menu_expertise'] .= '<li class="' . $child["slug"] . '"' . (!empty($child['icon']) ? ' style="background-image: url(/assets/img/' . $child['icon'] . ');"' : '') . '><a href="/yoga-studii/' . $child["slug"] . '">' . $child["title"] . '</a></li>';
+            }
+
+            // Добавляем "прочие" в самый конец третьей колонки
+            if ($last_cat) {
+                $col3_html .= "<li><a href='/yoga-studii/{$last_cat['slug']}'>{$last_cat['title']}</a></li>";
+                $data['mobile_menu_expertise'] .= "<li class='{$last_cat['slug']}'" . (!empty($last_cat['icon']) ? ' style="background-image: url(/assets/img/' . $last_cat['icon'] . ');"' : '') . "><a href='/yoga-studii/{$last_cat['slug']}'>{$last_cat['title']}</a></li>";
+            }
+
+            // Сохраняем для шаблона
+            $data['menu_expertise'] = $col1_html;
+            $data['menu_expertise_col2'] = $col2_html;
+            $data['menu_expertise_col3'] = $col3_html;
         }
     }
 }
@@ -316,7 +355,7 @@ foreach ($metro as $value) {
         <label for="metro-' . $value['id'] . '">' . $value['name'] . '</label>';
 }
 // Обрабатывает почту в попапе фидбэка
-$data['feedback_email'] = '<a href="mailto:' . EMAIL_FEEDBACK . '" class="blue-link">' . EMAIL_FEEDBACK . '</a>';
+$data['feedback_email'] = '<a href="/o-proekte" class="blue-link">“О проекте”</a>';
 
 //Выводит блок регистрации 
 
@@ -329,7 +368,7 @@ if (isset($_SESSION['user'])) {
 $data['footer_registration'] = '<div class="footer__reg-wrapper">
 <div class="wrap">
     <div class="flex">
-        <span>Вы юрист, адвокат, эксперт или у вас компания соответствующего профиля?</span>
+        <span class="text__reg-wrapper">У вас есть студия йоги? Тогда чего же вы ждёте – присоединяйтесь!<img style="width: 23px;" src="../assets/img/header/arrow-right.svg"></span>
         ' . $footer_reg_btn . '
     </div>
 </div>
@@ -351,7 +390,7 @@ $data['captcha'] = '
 
         <div class="captcha-right">
         <label class="captcha-label" for="captcha_code">Подтвердите, что вы не робот</label>
-        <input class="captcha-input" id="captcha_code2" name="captcha_code" type="text" placeholder="Введите код" autocomplete="off" />
+        <input class="captcha-input" id="captcha_code2" name="captcha_code" type="text" placeholder="Введите цифры" autocomplete="off" />
         <input type="hidden" id="captcha_captcha_id2" name="captcha_id2" value="' . $randId . '" />
         </div>
     </div>
@@ -372,7 +411,7 @@ $data['captcha_registration_company'] = '
         </div>
         <div class="captcha-right">
             <label class="captcha-label" for="captcha_code_registration_company">Подтвердите, что вы не робот</label>
-            <input class="captcha-input" id="captcha_code_registration_company" name="captcha_code_registration_company" type="text" placeholder="Введите код" autocomplete="off" />
+            <input class="captcha-input" id="captcha_code_registration_company" name="captcha_code_registration_company" type="text" placeholder="Введите цифры" autocomplete="off" />
             <input type="hidden" id="captcha_captcha_id_registration_company" name="captcha_id_registration_company" value="' . $randId . '" />
         </div>
     </div>
@@ -410,7 +449,7 @@ $data['recovery_popup'] = '<div class="popup pass">
                             </div>
                             <div class="captcha-right">
                                 <label class="captcha-label" for="captcha_code_recovery">Подтвердите, что вы не робот</label>
-                                <input class="captcha-input" id="captcha_code_recovery" name="captcha_code_recovery" type="text" placeholder="Введите код" autocomplete="off" />
+                                <input class="captcha-input" id="captcha_code_recovery" name="captcha_code_recovery" type="text" placeholder="Введите цифры" autocomplete="off" />
                                 <input type="hidden" id="captcha_captcha_id_recovery" name="captcha_id_recovery" value="' . $randId . '" />
                             </div>
                         </div>
@@ -490,6 +529,18 @@ $HTML = $HTML_[0] . "<!--data:footer_mobile_menu-->{$data['footer_mobile_menu']}
 $HTML = str_replace(
     '<!--data:menu_expertise--><!--data:menu_expertise-->',
     '<!--data:menu_expertise-->' . $data['menu_expertise'] . '<!--data:menu_expertise-->',
+    $HTML
+);
+
+$HTML = str_replace(
+    '<!--data:menu_expertise_col2--><!--data:menu_expertise_col2-->',
+    '<!--data:menu_expertise_col2-->' . $data['menu_expertise_col2'] . '<!--data:menu_expertise_col2-->',
+    $HTML
+);
+
+$HTML = str_replace(
+    '<!--data:menu_expertise_col3--><!--data:menu_expertise_col3-->',
+    '<!--data:menu_expertise_col3-->' . $data['menu_expertise_col3'] . '<!--data:menu_expertise_col3-->',
     $HTML
 );
 

@@ -18,12 +18,13 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/morphos/NounDeclension.php';
 use Morphos\Russian\GeographicalNamesInflection;
 
 // Личный кабинет
-if (isset($_SESSION['user'])) {
+if (isset($_SESSION['user']['id']) && $_SESSION['user']['id'] > 0) {
 	$user = get_specialist($_SESSION['user']['id']);
 	$name = $user['company'] ?? $user['name'] . " " . $user['lastname'];
     $data['user_links1'] = '<a href="/actions/account/logout.php" class="logout"><i></i>Выйти</a>';
     $data['user_links2'] = '<div class="header__profile-greeting">Привет, <a href="/cabinet" class="profile-link">'. $name .'</a></div>';
 } else {
+	unset($_SESSION['user']);
     $data['user_links1'] = <<<EOF
         <a class="login"><i></i>Войти</a>
     EOF;
@@ -44,14 +45,14 @@ $cityPrepositional = GeographicalNamesInflection::getCase($cityName, 'предл
 $_SESSION['city_genitive'] = $cityGenitive;
 $_SESSION['city_prepositional'] = $cityPrepositional;
 
-$slugs = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+$slugs = ['yuristy-i-advokaty', 'yoga-studii', 'notariusy'];
 
 foreach ($slugs as $slug) {
     $service = get_service_parent_catalog($slug); // вернёт ['title' => ..., 'icon' => ..., ...]
     if ($service) {
         $key = match ($slug) {
             'yuristy-i-advokaty' => 'menu1_lawyer',
-            'experty'            => 'menu1_expert',
+            'yoga-studii'            => 'menu1_expert',
             'notariusy'          => 'menu1_notarius',
         };
         $data[$key] = htmlspecialchars($service['title']);
@@ -62,7 +63,10 @@ foreach ($slugs as $slug) {
 $social_links = get_all_social();
 $data['social_links_header'] = '<li class="flex social__wrapper">';
 foreach ($social_links as $social) {
-    $data['social_links_header'] .= '<a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
+	if ($social['alt'] === 'Telegram') {
+        continue;
+    }
+    $data['social_links_header'] .= '<a target="_blank" href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a>';
 }
 $data['social_links_header'] .= '</li>';
 
@@ -74,14 +78,14 @@ if ($page == "") {
     $home = ' active';
 } else if ($page == "article") {
 	$journal = ' active';
-} else if ($page == "moy_urfaq") {
+} else if ($page == "moy_yogoort") {
 	$cabinet = ' active';
 } else {
     $$page = ' active';
 }
 $cabinet_element = '';
 if (isset($_SESSION['user'])) {
-	$cabinet_element = '<a href="/cabinet" class="bottom-header__item'.$cabinet.'" id="cabinet-item"><span>Мой ЮРФАК</span></a>';
+	$cabinet_element = '<a href="/cabinet" class="bottom-header__item'.$cabinet.'" id="cabinet-item"><span>Мой ЙОГУРТ</span></a>';
 }
 // вывод мобильного меню
 $data['mobile_bottom_header'] = '

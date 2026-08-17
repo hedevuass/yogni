@@ -3,17 +3,20 @@
 $data = [];
 
 // обрабатывает год в футере
-$data['year'] = date('Y', strtotime('NOW'));
+/* $data['year'] = '2020'; */
 
 // Социальные сети
 $social_links = get_all_social();
 $data['social_links'] = '<ul class="footer__social">';
 foreach ($social_links as $social) {
-    $data['social_links'] .= '<li><a href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a></li>';
+    if ($social['alt'] === 'Telegram') {
+        continue;
+    }
+    $data['social_links'] .= '<li><a target="_blank" href="' . htmlspecialchars($social['link']) . '" class="' . htmlspecialchars($social['alt']) . '"></a></li>';
 }
 $data['social_links'] .= '</ul>';
 
-$footer_slugs = ['yuristy-i-advokaty', 'experty', 'notariusy'];
+$footer_slugs = [/* 'yuristy-i-advokaty',  */'yoga-studii'/* , 'notariusy' */];
 $data['footer_menu_top'] = '<ul>';
 
 foreach ($footer_slugs as $slug) {
@@ -40,7 +43,7 @@ $HTML = $HTML_[0] . "<!--data:year-->{$data['year']}<!--data:year-->" . $HTML_[2
 
 //получаем id специалиста для сообщения в поддержку
 $data['input_user_id'] = "<input type='hidden' name='user' value='{$user['id']}'>";
-$data['feedback_email'] = '<a href="mailto:' . EMAIL_FEEDBACK . '" class="blue-link">' . EMAIL_FEEDBACK . '</a>';
+$data['feedback_email'] = '<a href="/cabinet/podderzhka" class="blue-link">“Поддержка”</a>';
 
 // Подставляем год
 $HTML_ = explode( '<!--data:year-->' , $HTML , 3 );

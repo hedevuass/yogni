@@ -31,7 +31,7 @@
   }
 
   .flatpickr-day.today {
-    background: #FF9E68 !important;
+    background: #F8A3AA !important;
     color: #393939 !important;
   }
 
@@ -76,7 +76,7 @@
   }
 
   .confirm-btn-tariff {
-    background-color: #ff7f27;
+    background-color: #F2606C;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -103,7 +103,7 @@
     font-size: 14px;
     font-weight: 500;
     border-radius: 12px;
-    background: #FF8139;
+    background: #F2606C;
     box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     height: 40px;
@@ -113,7 +113,7 @@
   }
 
   .confirm-btn-tariff:hover {
-    background-color: #ff9f57;
+    background-color: #f54e5c;
   }
 
   .confirm-btn-tariff.inactive-button {
@@ -197,7 +197,7 @@
   .select-toggle:after {
     content: '';
     position: absolute;
-    right: 5px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     width: 16px;
@@ -495,9 +495,10 @@
     right: 18px;
     top: 50%;
     transform: translateY(-50%);
-    width: 9px;
+    width: 11px;
     height: 16px;
     background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
+    background-size: contain;
     transition: background 0.3s ease;
   }
 
@@ -517,7 +518,7 @@
   .flatpickr-confirm-btn {
     width: 120px;
     height: 32px;
-    background-color: #FF9E68;
+    background-color: #F8A3AA;
     color: #FFFFFF;
     border: none;
     border-radius: 8px;
@@ -527,15 +528,15 @@
   }
 
   .flatpickr-confirm-btn:hover {
-    background-color: #e68a4d;
+    background-color: #d88087;
   }
 
   /* Кнопка "Сбросить" */
   .flatpickr-reset-btn {
     width: 120px;
     height: 32px;
-    background-color: #FFE6D9;
-    color: #FF9E68;
+    background-color: #F8A3AA26;
+    color: #F8A3AA;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -544,7 +545,8 @@
   }
 
   .flatpickr-reset-btn:hover {
-    background-color: #ffcb9d;
+    background-color: #F8A3AA59;
+    color: #F8A3AA;
   }
 
   @media (max-width: 911px) {
@@ -715,7 +717,7 @@
       <!--data:promo_connected--><!--data:promo_connected-->
       <p>
         Размещение карточки на самых заметных позициях каталога. Выберите первое место или позиции со второй по восьмую.
-        Доступно на страницах разделов и подразделов, а также на главной странице.
+        Доступно на страницах разделов и на главной странице.
       </p>
       <p class="bold">Ваша карточка – всегда в топе.</p>
       <button class="promo-button promo-card-button hidden-comp">Подключить</button>
@@ -1443,7 +1445,6 @@
                 dynamicEnd = weekEnd;
               }
 
-              // === ВСТАВЬ ЗДЕСЬ: проверка на disabled-red в диапазоне ===
               const totalDays = Math.floor((dynamicEnd - dynamicStart) / (1000 * 60 * 60 * 24)) + 1;
               const hasRedInRange = [...Array(totalDays)].some((_, i) => {
                 const d = new Date(dynamicStart);

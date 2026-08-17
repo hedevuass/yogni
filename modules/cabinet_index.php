@@ -33,7 +33,7 @@ $photo_edit_class = $user['photo'] ? '' : ' no-photo';
 
 $faq_page = get_faq_page_by_id(22);
 $data['faq_page'] = '<a href="/cabinet/faq/' . $faq_page . '" class="pro-photo_block-background">';
-$data['faq_page2'] = '<a href="/cabinet/faq/' . $faq_page . '" class="photo__faq-link">';
+/* $data['faq_page2'] = '<a href="/cabinet/faq/' . $faq_page . '" class="photo__faq-link">'; */
 
 /**
  * @param array $user
@@ -61,7 +61,7 @@ $name = $user['company'] ?? $user['name'] . " " . $user['lastname'];
 //выводим фото и инфу для верха мобилки
 $data['index_mob_info'] = '<div class="index-mob__info-block"><div class="photo-block profile-photo-mmenu">
 <div class="photo ' . $photo_class . '" style="background-image: url(' . $photo . ')"></div>
-<div class="photo-btn"></div>
+<a href="/cabinet/redaktirovat-gallery" class="photo-btn"></a>
 </div>
 <div class="info-block">
 <div class="name">' . $name . '</div>
@@ -227,9 +227,11 @@ function mob_edit_menu(array $user)
             continue;
         if (!$user['company'] && $page['id'] == 17)
             continue;
+        if ($page['id'] == 4)
+            continue;
         if (($user['classification_id'] == 4) && $page['id'] == 6)
             continue;
-        $code .= '<a class="menu-item" href="/cabinet/' . $page['alias'] . '">' . $page['menu_title'] . '</a>';
+        $code .= '<a class="menu-item" href="/cabinet/' . $page['alias'] . '">' . $page['menu_mob_title'] . '</a>';
     }
     return $code;
 }

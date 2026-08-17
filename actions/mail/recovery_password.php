@@ -11,7 +11,12 @@ $socials = get_all_social();
 $social_html = '<tr style="border-collapse:collapse">';
 foreach ($socials as $social) {
     if (!empty($social['link'])) {
-        $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+
+        if ($social['alt'] === 'Telegram') {
+            continue;
+        }
+
+        $image_src = 'https://yogni.ru/assets/img/login-parol/';
         $height = 24;
         $width = 30;
 
@@ -21,12 +26,17 @@ foreach ($socials as $social) {
                 $height = 24;
                 $width = 30;
                 break;
-            case 'Telegram':
+            /* case 'Telegram':
+                $image_src .= $social['image'];
+                $height = 24;
+                $width = 24;
+                break; */
+            case 'Vk':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
                 break;
-            case 'Vk':
+            case 'MAX':
                 $image_src .= $social['image'];
                 $height = 24;
                 $width = 24;
@@ -70,6 +80,7 @@ if (isset($_POST['email'])) {
     elseif ($specialist['deleted'] == 1 && !is_null($specialist['deleted_at'])) {
         $deletedTs = strtotime($specialist['deleted_at']);
         if (time() - $deletedTs > 30 * 24 * 60 * 60) {
+            // прошло больше 30 суток — считаем email неактивным
             $json['error']['email'] = 'Email не зарегистрирован';
         }
     }
@@ -78,7 +89,7 @@ if (isset($_POST['email'])) {
     if ($captchaId) {
         $securimage = new Securimage();
         if (!$captchaCode) {
-            $json['error']['captcha_error'] = 'Введите код с картинки.';
+            $json['error']['captcha_error'] = 'Введите цифры с картинки';
         } elseif (!$securimage->check($captchaCode, $captchaId)) {
             $json['error']['captcha_error'] = 'Неправильный код каптчи. Попробуйте снова.';
         }
@@ -90,8 +101,9 @@ if (isset($_POST['email'])) {
     // Если ошибок нет — продолжаем восстановление
     $hash = $specialist['hash'];
     $id = $specialist['id'];
+    $token = add_recovery_token($specialist['id']);
     $site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-    $link_url = $site_url . '/cabinet/login-i-parol?recovery&hash=' . $hash . '&user_id=' . $id;
+    $link_url = $site_url . '/cabinet/login-i-parol?recovery&hash=' . $hash . '&user_id=' . $id . '&token=' . $token;
     $title = 'ЮРФАК - восстановление пароля';
     'Для восстановления пароля перейдите по ссылке: ' . ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/cabinet/login-i-parol?recovery&hash=' . $specialist['hash'] . '&id=' . $specialist['id'];
     $body = <<<EOF
@@ -193,10 +205,10 @@ mso-hide:all;
             <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
             <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                 <tbody><tr class="es-mobile-hidden" style="border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/n6250.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/n6250.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                 </tr><!--[if !mso]><!-- -->
                 <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/recoverymob.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/recoverymob.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                 </tr><!--<![endif]-->
             </tbody></table></td>
             </tr>
@@ -252,7 +264,7 @@ mso-hide:all;
                 <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
                 </tr>
                 <tr style="border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
                 </tr>
             </tbody></table></td>
             </tr>

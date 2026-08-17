@@ -4,7 +4,7 @@
 $data = [];
 
 if (isset($_GET['text'])) {
-    $requestion = htmlentities(strip_tags($_GET['text']));
+    $requestion = trim($_GET['text']);
 } else {
     responseRedirect('/');
 }
@@ -23,15 +23,17 @@ $total_companies = count_full_search_companies($requestion);
 $total_specialists = count_full_search_specialists($requestion);
 $count = $total_companies + $total_specialists;
 
+$safe_requestion = htmlspecialchars($requestion, ENT_QUOTES);
+
 if (!empty($specialists) || !empty($companies)) {
     // Заголовок
     $data['top_text'] = <<<EOF
     <div class="top-text">
-        <h1 class="desctop">Найдено на юрфак.ру</h1>
-        <p class="favorite-page">Результаты поиска по запросу “{$requestion}”</p>
+        <h1 class="desctop">Найдено на йогурт.ру</h1>
+        <p class="favorite-page">Результаты поиска по запросу “{$safe_requestion}”</p>
     </div>
     EOF;
-    $title = "Результаты поиска по запросу “{$requestion}” — Юрфак.ру";
+    $title = "Результаты поиска по запросу “{$safe_requestion}” — Йогурт.ру";
     $classification = $specialists[0]['classification_id'] ?? $companies[0]['classification_id'];
 
     $vars = vars($classification);
@@ -50,10 +52,10 @@ if (!empty($specialists) || !empty($companies)) {
     $data['top_text'] = <<<EOF
     <div class="top-text">
         <h1 class="desctop">Ничего не найдено.</h1>
-        <p class="favorite-page">Результатов поиска по запросу “{$requestion}” не найдено на юрфак.ру</p>
+        <p class="favorite-page">Результатов поиска по запросу “{$safe_requestion}” не найдено на йогурт.ру</p>
     </div>
     EOF;
-    $title = "Ничего не найдено — Юрфак.ру";
+    $title = "Ничего не найдено — Йогурт.ру";
 }
 
     if (isset($_GET['filter'])) {
@@ -111,7 +113,7 @@ function vars(int $classification = null, string $requestion = null): array
             ],
             3, 7 => [
                 'title'     => 'Эксперты',
-                'slug'      => 'experty',
+                'slug'      => 'yoga-studii',
                 'h1'        => 'Все эксперты по направлению ',
                 'block'     => 2
             ],
@@ -126,9 +128,9 @@ function vars(int $classification = null, string $requestion = null): array
 
     if ($requestion) {
         $vars = match ($requestion) {
-            'experty' => [
+            'yoga-studii' => [
                 'title'             => 'Эксперты',
-                'slug'              => 'experty',
+                'slug'              => 'yoga-studii',
                 'h1'                => 'Все эксперты',
                 'classification'    => [3, 7],
                 'block'             => 2,
