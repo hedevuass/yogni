@@ -227,8 +227,8 @@ function mob_edit_menu(array $user)
             continue;
         if (!$user['company'] && $page['id'] == 17)
             continue;
-        if ($page['id'] == 4)
-            continue;
+        /* if ($page['id'] == 4)
+            continue; */
         if (($user['classification_id'] == 4) && $page['id'] == 6)
             continue;
         $code .= '<a class="menu-item" href="/cabinet/' . $page['alias'] . '">' . $page['menu_mob_title'] . '</a>';
@@ -330,7 +330,7 @@ $top_cards = '
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор для продвижения</p>
+    <p>Стартовый набор инструментов</p>
     <div class="card-status">
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -352,7 +352,7 @@ $top_cards = '
         ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
-    <p>Базовые настройки</p>
+    <p>Гибкие настройки</p>
     <div class="card-status">
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -374,7 +374,7 @@ $top_cards_mobile = '
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор <br>для продвижения</p>
+    <p>Стартовый набор <br>инструментов</p>
     <div class="card-status">
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -396,7 +396,7 @@ $top_cards_mobile = '
         ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
-    <p>Базовые настройки</p>
+    <p>Гибкие настройки</p>
     <div class="card-status">
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>

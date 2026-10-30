@@ -3,12 +3,12 @@
 return [
     ADMIN_HREF => [
         'module' => 'index',
-        'title'  => 'Общие настройки',
+        'title'  => 'Основное',
         'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'index' => [
         'module' => 'index',
-        'title'  => 'Общие настройки',
+        'title'  => 'Основное',
         'roles'  => ['superadmin'],
     ],
     ADMIN_HREF . 'menu' => [

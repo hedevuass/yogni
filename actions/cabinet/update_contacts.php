@@ -5,7 +5,11 @@ session_start();
 
 if (isset($_POST['phone'])) {
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        if (in_array($key, ['how_to_get'])) {
+            $data[$key] = clean_elem_blog_title($value);
+        } else {
+            $data[$key] = clean_elem_form($value);
+        }
     }
     $data['phone'] = '+7' . $data['phone'];
     // Валидация телефонного номера
@@ -53,7 +57,7 @@ if (isset($_POST['phone'])) {
             'http' => [
                 'method' => 'GET',
                 'header' => "User-Agent: PHP-Backend\r\n"
-                    . "Referer: https://yogni.ru/\r\n"
+                    . "Referer: https://yogoort.ru/\r\n"
             ]
         ]);
 

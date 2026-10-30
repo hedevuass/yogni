@@ -10,7 +10,6 @@ require 'actions/database/functions.php';
 // Функции применимые только к данному проекту
 require 'actions/functions.php';
 
-
 // === Определяем запрошенную страницу ===
 if (isset($_REQUEST['path'])) {
     $requested_page = $_REQUEST['path'] ?: 'index';
@@ -23,7 +22,9 @@ if (isset($_REQUEST['path'])) {
 
     // определяем основную страницу
     $requested_page = $requested_vars[0] ?: 'index';
-    $requested_page = $requested_page === 'show_login' ? 'index' : $requested_page;
+    if ($requested_page === 'show_login' || $requested_page === 'index.php') {
+        $requested_page = 'index';
+    }
 
     if (in_array($requested_page, get_catalog_slugs(), true)) {
         $requested_page = 'catalog';
@@ -33,24 +34,34 @@ if (isset($_REQUEST['path'])) {
         } else {
             $requested_page = 'cabinet_index';
         }
-    } elseif (in_array($requested_page, $cabinet_pages)) {
+    } elseif (in_array($requested_page, $cabinet_pages, true)) {
         responseRedirect('/cabinet/' . $requested_page);
     }
 }
 
 $HTML = '';
 
-// теперь проверяем файл страницы
-if (!file_exists("pages/$requested_page.html")) {
-    http_response_code(404); 
-    $requested_page = 'not_found';
+// === Проверка наличия файла и обработка 404 ===
+if ($requested_page === '404' || $requested_page === 'not_found') {
+    http_response_code(404);
+    if (file_exists("pages/404.html")) {
+        $requested_page = '404';
+    } elseif (file_exists("pages/not_found.html")) {
+        $requested_page = 'not_found';
+    }
+} elseif (!file_exists("pages/$requested_page.html")) {
+    // Если страницы физически нет и это не каталог/кабинет — перенаправляем на /404
+    responseRedirect('/404');
 }
 
+// === Отрисовка страницы ===
 $HTML = file_get_contents("pages/$requested_page.html");
 
 $HTML = modules_include($HTML);
 
-if (file_exists("pages/$requested_page.php")) require("pages/$requested_page.php");
+if (file_exists("pages/$requested_page.php")) {
+    require "pages/$requested_page.php";
+}
 
 $HTML = editable($HTML);
 

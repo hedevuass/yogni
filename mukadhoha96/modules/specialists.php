@@ -122,3 +122,41 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="requestsInvoiceModal" tabindex="-1" aria-labelledby="requestsInvoiceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="requestsInvoiceModalLabel">Отправка счёта на оплату</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="ri-alert" role="alert"></div>
+        <form id="requests-invoice-form">
+          <div class="mb-3">
+            <label for="ri-period" class="form-label">Период</label>
+            <input type="text" class="form-control" id="ri-period" readonly>
+          </div>
+          <div class="mb-3 d-flex gap-3">
+            <div class="flex-fill">
+              <label for="ri-count" class="form-label">Количество заявок</label>
+              <input type="text" class="form-control" id="ri-count" readonly>
+            </div>
+            <div class="flex-fill">
+              <label for="ri-amount" class="form-label">Сумма</label>
+              <input type="text" class="form-control" id="ri-amount" readonly>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="ri-inn" class="form-label">ИНН</label>
+            <input type="text" class="form-control" id="ri-inn" name="tax_code" required>
+            <div class="invalid-feedback">ИНН должен состоять из 10 или 12 цифр</div>
+          </div>
+          <div class="text-end">
+            <button type="submit" style="width: 140px;" class="btn btn-primary">Отправить счёт</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

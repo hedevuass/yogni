@@ -14,23 +14,24 @@ EOF;
 
 // Формируем HTML прайсов
 foreach ($prices as $key => $price) {
-	$checked = $price['ot'] ? 'checked' : '';
+    $checked = $price['ot'] ? 'checked' : '';
+    $safe_name = htmlspecialchars($price['name'], ENT_QUOTES);
 
-	$data['cabinet_price'] .= <<<EOF
-		<tr style="white-space: nowrap;">
-			<td>
-				<div class="links">
-					<a data-id="{$price['id']}", data-name="{$price['name']}", data-price="{$price['price']}", data-of="{$price['ot']}"></a>
-					<a></a>
-				</div>
-			</td>
-			<td><input type="text" name="name[$key]" placeholder="Наименование услуги (не более 40 символов)" maxlength="40" value="{$price['name']}">
-			<div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
-			<td><input type="text" name="price[$key]" placeholder="Цена" value="{$price['price']}"></td>
-			<td><input type="checkbox" name="of[$key]" class="checkbox" data-key="{$key}" id="checkbox{$key}" $checked><label for="checkbox{$key}"></label></td>
-			<td><a class="edit-price-mobile"></a><a class="delete"></a></td>
-		</tr>
-	EOF;
+    $data['cabinet_price'] .= <<<EOF
+        <tr style="white-space: nowrap;">
+            <td>
+                <div class="links">
+                    <a data-id="{$price['id']}" data-name="{$safe_name}" data-price="{$price['price']}" data-of="{$price['ot']}"></a>
+                    <a></a>
+                </div>
+            </td>
+            <td><input type="text" name="name[$key]" placeholder="Наименование услуги (не более 40 символов)" maxlength="40" value="{$safe_name}">
+            <div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
+            <td><input type="text" name="price[$key]" placeholder="Цена" value="{$price['price']}"></td>
+            <td><input type="checkbox" name="of[$key]" class="checkbox" data-key="{$key}" id="checkbox{$key}" $checked><label for="checkbox{$key}"></label></td>
+            <td><a class="edit-price-mobile"></a><a class="delete"></a></td>
+        </tr>
+    EOF;
 }
 
 // Добавляем пустые инпуты

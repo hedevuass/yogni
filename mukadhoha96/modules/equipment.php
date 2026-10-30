@@ -25,9 +25,9 @@ foreach ($all_items as $item) {
             <thead>
                 <tr>
                     <td style="width: 30%">Название</td>
-                    <td style="width: 25%">Иконка</td>
-                    <td style="width: 25%">Цветная икона</td>
-                    <td style="width: 20%">Действие</td>
+                    <td style="width: 30%">Иконка</td>
+                    <td style="width: 30%">Цветная икона</td>
+                    <td style="width: 10%">Действие</td>
                 </tr>
             </thead>
             <tbody>
@@ -62,8 +62,8 @@ foreach ($all_items as $item) {
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button type="button" class="btn btn-success btn-sm save-row">Сохранить</button>
-                                <button type="button" class="btn btn-danger btn-sm delete-row">Удалить</button>
+                                <button type="button" class="btn btn-success save-row">Сохранить</button>
+                                <button type="button" class="btn btn-danger delete-row">Удалить</button>
                             </div>
                         </td>
                     </tr>
@@ -83,9 +83,9 @@ foreach ($all_items as $item) {
             <thead>
                 <tr>
                     <td style="width: 30%">Название</td>
-                    <td style="width: 25%">Иконка</td>
-                    <td style="width: 25%">Цветная икона</td>
-                    <td style="width: 20%">Действие</td>
+                    <td style="width: 30%">Иконка</td>
+                    <td style="width: 30%">Цветная икона</td>
+                    <td style="width: 10%">Действие</td>
                 </tr>
             </thead>
             <tbody>
@@ -120,8 +120,8 @@ foreach ($all_items as $item) {
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button type="button" class="btn btn-success btn-sm save-row">Сохранить</button>
-                                <button type="button" class="btn btn-danger btn-sm delete-row">Удалить</button>
+                                <button type="button" class="btn btn-success save-row">Сохранить</button>
+                                <button type="button" class="btn btn-danger delete-row">Удалить</button>
                             </div>
                         </td>
                     </tr>

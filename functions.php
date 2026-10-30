@@ -78,6 +78,22 @@ function clean_elem_form($elem)
     return $elem;
 }
 
+function clean_elem_blog_title($elem)
+{
+    if (is_array($elem)) {
+        foreach ($elem as &$value) {
+            $value = clean_elem_blog_title($value);
+        }
+        return $elem;
+    }
+
+    $elem = trim($elem);
+    $elem = stripslashes($elem);
+    $elem = strip_tags($elem); // защита от <script> и прочих тегов, кавычки не трогает
+
+    return $elem;
+}
+
 // Возвращает JSON
 #[NoReturn] function responseJson($array)
 {
@@ -365,7 +381,7 @@ function load_image_webp(array $file, string $directory, string $img_name = '', 
         return ['error' => 'Изображение слишком большое'];
     } */
     if ($file['size'] > ($max_weight * 1024 * 1024)) {
-        return ['error' => 'Файл слишком большой (максимальный размер - до 5 МБ).'];
+        return ['error' => 'Файл слишком большой (максимальный размер - до 5 МБ)'];
     }
 
     $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/' . $directory . '/';

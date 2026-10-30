@@ -17,13 +17,13 @@ if (isset($_FILES['file']) && $_FILES['file']['error'] === 0) {
 
     if (!in_array($ext, $allow) || in_array($ext, $deny)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Допустимы только jpeg, jpg, png, heic, jfif, webp.']);
+        echo json_encode(['error' => 'Недопустимый формат изображения']);
         exit;
     }
 
     if ($file['size'] > 5 * 1024 * 1024) {
         http_response_code(400);
-        echo json_encode(['error' => 'Файл слишком большой (максимальный размер - до 5 МБ).']);
+        echo json_encode(['error' => 'Файл поста слишком большой (максимальный размер - до 5 МБ) ']);
         exit;
     }
 

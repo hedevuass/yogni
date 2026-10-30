@@ -676,6 +676,7 @@ function get_specialist(int $id)
             sd.foundation, 
             sd.schedule AS schedule, 
             sd.document,
+            sd.inn,
             sd.university,
             com.title AS company,
             com.classification AS company_classification_id,
@@ -710,7 +711,8 @@ function get_specialists_by_company(int $company_id)
     return $data_base->selectRow("SELECT 
                                     id, 
                                     name, 
-                                    lastname, 
+                                    lastname,
+                                    slug, 
                                     classification_id 
                                FROM dt_specialist 
                                WHERE company_id = ? AND deleted = 0", [$company_id]);
@@ -1060,7 +1062,7 @@ function get_banner(int $id): mixed
 
             // Получаем данные специалиста
             $specialist = $data_base->selectRow(
-                "SELECT company_id, name, lastname, classification_id 
+                "SELECT company_id, name, lastname, slug, classification_id 
                    FROM dt_specialist 
                   WHERE id = ?",
                 [$specialist_id]
@@ -1421,6 +1423,301 @@ function unset_article_themes(int $article_id)
     return $data_base->delete("DELETE FROM `dt_post_themes` WHERE article_id = ?", [$article_id]);
 }
 
+function get_schedule_lessons(int $specialist_id, string $from, string $to, DateTimeImmutable $now): array
+{
+    global $data_base;
+
+    $rows = $data_base->selectAll(
+        "SELECT l.id,
+                DATE_FORMAT(l.lesson_date, '%Y-%m-%d') AS date,
+                TIME_FORMAT(l.start_time, '%H:%i')     AS time,
+                l.duration_min AS duration,
+                CASE WHEN l.end_at <= ? THEN 'done' ELSE l.status END AS status,
+                l.service_id, l.custom_title, l.employee_id, l.room_idx, l.room_name, l.level,
+                s.title AS service_title
+           FROM dt_schedule_lesson l
+           LEFT JOIN dt_service s ON s.id = l.service_id
+          WHERE l.specialist_id = ? AND l.lesson_date BETWEEN ? AND ? AND l.deleted_at IS NULL
+          ORDER BY l.lesson_date, l.start_time",
+        [$now->format('Y-m-d H:i:s'), $specialist_id, $from, $to]
+    );
+    $by_date = [];
+    foreach ($rows as $r) {
+        $by_date[$r['date']][] = $r;
+    }
+    return $by_date;
+}
+
+/** Строка БД в данные строки занятия */
+function schedule_lesson_view(array $r, array $teachers): array
+{
+    return [
+        'id'           => $r['id'],
+        'time'         => $r['time'],
+        'duration'     => $r['duration'],
+        'status'       => $r['status'],
+        'title'        => $r['custom_title'] ?: ($r['service_title'] ?? ''),
+        'trainer'      => $teachers[$r['employee_id']] ?? '',
+        'direction'    => $r['service_id'] ?: 'custom',
+        'custom_title' => $r['custom_title'] ?? '',
+        'teacher'      => $r['employee_id'],
+        'hall'         => $r['room_idx'],
+        'level'        => $r['level'],
+    ];
+}
+
+/** HTML блока дня: список занятий или заглушка */
+function render_schedule_day(string $ymd, array $lessons, bool $hidden = true): string
+{
+    $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $labels = ['done' => 'Проведено', 'closed' => 'Запись закрыта', 'open' => 'Запись идёт'];
+
+    $rows = implode('', array_map(function ($lesson) use ($e, $labels) {
+        // ← сюда перенесите тело вашего $render_lessons (одна строка занятия с меню),
+        //    заменив $status_labels на $labels
+    }, $lessons));
+
+    return '<div class="schedule-day-content" data-date="' . $e($ymd) . '"' . ($hidden ? ' hidden' : '') . '>'
+        . ($rows !== ''
+            ? '<div class="schedule-lessons">' . $rows . '</div>'
+            : '<div class="schedule-empty">Расписание на день не заполнено.</div>')
+        . '</div>';
+}
+
+/** Одно занятие специалиста (null, если нет или чужое) */
+function get_schedule_lesson(int $id, int $specialist_id)
+{
+    global $data_base;
+
+    return $data_base->selectRow(
+        "SELECT * FROM dt_schedule_lesson WHERE id = ? AND specialist_id = ? AND deleted_at IS NULL",
+        [$id, $specialist_id]
+    );
+}
+
+/** Занятие уже проведено? (время окончания прошло) */
+function schedule_lesson_is_done(array $lesson, DateTimeImmutable $now): bool
+{
+    $end = new DateTimeImmutable($lesson['lesson_date'] . ' ' . $lesson['start_time'], $now->getTimezone());
+    $end = $end->modify('+' . (int)$lesson['duration_min'] . ' minutes');
+    return $end <= $now;
+}
+
+/** Все занятия специалиста за дату (включая прошедшие) */
+function get_schedule_lessons_by_date(int $specialist_id, string $date): array
+{
+    global $data_base;
+
+    return $data_base->selectAll( 
+        "SELECT * FROM dt_schedule_lesson
+         WHERE specialist_id = ? AND lesson_date = ? AND deleted_at IS NULL
+         ORDER BY start_time",
+        [$specialist_id, $date]
+    ) ?: [];
+}
+
+/** Поля из проверенных данных попапа в колонки таблицы */
+function schedule_lesson_fields(array $d): array
+{
+    return [
+        'lesson_date'   => $d['date'],
+        'start_time'    => $d['time'] . ':00',
+        'duration_min'  => (int)$d['duration'],
+        'status'        => $d['status'],
+        'service_id'    => $d['service_id'],
+        'custom_title'  => $d['custom_title'],
+        'employee_id'   => $d['employee_id'],
+        'room_idx'      => $d['room_idx'],
+        'room_name'     => $d['room_name'],
+        'level'         => (int)$d['level'],
+    ];
+}
+
+function add_schedule_lesson(int $specialist_id, array $d)
+{
+    global $data_base;
+
+    $f = schedule_lesson_fields($d);
+
+    $ok = $data_base->update(
+        "INSERT INTO dt_schedule_lesson
+            (specialist_id, lesson_date, start_time, duration_min, status,
+             service_id, custom_title, employee_id, room_idx, room_name, level)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            $specialist_id, $f['lesson_date'], $f['start_time'], $f['duration_min'], $f['status'],
+            $f['service_id'], $f['custom_title'], $f['employee_id'],
+            $f['room_idx'], $f['room_name'], $f['level'],
+        ]
+    );
+    if (!$ok) return false;
+
+    // id только что вставленной записи
+    $row = $data_base->selectRow("SELECT LAST_INSERT_ID() AS id");
+    return $row ? (int)$row['id'] : false;
+}
+
+/** Изменить занятие (только своё и только не проведённое) */
+function update_schedule_lesson(int $id, int $specialist_id, array $d, DateTimeImmutable $now): bool
+{
+    global $data_base;
+
+    $lesson = get_schedule_lesson($id, $specialist_id);
+    if (!$lesson || schedule_lesson_is_done($lesson, $now)) return false;
+
+    $f = schedule_lesson_fields($d);
+
+    return $data_base->update(
+        "UPDATE dt_schedule_lesson
+            SET lesson_date = ?, start_time = ?, duration_min = ?, status = ?,
+                service_id = ?, custom_title = ?, employee_id = ?,
+                room_idx = ?, room_name = ?, level = ?
+          WHERE id = ? AND specialist_id = ? AND deleted_at IS NULL",
+        [
+            $f['lesson_date'], $f['start_time'], $f['duration_min'], $f['status'],
+            $f['service_id'], $f['custom_title'], $f['employee_id'],
+            $f['room_idx'], $f['room_name'], $f['level'],
+            $id, $specialist_id,
+        ]
+    );
+}
+
+/** Удалить занятие (мягко; только своё и не проведённое) */
+function delete_schedule_lesson(int $id, int $specialist_id, DateTimeImmutable $now): bool
+{
+    global $data_base;
+
+    $lesson = get_schedule_lesson($id, $specialist_id);
+    if (!$lesson || schedule_lesson_is_done($lesson, $now)) return false;
+
+    return $data_base->update(
+        "UPDATE dt_schedule_lesson SET deleted_at = ? WHERE id = ? AND specialist_id = ? AND deleted_at IS NULL",
+        [$now->format('Y-m-d H:i:s'), $id, $specialist_id]
+    );
+}
+
+/** Справочники расписания специалиста: направления, преподаватели, залы */
+function get_schedule_dicts(array $specialist): array
+{
+    // направления: все конечные из общего меню сайта
+    $menu = get_services_for_menu();
+    $all = []; $parents = [];
+    foreach ($menu as $by_parent) {
+        foreach ($by_parent as $services) {
+            foreach ($services as $s) {
+                $all[$s['id']] = $s;
+                if ((int)$s['p_id'] > 0) $parents[(int)$s['p_id']] = true;
+            }
+        }
+    }
+    $leaf = array_filter($all, fn($s) => !isset($parents[(int)$s['id']]));
+    usort($leaf, fn($a, $b) => [$a['sort_order'], $a['title']] <=> [$b['sort_order'], $b['title']]);
+    $directions = [];
+    foreach ($leaf as $s) $directions[$s['id']] = $s['title'];
+
+    // преподаватели: команда студии
+    $company_id = (int)($specialist['company_id'] ?? 0);
+    $teachers = [];
+    foreach ($company_id ? get_company_employees($company_id) : [] as $emp) {
+        $name = trim(($emp['name'] ?? '') . ' ' . ($emp['lastname'] ?? ''));
+        if ($name !== '') $teachers[$emp['id']] = $name;
+    }
+
+    // залы студии
+    $halls = [];
+    foreach (json_decode($specialist['rooms'] ?? '[]', true) ?: [] as $i => $room) {
+        $name = trim($room['name'] ?? '');
+        if ($name !== '') $halls[$i] = $name;
+    }
+
+    return ['directions' => $directions, 'teachers' => $teachers, 'halls' => $halls];
+}
+
+/** Проверка данных занятия. Возвращает [очищенные данные, ошибки] */
+function validate_lesson(array $in, array $dicts, DateTimeImmutable $now): array
+{
+    $err = []; $out = [];
+
+    $out['status'] = in_array($in['status'] ?? '', ['open', 'closed'], true) ? $in['status'] : null;
+    if (!$out['status']) $err['status'] = 'Выберите статус';
+
+    $date = (string)($in['date'] ?? '');
+    $date_ok = preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && strtotime($date);
+    if (!$date_ok) $err['date'] = 'Некорректная дата';
+    $out['date'] = $date;
+
+    $time = (string)($in['time'] ?? '');
+    $time_ok = preg_match('/^([01]\d|2[0-3]):(00|15|30|45)$/', $time);
+    if (!$time_ok) $err['time'] = 'Выберите начало занятия';
+    $out['time'] = $time;
+
+    $dur = (int)($in['duration'] ?? 0);
+    $dur_ok = $dur >= 15 && $dur <= 180 && $dur % 15 === 0;
+    if (!$dur_ok) $err['duration'] = 'Выберите длительность занятия';
+    $out['duration'] = $dur;
+
+    if (!$time_ok && !$dur_ok) { 
+        $err['time'] = 'Выберите начало и длительность занятия';
+        $err['duration'] = '';
+    }
+    // занятие должно заканчиваться в будущем, иначе оно сразу было бы «Проведено»
+    if ($date_ok && $time_ok && $dur_ok) {
+        $end = (new DateTimeImmutable("$date $time", $now->getTimezone()))->modify("+$dur minutes");
+        if ($end <= $now) $err['time'] = 'Прошедшие занятия редактировать нельзя. Проверьте время начала и продолжительность занятия.';
+    }
+
+    // направление или своё название
+    $dir = (string)($in['direction'] ?? '');
+    if ($dir === 'custom') {
+        $raw  = trim((string)($in['custom_title'] ?? ''));
+        $norm = html_entity_decode($raw, ENT_QUOTES | ENT_HTML5, 'UTF-8'); // как в блоге: ловим &lt;script&gt;
+    
+        if ($raw === '') {
+            $err['custom_title'] = 'Введите наименование';
+        } elseif (mb_strlen($norm) > 30) {
+            $err['custom_title'] = 'Превышено допустимое количество символов';
+        } elseif (preg_match('/<[^>]+>/', $norm)) {
+            $err['custom_title'] = 'Название не должно содержать HTML-теги';
+        } elseif (preg_match('/https?:\/\/[^\s"\'<>]+/i', $norm)) {
+            $err['custom_title'] = 'Название не должно содержать ссылки';
+        } else {
+            $low = mb_strtolower($norm, 'UTF-8');
+            foreach (getForbiddenWords() as $word) {
+                $w = trim((string)$word);
+                if ($w === '' || in_array($w, ['<', '>', '&lt;', '&gt;'], true)) continue;
+    
+                $quoted = preg_quote(mb_strtolower($w, 'UTF-8'), '/');
+                if (preg_match('/(?<!\p{L})' . $quoted . '(?!\p{L})/iu', $low)) {
+                    $err['custom_title'] = 'Название содержит запрещенное слово: "' . htmlspecialchars($w) . '"';
+                    break;
+                }
+            }
+        }
+    
+        $out['service_id']   = null;
+        $out['custom_title'] = $raw;
+    } elseif (isset($dicts['directions'][$dir])) {
+        $out['service_id'] = (int)$dir;
+        $out['custom_title'] = null;
+    } else {
+        $err['direction'] = 'Выберите направление занятия';
+    }
+
+    $teacher = (string)($in['teacher'] ?? '');
+    if (isset($dicts['teachers'][$teacher])) $out['employee_id'] = (int)$teacher;
+    else $err['teacher'] = 'Выберите преподавателя';
+
+    $hall = (string)($in['hall'] ?? '');
+    if (isset($dicts['halls'][$hall])) { $out['room_idx'] = (int)$hall; $out['room_name'] = $dicts['halls'][$hall]; }
+    else $err['hall'] = 'Выберите зал для занятий';
+
+    $lvl = (int)($in['level'] ?? 0);
+    if ($lvl < 1 || $lvl > 4) $err['level'] = 'Выберите уровень подготовки';
+    $out['level'] = $lvl;
+
+    return [$out, $err];
+}
+
 // Возвращает всех работников компании
 function get_company_employees(int $company_id)
 {
@@ -1429,10 +1726,23 @@ function get_company_employees(int $company_id)
 }
 
 // Удаляет сотрудника компании
-function unset_company_employee(int $employee_id)
+function unset_company_employee(int $employee_id, int $company_id)
 {
     global $data_base;
-    return $data_base->delete("DELETE FROM `dt_company_employee` WHERE id = ?", [$employee_id]);
+    return $data_base->delete(
+        "DELETE FROM `dt_company_employee` WHERE id = ? AND company_id = ?",
+        [$employee_id, $company_id]
+    );
+}
+
+// Обновляет сотрудника компании (id сохраняется)
+function update_company_employee(int $employee_id, int $company_id, array $employee)
+{
+    global $data_base;
+    return $data_base->update(
+        "UPDATE dt_company_employee SET name = ?, lastname = ?, post = ?, photo = ? WHERE id = ? AND company_id = ?",
+        [$employee['name'], $employee['lastname'], $employee['post'], $employee['file'], $employee_id, $company_id]
+    );
 }
 
 // Удаляет сотрудника компании
@@ -1445,18 +1755,17 @@ function set_company_employee($employee, $company_id)
     );
 }
 
-function add_user_request(int $specialist_id, string $name, string $phone, string $message)
+function add_user_request(int $specialist_id, string $name, string $phone)
 {
     global $data_base;
 
     return $data_base->add(
-        "INSERT INTO dt_user_request (specialist_id, name, phone, message) 
-         VALUES (?, ?, ?, ?)",
+        "INSERT INTO dt_user_request (specialist_id, name, phone) 
+         VALUES (?, ?, ?)",
         [
             $specialist_id,
             $name,
-            $phone,
-            $message
+            $phone
         ]
     );
 }
@@ -1650,8 +1959,10 @@ function get_specialists_by_classification_n_block($classification, int $limit, 
         SELECT
             s.id,
             s.name,
+            s.slug,
             s.lastname,
             s.photo,
+            s.gallery,
             IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) AS rating,
             c.title AS classification_title,
             ci.name AS city_name,
@@ -1698,8 +2009,10 @@ function get_specialists_by_classification_n_block($classification, int $limit, 
         SELECT
             s.id,
             s.name,
+            s.slug,
             s.lastname,
             s.photo,
+            s.gallery,
             IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),0) AS rating,
             c.title AS classification_title,
             ci.name AS city_name,
@@ -1741,27 +2054,47 @@ function get_specialists_by_classification_n_block($classification, int $limit, 
     return array_slice($all, 0, $limit);
 }
 
-function getCachedData(string $key, int $ttl, callable $callback)
+function getCachedData(string $baseKey, int $ttl, callable $callback, ?string $version = null)
 {
     $tmpDir = __DIR__ . '/tmp';
-    if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
+    if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
-    $cacheFile = $tmpDir . '/cache_' . md5($key);
+    $hash = md5($baseKey);
+    $suffix = $version !== null ? '_' . md5((string)$version) : '';
+    $cacheFile = $tmpDir . '/cache_' . $hash . $suffix . '.cache';
 
     if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
-        return unserialize(file_get_contents($cacheFile));
+        $raw = file_get_contents($cacheFile);
+        $data = @unserialize($raw);
+        if ($raw === serialize(false) || $data !== false) {
+            return $data;
+        }
+    }
+
+    // убираем прошлые версии этого же базового ключа
+    foreach (glob($tmpDir . '/cache_' . $hash . '_*.cache') as $oldFile) {
+        if ($oldFile !== $cacheFile) {
+            @unlink($oldFile);
+        }
     }
 
     $data = $callback();
-    file_put_contents($cacheFile, serialize($data));
+
+    $tmpFile = $cacheFile . '.' . uniqid('', true) . '.tmp';
+    file_put_contents($tmpFile, serialize($data), LOCK_EX);
+    rename($tmpFile, $cacheFile);
 
     return $data;
 }
 
-function clearCache(string $key)
+function clearCache(string $baseKey)
 {
-    $cacheFile = __DIR__ . '/tmp/cache_' . md5($key);
-    if (file_exists($cacheFile)) unlink($cacheFile);
+    $tmpDir = __DIR__ . '/tmp';
+    $hash = md5($baseKey);
+    // удаляем ВСЕ файлы этого базового ключа, независимо от версии в имени
+    foreach (glob($tmpDir . '/cache_' . $hash . '*') as $file) {
+        @unlink($file);
+    }
 }
 
 function get_random_specialists_by_classification(array $classArr, int $limit, array $excludeIds = []): array
@@ -1929,7 +2262,9 @@ FROM (
         s.id,
         s.name,
         s.lastname,
+        s.slug,
         s.photo,
+        s.gallery,
         IFNULL(r.rating, 0) AS rating,
         c.title AS classification_title,
         ci.name AS city_name,
@@ -2794,7 +3129,9 @@ function get_specialists_by_service_with_tariffs(
         s.id,
         s.name,
         s.lastname,
+        s.slug,
         s.photo,
+        s.gallery,
         IFNULL(
            (SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id),
            0
@@ -3447,8 +3784,10 @@ function get_promo_list(string $service_slug, int $limit = 8)
     $query = "SELECT
                     s.id,
                     s.name,
+                    s.slug,
                     s.lastname,
                     s.photo,
+                    s.gallery,
                     s.rating,
                     pl.id AS promo_id,
                     c.title as classification_title,
@@ -3614,7 +3953,9 @@ function fetch_specialists_by_classification(array $classifications, int $count,
             s.id,
             s.name,
             s.lastname,
+            s.slug,
             s.photo,
+            s.gallery,
             IFNULL((SELECT AVG(rating) FROM dt_specialist_review WHERE specialist_id = s.id), 0) AS rating,
             c.title AS classification_title,
             ci.name AS city_name,
@@ -3657,7 +3998,7 @@ function get_alias_from_url()
     $last_segment = end($uri_arr);
 
     // Массив допустимых окончаний
-    $valid_endings = ['yuristy-i-advokaty', 'yoga-studii', 'notariusy'];
+    $valid_endings = ['yoga-studii'];
 
     // Если последний элемент в URL соответствует одному из указанных значений и это не alias,
     // добавляем слэш в конец
@@ -4438,12 +4779,12 @@ function update_specialist_description(array $data)
     return $data_base->update("UPDATE dt_specialist_description SET
                                                                     description = ?,
                                                                     university = ?,
-                                                                    foundation = ?
+                                                                    foundation = ?,
+                                                                    inn = ?
                                                                 WHERE
                                                                     specialist_id = ?", [
-        $data['description'],
-        $data['university'],
-        $data['foundation'],
+        $data['description'],$data['university'],
+        $data['foundation'],$data['inn'],
         (int) $_SESSION['user']['id']
     ]);
 }
@@ -4606,6 +4947,94 @@ function update_specialist_documents(string $documents)
         $documents,
         $_SESSION['user']['id']
     ]);
+}
+
+function get_request_data(): array
+{
+    global $data_base;
+ 
+    $rows = $data_base->selectAll("SELECT * FROM dt_requests ORDER BY id LIMIT 1");
+ 
+    return $rows[0] ?? [];
+}
+
+function request_statuses(): array
+{
+    return [
+        'new'          => ['Новая заявка',   'text-danger'],    // красный
+        'sent'         => ['Отправлена',     'text-dark'],      // чёрный
+        'spam'         => ['Спам',           'text-secondary'], // серый
+        'invoice_sent' => ['Отправлен счет', 'text-primary'],   // синий
+        'paid'         => ['Оплачена',       'text-success'],   // зелёный
+        'unpaid'       => ['Не оплачена',    'text-warning'],   // жёлтый
+    ];
+}
+function request_status_codes(): array
+{
+    return [
+        'sent'         => 1,
+        'spam'         => 2,
+        'new'          => 3,
+        'invoice_sent' => 4,
+        'paid'         => 5,
+        'unpaid'       => 6,
+    ];
+}
+
+function request_status_key(array $r): string
+{
+    $key = array_search((int)($r['moderation'] ?? 0), request_status_codes(), true);
+    return $key === false ? 'new' : $key;
+}
+/**
+ * Заявки одного специалиста
+ *
+ * @param int $specialist_id
+ * @return array
+ */
+function get_specialist_requests(int $specialist_id): array
+{
+    global $data_base;
+
+    return $data_base->selectAll("
+        SELECT 
+            ur.*, 
+            COALESCE(
+                c.title,                         
+                CONCAT(s.name, ' ', s.lastname),
+                '-'                              
+            ) AS specialist_name,
+             s.id AS specialist_id
+        FROM dt_user_request ur
+        LEFT JOIN dt_specialist s ON ur.specialist_id = s.id
+        LEFT JOIN dt_company c ON s.company_id = c.id
+        WHERE ur.specialist_id = " . (int)$specialist_id . "
+        ORDER BY ur.created_at DESC
+    ");
+}
+function get_specialist_inn(int $specialistId): string
+{
+    global $data_base;
+    $row = $data_base->selectRow(
+        "SELECT inn FROM dt_specialist_description WHERE specialist_id = ? LIMIT 1",
+        [$specialistId]
+    );
+    return trim((string)($row['inn'] ?? ''));
+}
+
+function parse_request_price(string $raw): float
+{
+    $text = html_entity_decode(strip_tags($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    if (!preg_match('/\d[\d\s\x{00A0}]*(?:[.,]\d+)?/u', $text, $m)) return 0.0;
+    $num = preg_replace('/[\s\x{00A0}]+/u', '', $m[0]);
+    return (float)str_replace(',', '.', $num);
+}
+
+function get_request_price(): float
+{
+    global $data_base;
+    $row = $data_base->selectRow("SELECT price FROM dt_requests ORDER BY id LIMIT 1", []);
+    return parse_request_price((string)($row['price'] ?? ''));
 }
 
 // Возвращает все тарифы

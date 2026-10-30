@@ -217,107 +217,104 @@ let Posts = {
       tinymce.remove(
         `${Posts.selectors.contentSelector}, ${Posts.selectors.titleSelector}`
       );
-
+  
       // Инициализируем отдельно для каждого поля
       [Posts.selectors.contentSelector, Posts.selectors.titleSelector].forEach(
         (selector) => {
           const el = document.querySelector(selector);
           if (!el) return;
-
+  
           const isTitle = selector === Posts.selectors.titleSelector;
-
+  
           tinymce.init({
             target: el,
-            height: isTitle ? 170 : 450, // Выравниваем высоту по стандарту (170 для заголовка)
-
-            // Жесткое разделение на абзацы при нажатии Enter
+            height: isTitle ? 170 : 450,
+  
+            // Разделение на абзацы при нажатии Enter
             force_br_newlines: false,
             force_p_newlines: true,
             forced_root_block: "p",
-
-            // Плагины (в TinyMCE 6+ плагин paste встроен по умолчанию)
+  
+            // Строгое ограничение разрешенных тегов средствами самого TinyMCE
+            valid_elements: isTitle
+              ? "p,br,b,i,strong,em"
+              : "p,br,ul,ol,li,h1,h2,h3,blockquote,img[src|alt|title],a[href|target|title],b,i,strong,em",
+  
             plugins: isTitle
               ? "lists autolink code link"
               : "lists autolink code link image",
-
+  
             paste_as_text: false,
-
-            // Умная обработка вставляемого текста (из буфера)
+  
+            // Безопасная обработка вставляемого текста
             paste_preprocess: function (plugin, args) {
               let content = args.content;
-
-              if (!isTitle) {
-                // 1. Превращаем двойные переносы строк в закрытие и открытие абзаца
-                content = content.replace(
-                  /<br\s*\/?>\s*<br\s*\/?>/gi,
-                  "</p><p>"
-                );
-                // 2. Одиночные переносы строк тоже изолируем в независимые абзацы
-                content = content.replace(/<br\s*\/?>/gi, "</p><p>");
-              }
-
-              // Список разрешенных тегов
-              const allowedTags = isTitle
-                ? "p|br"
-                : "p|br|ul|ol|li|h1|h2|h3|blockquote|img";
-
-              // Очищаем все остальные неразрешенные теги
+    
+              // Списки -> абзацы, чтобы пункты не слипались при последующей очистке тегов
+              content = content.replace(/<\/li>\s*<li[^>]*>/gi, "</p><p>");
+              content = content.replace(/<li[^>]*>/gi, "<p>");
+              content = content.replace(/<\/li>/gi, "</p>");
+              content = content.replace(/<\/?(ul|ol)[^>]*>/gi, "");
+    
+              const allowedTags = "p|br";
               const regex = new RegExp(
                 `<(?!\\/?(${allowedTags})(\\s|>))[^>]+>`,
                 "gi"
               );
-
+              content = content.replace(regex, "");
+    
+              content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
+              content = content.replace(/<br\s*\/?>/gi, "</p><p>");
+    
               args.content = content
-                .replace(regex, "")
                 .replace(/&nbsp;/g, " ")
-                .replace(/<p>\s*<\/p>/g, "") // Вычищаем пустые абзацы
+                .replace(/<p>\s*<\/p>/g, "")
                 .trim();
             },
-
-            // Кнопки управления в строгом порядке
+  
+            // Кнопки управления
             toolbar: isTitle
               ? "undo redo | formatselect | fontselect fontsizeselect"
               : "undo redo formatselect fontselect fontsizeselect alignleft aligncenter alignright h2 h3 blockquote bullist numlist bold italic underline strikethrough image link code",
-
+  
             branding: false,
             relative_urls: false,
             remove_script_host: false,
             convert_urls: false,
             readonly: false,
-
+  
             content_css:
               "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap",
-
-            // Стилизация текста внутри редактора
+  
             content_style: `
-                        body, p, h1, h2, h3, div, span, blockquote {
-                            font-family: Roboto, sans-serif !important;
-                            font-size: 14px !important;
-                        }
-                        blockquote {
-                            border-left: 3px solid #F8A3AA;
-                            margin-left: 1.5rem;
-                            padding-left: 1rem;
-                            font-style: italic;
-                        }
-                        img {
-                            width: 100% !important; 
-                            height: auto !important;
-                            aspect-ratio: 16 / 9 !important; 
-                            object-fit: cover !important; 
-                            border-radius: 16px !important; 
-                            display: block !important; 
-                            margin: 10px 0 !important;
-                        }
-                    `,
-
+              body, p, h1, h2, h3, div, span, blockquote {
+                  font-family: Roboto, sans-serif !important;
+                  font-size: 14px !important;
+              }
+              blockquote {
+                  border-left: 3px solid #F8A3AA;
+                  margin-left: 1.5rem;
+                  padding-left: 1rem;
+                  font-style: italic;
+              }
+              img {
+                  width: 100% !important; 
+                  height: auto !important;
+                  aspect-ratio: 16 / 9 !important; 
+                  object-fit: cover !important; 
+                  border-radius: 16px !important; 
+                  display: block !important; 
+                  margin: 10px 0 !important;
+              }
+            `,
+  
             font_family_formats:
               "Roboto=Roboto, sans-serif;Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;",
             font_size_formats:
               "8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 24pt 36pt 48pt",
             block_formats:
               "Header 1=h1; Header 2=h2; Header 3=h3; Paragraph=p; Blockquote=blockquote",
-
+  
             style_formats: [
               { title: "Header 1", block: "h1" },
               { title: "Header 2", block: "h2" },
@@ -325,14 +322,13 @@ let Posts = {
               { title: "Paragraph", block: "p" },
               { title: "Blockquote", block: "blockquote" },
             ],
-
+  
             image_title: true,
             image_description: true,
             automatic_uploads: true,
             file_picker_types: "image",
             image_dimensions: false,
-
-            // Асинхронный загрузчик изображений (исправлен URL для v6)
+  
             images_upload_handler: function (
               blobInfo,
               success,
@@ -340,80 +336,58 @@ let Posts = {
               progress
             ) {
               var isV6 = parseInt(tinymce.majorVersion) >= 6;
-
+              var formData = new FormData();
+              formData.append("file", blobInfo.blob(), blobInfo.filename());
+  
               if (isV6) {
                 return new Promise(function (resolve, reject) {
-                  var formData = new FormData();
-                  formData.append("file", blobInfo.blob(), blobInfo.filename());
-
-                  // ИСПРАВЛЕНО: Теперь запрос идет в posts, а не в journal
                   fetch("actions/posts/upload_img.php", {
                     method: "POST",
                     body: formData,
                   })
-                    .then(function (response) {
-                      if (!response.ok)
-                        throw new Error("HTTP статус " + response.status);
-                      return response.json();
-                    })
-                    .then(function (result) {
-                      if (result && result.location) {
-                        resolve(result.location);
-                      } else {
-                        reject(result.error || "Неверный ответ от сервера");
-                      }
-                    })
-                    .catch(function (error) {
-                      reject("Ошибка: " + error.message);
-                    });
+                    .then((res) => res.json())
+                    .then((result) =>
+                      result?.location
+                        ? resolve(result.location)
+                        : reject(result.error || "Ошибка загрузки")
+                    )
+                    .catch((err) => reject("Ошибка: " + err.message));
                 });
               } else {
-                var formData = new FormData();
-                formData.append("file", blobInfo.blob(), blobInfo.filename());
-
                 fetch("actions/posts/upload_img.php", {
                   method: "POST",
                   body: formData,
                 })
-                  .then(function (response) {
-                    if (!response.ok)
-                      throw new Error("HTTP статус " + response.status);
-                    return response.json();
-                  })
-                  .then(function (result) {
-                    if (result && result.location) {
-                      success(result.location);
-                    } else {
-                      failure(result.error || "Неверный ответ от сервера");
-                    }
-                  })
-                  .catch(function (error) {
-                    failure("Ошибка: " + error.message);
-                  });
+                  .then((res) => res.json())
+                  .then((result) =>
+                    result?.location
+                      ? success(result.location)
+                      : failure(result.error || "Ошибка загрузки")
+                  )
+                  .catch((err) => failure("Ошибка: " + err.message));
               }
             },
-
+  
             setup: function (editor) {
-              // Работа с фокусом модального окна Bootstrap
               let modalEl = document.querySelector(
                 Posts.selectors.modalEditSelector
               );
               let modalInstance = modalEl
                 ? bootstrap.Modal.getInstance(modalEl)
                 : null;
-
+  
               function disableFocusTrap() {
                 if (modalInstance && modalInstance._focustrap) {
                   modalInstance._focustrap.deactivate();
                 }
               }
-
+  
               function enableFocusTrap() {
                 if (modalInstance && modalInstance._focustrap) {
                   modalInstance._focustrap.activate();
                 }
               }
-
+  
               editor.on("OpenWindow", function () {
                 disableFocusTrap();
                 setTimeout(() => {
@@ -422,8 +396,8 @@ let Posts = {
                   if (inputInDialog) inputInDialog.focus();
                 }, 50);
               });
-
-              editor.on("OpenWindow", function (e) {
+  
+              editor.on("OpenWindow", function () {
                 var tabs = document.querySelectorAll(".tox-tab");
                 tabs.forEach(function (tab) {
                   if (tab.textContent.trim() === "Upload") {
@@ -431,14 +405,9 @@ let Posts = {
                   }
                 });
               });
-
+  
               editor.on("CloseWindow", function () {
                 enableFocusTrap();
-              });
-
-              // Чистый лог инициализации без принудительной мутации DOM
-              editor.on("init", function () {
-                console.log("Editor initialized");
               });
             },
           });

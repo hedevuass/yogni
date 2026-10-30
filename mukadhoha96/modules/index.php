@@ -350,11 +350,11 @@ $editorCount = count($editors) + 1;
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($socials as $social): 
+                        <?php foreach ($socials as $social):
                             if ($social['alt'] === 'Telegram') {
                                 continue;
                             }
-                            ?>
+                        ?>
                             <tr>
                                 <td>
                                     <?= htmlspecialchars($social['id']); ?>
@@ -490,15 +490,13 @@ $editorCount = count($editors) + 1;
         <div class="table-responsive">
             <div class="container-fluid">
                 <div class="d-flex justify-content-center align-items-center">
-                    <div class="col-1 position-relative me-3 image-container"
-                        onclick="document.getElementById('input-favicon').click();">
+                    <div class="col-2 position-relative me-3 image-container">
                         <img src="/uploads/fav-icon/<?php echo file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/fav-icon/favicon.svg') ? 'favicon.svg' : 'favicon.png'; ?>"
-                            class="avatar" alt="icon" id="favicon-preview">
-                        <span class="upload-avatar">Изменить</span>
+                            class="avatar" style="width: 150px; height: 150px;" alt="icon" id="favicon-preview">
+                        <span class="btn btn-upload-favicon" onclick="document.getElementById('input-favicon').click();">Изменить</span>
+                        <!-- Кнопка удалить -->
+                        <button type="button" class="btn btn-danger" id="delete-favicon-btn">Удалить</button>
                     </div>
-
-                    <!-- Кнопка удалить -->
-                    <button type="button" class="btn btn-danger" id="delete-favicon-btn">Удалить</button>
 
                     <input type="file" style="display: none" name="favicon" id="input-favicon"
                         accept="image/png,image/x-icon,image/svg+xml">

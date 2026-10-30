@@ -37,6 +37,7 @@ foreach ($rooms_to_render as $r => $room) {
     $room_photos = $room['photos'] ?? [];
     $is_empty_room = ($room_name === '' && empty($room_photos));
     $item_class_extra = $is_empty_room ? ' is-empty-room' : '';
+    $doc_loaded_class = $is_empty_room ? '' : ' loaded';
 
     $data['rooms_info'] .= "<div class='room-editor-item{$item_class_extra}' data-room-index=\"{$r}\">";
 
@@ -54,7 +55,7 @@ foreach ($rooms_to_render as $r => $room) {
                 >
                 
                 <!-- Кнопки действий для мобильной версии -->
-                <div class="doc loaded mobile-only">
+                <div class="doc{$doc_loaded_class} mobile-only">
                     <a onclick="$(this).siblings('input[type=file]').click()"></a>
                 </div>
                 <div class="room-mobile-actions">

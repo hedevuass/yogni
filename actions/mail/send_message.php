@@ -16,7 +16,7 @@ foreach ($socials as $social) {
             continue;
         }
 
-        $image_src = 'https://yogni.ru/assets/img/login-parol/';
+        $image_src = 'https://yogoort.ru/assets/img/login-parol/';
         $height = 24;
         $width = 30;
 
@@ -67,6 +67,9 @@ foreach ($socials as $social) {
 }
 
 $social_html .= '</tr>';
+
+$support_site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+$support_link = $support_site_url . '/o-proekte';
 
 
 $forbidden_words = getForbiddenWords();
@@ -174,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
     $link_url .= '/cabinet';
-    $title = 'Запрос клиента с сайта urfaq.ru';
+    $title = 'Запрос клиента с сайта yogoort.ru';
 
     $body = <<<EOF
     <html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="ru" style="padding:0;Margin:0"><head>
@@ -269,7 +272,7 @@ mso-hide:all;
 </tbody></table>
 <table cellpadding="0" cellspacing="0" class="es-content" align="center" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%">
     <tbody><tr style="border-collapse:collapse">
-    <td align="center" style="padding:0;Margin:0;height:100vh;">
+    <td align="center" style="padding:0;Margin:0;">
     <table class="es-content-body" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:separate;border-spacing:0px;background-color:#ededed;border-radius:25px;width:600px" bgcolor="#EDEDED" role="none">
         <tbody><tr style="border-collapse:collapse">
         <td align="left" style="padding:0;Margin:0">
@@ -278,10 +281,10 @@ mso-hide:all;
             <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
             <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                 <tbody><tr class="es-mobile-hidden" style="border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/client_request.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/client_request.png?ver=2" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                 </tr><!--[if !mso]><!-- -->
                 <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogni.ru/assets/img/login-parol/client_request_mob.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/client_request_mob.png?ver=2" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                 </tr><!--<![endif]-->
             </tbody></table></td>
             </tr>
@@ -322,19 +325,19 @@ mso-hide:all;
                     </tbody></table></td>
                     </tr>
                     <tr style="border-collapse:collapse">
-                    <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
+                    <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: осуществляется через форму обратной связи на странице сайта <a target="_blank" href="{$support_link}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;font-size:12px">&#8220;О проекте&#8221;.</a></strong></p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
                     <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
-                    <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
+                    <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">yogoort.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                     </tr>
                     <tr style="border-collapse:collapse">
-                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЙОГУРТ 2020 © - удобный сервис по поиску лучших студий йоги. Все права защищены.</p></td>
                 </tr>
                     <tr style="border-collapse:collapse">
-                    <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogni.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                    <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogoort.ru/assets/img/login-parol/yogoortru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="18"></a></td>
                     </tr>
                 </tbody></table></td>
             </tr>

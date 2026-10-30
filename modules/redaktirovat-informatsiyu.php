@@ -34,6 +34,8 @@ $data['main_info'] .= <<<EOF
     </div>
 EOF;
 
+$data['main_info'] .= input_inn($user);
+
 $data['main_info'] .= input_change_status($user);
 
 $data['main_info'] .= <<<EOF
@@ -218,6 +220,34 @@ function input_foundation(array $user): string
     return $code;
 }
 
+/**
+ * @param array $user
+ * @return string
+ */
+function input_inn(array $user): string
+{
+    $placeholder = 'ИНН (не отображается в публичном доступе)';
+    $def_value = htmlspecialchars($user['inn'] ?? '', ENT_QUOTES, 'UTF-8');
+    
+    $code = <<<EOF
+        <div class="item">
+            <p>$placeholder</p>
+            <input type="text" 
+                   name="inn" 
+                   class="quantity" 
+                   value="{$def_value}" 
+                   data-maxlength="12" 
+                   inputmode="numeric"
+                   pattern="[0-9]*"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                   data-maxlength-message="ИНН должен состоять из 10 или 12 символов"
+                   placeholder="ИНН (10 или 12 символов)">
+                <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+    EOF;
+
+    return $code;
+}
 
 /**
  * @param array $user

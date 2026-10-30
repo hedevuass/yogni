@@ -71,7 +71,7 @@ if ($blog_id == NULL) {
             } else if ($specialist['classification_id'] == 6) {
                 $title .= "коллегии адвокатов";
             } else if ($specialist['classification_id'] == 8) {
-                $title .= "экспертного учреждения";
+                $title .= "студии йоги";
             } else if ($specialist['classification_id'] == 7) {
                 $title .= "адвокатского бюро";
             }

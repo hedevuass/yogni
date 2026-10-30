@@ -1,0 +1,218 @@
+<style>
+
+  .flatpickr-day {
+    border-radius: 50% !important;
+  }
+
+  .flatpickr-day.flatpickr-disabled {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    position: static !important;
+  }
+
+  .flatpickr-current-month .numInputWrapper {
+    width: 5ch !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month.flatpickr-disabled,
+  .flatpickr-months .flatpickr-next-month.flatpickr-disabled {
+    display: block !important;
+  }
+  .numInputWrapper span.arrowUp,
+  .numInputWrapper span.arrowDown {
+    display: none !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month.flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month.flatpickr-next-month {
+    align-content: center !important;
+  }
+
+  .flatpickr-month {
+    justify-content: center !important;
+    background: unset !important;
+  }
+
+  .flatpickr-day.nextMonthDay,
+  .flatpickr-day.prevMonthDay:not(.flatpickr-disabled) {
+    color: #393939 !important;
+  }
+
+  .flatpickr-day.disabled-red,
+  .flatpickr-day.flatpickr-disabled {
+    cursor: not-allowed;
+    color: rgba(57, 57, 57, 0.1) !important;
+  }
+
+  .range-highlight {
+    background: #cbcaca91 !important;
+  }
+
+  /* Контейнер для кнопок */
+  .flatpickr-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 36px 0 41px;
+  }
+
+  /* Кнопка "Подтвердить" */
+  .flatpickr-confirm-btn {
+    width: 120px;
+    height: 32px;
+    background-color: #f8a3aa;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .flatpickr-confirm-btn:hover {
+    background-color: #d88087;
+  }
+
+  /* Кнопка "Сбросить" */
+  .flatpickr-reset-btn {
+    width: 120px;
+    height: 32px;
+    background-color: #f8a3aa26;
+    color: #f8a3aa;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .flatpickr-reset-btn:hover {
+    background-color: #f8a3aa59;
+    color: #f8a3aa;
+  }
+
+  .flatpickr-day.selected {
+    border-color: transparent !important;
+  }
+
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past:not(.selected) {
+    background: transparent;
+    border-color: transparent;
+    color: #7d7d7d;
+  }
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past:not(.selected):hover {
+    background: #e4e5ea; /* чуть темнее при наведении */
+    border-color: #e4e5ea;
+  }
+
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past:not(.selected),
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past.prevMonthDay:not(.selected),
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past.nextMonthDay:not(.selected) {
+    background: transparent;
+    border-color: transparent;
+    color: #7d7d7d !important;
+  }
+
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past:not(.selected):hover,
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past.prevMonthDay:not(.selected):hover,
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-past.nextMonthDay:not(.selected):hover {
+    background: #e4e5ea !important;
+    border-color: #e4e5ea !important;
+  }
+
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.schedule-picker-today:not(.selected) {
+    background: #fbe4d0;
+    border-color: #fbe4d0;
+    color: #1f2328;
+  }
+  /* родная подсветка «сегодня» у flatpickr (по часам браузера) отключена */
+  .flatpickr-calendar.schedule-flatpickr
+    .flatpickr-day.today:not(.schedule-picker-today):not(.selected) {
+    border-color: transparent;
+  }
+
+  /* выбранный день — фиолетовый */
+  .flatpickr-calendar.schedule-flatpickr .flatpickr-day.selected,
+  .flatpickr-calendar.schedule-flatpickr .flatpickr-day.selected:hover,
+  .flatpickr-calendar.schedule-flatpickr .flatpickr-day.selected:focus {
+    background: #c0629b !important;
+    border-color: #c0629b !important;
+    color: #fff !important;
+  }
+
+  @media (max-width: 991px) {
+    .cabinet-page {
+      padding: 58px 0 172px 0;
+    }
+    .cabinet-page.schedule-no-add {
+      padding: 58px 0 148px 0;
+    }
+}
+</style>
+<form id="cabinet-schedule">
+  <div id="obzor-href" class="heading__mobile support-heading">
+    <a href="/cabinet/"></a>
+    <div class="text">Расписание занятий</div>
+  </div>
+  <div class="schedule-block">
+    <!--data:schedule_content--><!--data:schedule_content-->
+  </div>
+</form>
+
+<!--data:schedule_popup--><!--data:schedule_popup-->
+
+<div class="popup delete-article delete-class">
+  <div class="bg"></div>
+  <div class="window middle">
+    <div class="close"></div>
+    <div class="delete-class delete-article">
+      <p>Вы подтверждаете удаление?</p>
+      <div class="buttons">
+        <a class="button-new" id="delete-class-btn" data-class="">Да</a>
+        <a class="button-new">Нет</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="popup schedule-popup" id="forbidden-popup">
+	<div class="bg"></div>
+	<div class="window middle">
+		<div class="close"></div>
+		<div class="reg">
+			<div class="popup-body">
+				<form method="POST" id="forbidden-popup-form">
+					<div class="name">
+						Запрет публикации
+					</div>
+					<div class="popup-content forbidden-popup-content">
+						<div class="forbidden-popup-text">
+							Контент, который вы хотите опубликовать, содержит запрещенные слова и элементы:
+							<span id="forbidden-words-list"></span>.
+							<br><br>С правилами сайта вы можете ознакомиться
+							на странице <a href="/o-proekte">«О проекте»</a>.
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<link rel="stylesheet" href="/assets/flatpickr/dist/flatpickr.min.css" />
+<script src="/assets/flatpickr/dist/flatpickr.min.js"></script>
+<script src="/assets/flatpickr/dist/l10n/ru.js"></script>

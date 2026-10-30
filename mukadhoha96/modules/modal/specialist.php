@@ -110,6 +110,13 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                         </li>
                     <?php endif; ?>
 
+                    <!-- 9/10 Заявки (для всех) -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-requests" data-bs-toggle="tab"
+                            data-bs-target="#content-requests" type="button" role="tab"
+                            aria-controls="content-requests" aria-selected="false">Заявки</button>
+                    </li>
+
                     <!-- 10. Фотосъемка (для всех) -->
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="tab-pro-photo" data-bs-toggle="tab"
@@ -194,6 +201,14 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                             <div class="mb-3">
                                 <label for="input-password" class="form-label">Пароль</label>
                                 <input type="password" name="password" class="form-control" id="input-password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="input-inn" class="form-label">ИНН</label>
+                                <input type="text" name="inn" class="form-control" id="input-inn"
+                                    value="<?= htmlspecialchars($specialist['inn'] ?? '') ?>"
+                                    maxlength="12" inputmode="numeric" pattern="[0-9]*"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    placeholder="ИНН (10 или 12 символов)">
                             </div>
                         <?php endif; ?>
                         <div class="mb-3">
@@ -1014,6 +1029,7 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                                             class="btn btn-sm btn-primary send-invoice"
                                             data-type="tariff"
                                             data-id="<?= $tariff['id'] ?>"
+                                            data-inn="<?= $specialist['inn'] ?>"
                                             data-specialist-id="<?= $specialist_id ?>"
                                             data-duration-checkbox="duration_<?= $tariff['id'] ?>"
                                             data-price="<?= htmlspecialchars(number_format($price, 2, '.', '')) ?>"
@@ -1468,6 +1484,7 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                                             class="btn btn-sm btn-primary send-invoice"
                                             data-type="option"
                                             data-id="<?= $option['id'] ?>"
+                                            data-inn="<?= $specialist['inn'] ?>"
                                             data-specialist-id="<?= $specialist_id ?>"
                                             data-duration-checkbox="duration_<?= $option['id'] ?>"
                                             data-price="<?= htmlspecialchars(number_format($optionPrice, 2, '.', '')) ?>"
@@ -2022,6 +2039,146 @@ $userRole = $_SESSION['user_role'] ?? 'editor';
                         <?php else: ?>
                             <p>Нет архивных размещений</p>
                         <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php
+                $specialistRow = get_specialist($specialist_id);
+                $specialistOther = json_decode($specialistRow['other'] ?? '', true) ?: [];
+                $specialistEmail = $specialistOther['email'] ?? '';
+                $specialistLoginEmail = $specialistRow['email'];
+                $specialistInn = get_specialist_inn($specialist_id);
+                $requestPrice = get_request_price();
+                $specRequests = get_specialist_requests($specialist_id);
+
+                $monthsRu = [1 => 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+                function spec_req_status(array $r): array
+                {
+                    $key = request_status_key($r);
+                    [$label, $cls] = request_statuses()[$key];
+                    $selectable = !in_array($key, ['new', 'spam'], true); // галочка только у заявок, по которым можно выставлять счёт
+                    return [$label, $cls, $selectable, $key];
+                }
+
+                // группировка по месяцам (запросы уже отсортированы по дате DESC)
+                $grouped = [];
+                foreach ($specRequests as $r) {
+                    $ts = strtotime($r['created_at']);
+                    $key = date('Y-m', $ts);
+                    $grouped[$key]['title'] = $monthsRu[(int)date('n', $ts)] . ' ' . date('Y', $ts);
+                    $grouped[$key]['items'][] = $r;
+                }
+                ?>
+
+                <div class="tab-pane fade" id="content-requests" role="tabpanel" aria-labelledby="tab-requests">
+                    <div class="requests-section mb-5"
+                        data-specialist-id="<?= (int)$specialist_id ?>"
+                        data-inn="<?= htmlspecialchars($specialistInn) ?>"
+                        data-email="<?= htmlspecialchars($specialistEmail) ?>"
+                        data-login-email="<?= htmlspecialchars($specialistLoginEmail) ?>"
+                        data-request-price="<?= $requestPrice ?>">
+                        <h4>Заявки</h4>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="req-period" class="mb-0">Период:</label>
+                                <input type="text" id="req-period" class="form-control form-control-sm w-auto"
+                                    placeholder="Выберите период" readonly>
+                                <button type="button" id="req-period-clear" class="btn btn-sm btn-outline-secondary"
+                                    title="Сбросить период">&times;</button>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="spec-req-filter" class="mb-0">Фильтр:</label>
+                                <select id="spec-req-filter" class="form-select form-select-sm w-auto">
+                                    <option value="all">Все</option>
+                                    <?php foreach (request_statuses() as $key => [$label, $cls]): ?>
+                                        <option value="<?= $key ?>" class="<?= $cls ?>"><?= $label ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                            <span class="me-2">Действие/статус:</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary req-invoice"
+                                data-status="invoice_sent" disabled>Отправить счет</button>
+                            <button type="button" class="btn btn-sm btn-outline-success req-action"
+                                data-status="paid" disabled>Оплачена</button>
+                            <button type="button" class="btn btn-sm btn-outline-warning req-action"
+                                data-status="unpaid" disabled>Не оплачена</button>
+                        </div>
+
+                        <?php if (empty($grouped)): ?>
+                            <p class="text-muted">Заявок пока нет</p>
+                        <?php endif; ?>
+
+                        <?php $firstMonth = true; ?>
+                        <?php foreach ($grouped as $key => $group): ?>
+                            <div class="req-month mb-4" data-month="<?= $key ?>">
+                                <div class="req-month-head d-flex justify-content-between align-items-center mb-2">
+                                    <h4 class="mb-0" style="font-size: 22px;">
+                                        <?= $group['title'] ?>
+                                        <a href="#" style="font-size: 14px;" class="req-toggle-month small ms-2 text-dark">(развернуть все)</a>
+                                    </h4>
+
+                                    <span class="req-controls <?= $firstMonth ? '' : 'd-none' ?>">
+                                        <a href="#" class="req-select-all">Выбрать все</a> /
+                                        <a href="#" class="req-reset">Сбросить</a>
+                                    </span>
+                                </div>
+
+                                <?php foreach ($group['items'] as $r):
+                                    [$stText, $stClass, $selectable, $stKey] = spec_req_status($r);
+                                    $ts = strtotime($r['created_at']);
+                                    $highlight = '';
+                                    $r['moderation'] == 3 ? $highlight = 'highlight' : '';
+                                ?>
+                                    <div class="req-item" data-date="<?= date('Y-m-d', $ts) ?>" data-status="<?= $stKey ?>" data-initial-status="<?= $stKey ?>">
+                                        <div class="d-flex align-items-start gap-3 mb-2">
+                                            <div class="card flex-grow-1 overflow-hidden">
+                                                <div class="card-header py-2 d-flex justify-content-between align-items-center <?= $highlight ?>">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <?php if ($selectable): ?>
+                                                            <input type="checkbox" class="form-check-input border-dark mt-0 req-check"
+                                                                value="<?= (int)$r['id'] ?>">
+                                                        <?php else: ?>
+                                                            <input type="checkbox" class="form-check-input mt-0 invisible" disabled>
+                                                        <?php endif; ?>
+                                                        <span><?= date('d.m.Y', $ts) ?></span>
+                                                        <span>ID <?= (int)$r['id'] ?></span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span class="req-status <?= $stClass ?>"><?= $stText ?></span>
+                                                        <button type="button" class="btn btn-dark toggle-req-details"
+                                                            data-request-id="<?= (int)$r['id'] ?>">Подробнее</button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card-body d-none" id="req-details-<?= (int)$r['id'] ?>">
+                                                    <p><strong>Дата заявки:</strong> <?= date('d.m.Y H:i', $ts) ?></p>
+                                                    <p><strong>ID заявки:</strong> <?= (int)$r['id'] ?></p>
+                                                    <p><strong>Наименование специалиста:</strong> <?= htmlspecialchars($r['specialist_name'] ?? '-') ?></p>
+                                                    <p><strong>ID специалиста:</strong> <?= (int)$r['specialist_id'] ?></p>
+                                                    <p><strong>Имя в заявке:</strong> <?= htmlspecialchars($r['name']) ?></p>
+                                                    <p><strong>Номер телефона:</strong>
+                                                        <?php if (filter_var($r['phone'], FILTER_VALIDATE_EMAIL)): ?>
+                                                            <a href="mailto:<?= htmlspecialchars($r['phone']) ?>"><?= htmlspecialchars($r['phone']) ?></a>
+                                                        <?php else: ?>
+                                                            <a href="tel:<?= htmlspecialchars(preg_replace('/[^\d+]/', '', $r['phone'])) ?>"><?= htmlspecialchars($r['phone']) ?></a>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p class="mb-0"><strong>Информация о занятии:</strong>
+                                                        <span class="text-break"><?= nl2br(htmlspecialchars($r['message'])) ?></span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php $firstMonth = false; ?>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 

@@ -5,6 +5,7 @@ import {
 let Tariffs = {
     selectors: {
         'pageSelector': '#tariffPage',
+        'modalEditRequestSelector': '#modalEditRequest',
         'modalEditTariffSelector': '#modalEditTariff',
         'modalEditPromotionSelector': '#modalEditPromotion',
         'modalEditOptionSelector': '#modalEditOption',
@@ -13,6 +14,10 @@ let Tariffs = {
         'deleteOptionButton': '.delete-option-btn'
     },
     start: function () {
+        $('#requestPromo').dataTable({
+            language: Helper.dataTableLanguage(),
+            'iDisplayLength': 50,
+        })
         $('#tariffs').dataTable({
             language: Helper.dataTableLanguage(),
             'iDisplayLength': 50,
@@ -66,6 +71,7 @@ let Tariffs = {
         });
 
         $(this.selectors.pageSelector).on('click', '.modalEdit', this.modalEdit)
+        $(this.selectors.pageSelector).on('click', '#requestEdit', this.edit_request)
         $(this.selectors.pageSelector).on('click', '#tariffEdit, #optionEdit', this.edit)
         $(this.selectors.pageSelector).on('click', '#promotionEdit', this.edit_promo)
         $(this.selectors.pageSelector).on('click', '.delete', this.delete)
@@ -155,12 +161,14 @@ let Tariffs = {
             },
             beforeSend: function () {
                 Helper.loadingButton(button)
+                $(Tariffs.selectors.modalEditRequestSelector).remove()
                 $(Tariffs.selectors.modalEditTariffSelector).remove()
                 $(Tariffs.selectors.modalEditPromotionSelector).remove()
                 $(Tariffs.selectors.modalEditOptionSelector).remove()
             },
             success: function (json) {
                 $(Tariffs.selectors.pageSelector).append(json.code)
+                $(Tariffs.selectors.modalEditRequestSelector).modal('show')
                 $(Tariffs.selectors.modalEditTariffSelector).modal('show')
                 $(Tariffs.selectors.modalEditPromotionSelector).modal('show')
                 $(Tariffs.selectors.modalEditOptionSelector).modal('show')
@@ -259,7 +267,38 @@ let Tariffs = {
                 Helper.fatalError('Произошла ошибка при отправке данных.');
             }
         });
-    }, delete: function () {
+    },
+    edit_request: function () {
+        let button = $(this),
+            buttonContent = button.html(),
+            modal = Tariffs.selectors.modalEditRequestSelector
+     
+        $.ajax({
+            type: "POST",
+            url: "actions/tariff/edit_request.php",
+            dataType: 'json',
+            data: $(`${modal} input, ${modal} textarea`),
+            beforeSend: function () {
+                Helper.loadingButton(button)
+                Helper.removeValidation(modal)
+            },
+            success: function (json) {
+                Helper.loadingButton(button, buttonContent)
+                if (json.error) {
+                    $.each(json.error, function (key, value) {
+                        $(`#input-${key}`).addClass('is-invalid').after(Helper.invalidFeedback(value))
+                    });
+                }
+                if (json.fatal) Helper.fatalError(json.fatal)
+                if (json.success) location.reload()
+            },
+            error: function () {
+                Helper.loadingButton(button, buttonContent)
+                Helper.fatalError('Произошла ошибка при отправке данных.')
+            }
+        })
+    }, 
+    delete: function () {
         let id = $(this).attr('data-id'),
             button = $(this)
 

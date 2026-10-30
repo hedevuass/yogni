@@ -29,6 +29,7 @@ try {
             tariff_id = ?, 
             end_date = ?, 
             duration = ?,
+            orderId = ?,
             moderation = 0
         WHERE specialist_id = ? 
         ORDER BY (moderation = 0) DESC, id DESC
@@ -38,6 +39,7 @@ try {
             $tariffId,
             $endDate,
             $duration,
+            $orderId,
             $specialistId
         ]);
 

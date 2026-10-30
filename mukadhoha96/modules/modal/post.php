@@ -37,7 +37,7 @@
                         <div class="mb-3">
                             <label for="input-title" class="form-label">Заголовок</label>
                             <input type="text" name="title" class="form-control" id="input-title"
-                                value="<?= $journal['title'] ?? '' ?>" require>
+                                value="<?= htmlspecialchars($journal['title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
                         </div>
                     </div>
                     <div class="col-12">

@@ -201,7 +201,7 @@ $pro_photo_list = get_pro_photo_list(5);
         Запросы на фотосъемку
     </p>
 
-    <div id="table-responsive" class="table-responsive">
+    <div id="table-responsive" class="table-responsive container-fluid">
         <table id="photoTable3" class="table table-striped" style="width:100%">
             <thead>
                 <tr>

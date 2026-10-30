@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/tochka_functions.php';
+
 include $_SERVER['DOCUMENT_ROOT'] . '/actions/database/functions.php';
 
 $inn          = trim($_POST['tax_code']     ?? '');
@@ -18,11 +20,11 @@ $dateEnd    = $_POST['date_end']    ?? null;
 $dontChangeModeration = !empty($_POST['dont_change_moderation']);
 
 // Простая валидация
-if (!in_array($type, ['ip', 'company'], true) || !preg_match('/^\d+$/', $inn)) {
+if (!in_array($type, ['ip', 'company'], true) || !isValidInn($inn, $type)) {
     http_response_code(422);
     echo json_encode([
         'success' => false,
-        'error'   => 'Неверные параметры: customer_type должен быть "ip" или "company"'
+        'error'   => 'ИНН не существует. Проверьте правильность ввода.'
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -39,44 +41,7 @@ $floatPrice     = floatval(str_replace(',', '.', $price));
 $formattedPrice = number_format($floatPrice, 2, '.', '');
 
 $apiBaseUrl = 'https://enter.tochka.com/uapi/';
-$authToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ6ekhySFVta1lUU3ZuMERVdGdnVnNMRHF0TnBYaGVrUiJ9.jUpIG6PtuYA7jG59dzw-9r6mwPWvJGyTI-rDI_Sx4EIhakXYt48wy4UHavP9UR5Yy_U3LJDVFN0w7Bimrd3B8aRAvI4yDt1ZneMwfkOiYLato9ZLkKrZqHQjgty8kKEuCKf1-gEKcSYFor9sdFP4XBjRIBenxDKYjjI9Lb6UMFXUr_ET9QsIySvE8Boo6MSIneucWuXRIQnQRcLDwbde7UmfmQpK7HzG4dlNU1Y-6TSxqdbCnM8YQ90Hh-2R0stR4oNGbWxlhvaIIEPDsdmQXyHWJvzYzzktRn5uI51rOHs02j9uIXEcnHyn3Ctp7Du8FagdppCz-KJmflkxXejNON7nHUJaTOpbRjRQAZdw_YV2hZwxZd4NxiuNr4dizH6rbVkevs748SkXZzCPvMvKUnUZPciylsvByjTRJLyets01Ix6PRM695J5bchWCmlzi6uGamIm-sGSFtNjq6JvdNkKgGQbx5f34oeY5Owpb7MhWVh1gfNxRH9UIDCqN-UM_'; // актуальный токен
-
-function apiGetRequest(string $url, string $authToken): array
-{
-    $opts = [
-        "http" => [
-            "method" => "GET",
-            "header" => "Authorization: Bearer $authToken\r\n"
-        ]
-    ];
-    $context = stream_context_create($opts);
-    $respJson = @file_get_contents($url, false, $context);
-    if ($respJson === false) {
-        return ['error' => 'GET request вернул false'];
-    }
-    return json_decode($respJson, true) ?: ['error' => 'Невалидный JSON в GET response'];
-}
-
-function apiPostRequest(string $url, string $authToken, array $postData): array
-{
-    $data = json_encode($postData, JSON_UNESCAPED_UNICODE);
-    $opts = [
-        'http' => [
-            'method'  => 'POST',
-            'header'  => "Authorization: Bearer $authToken\r\n" .
-                "Content-Type: application/json\r\n" .
-                "Content-Length: " . strlen($data) . "\r\n",
-            'content' => $data,
-            'ignore_errors' => true
-        ]
-    ];
-    $context = stream_context_create($opts);
-    $respJson = @file_get_contents($url, false, $context);
-    if ($respJson === false) {
-        return ['error' => 'POST request вернул false'];
-    }
-    return json_decode($respJson, true) ?: ['error' => 'Невалидный JSON в POST response'];
-}
+$authToken = TOCHKA_TOKEN;
 
 // Получаем из API Точки customerCode и accountId
 
@@ -277,7 +242,18 @@ if ($documentId) {
     }
 } else {
     http_response_code(500);
-    $err = $invoiceResponse['error'] ?? json_encode($invoiceResponse, JSON_UNESCAPED_UNICODE);
-    echo json_encode(['success' => false, 'error' => "Нет documentId в ответе. API сказал: $err"]);
+
+    $errorCode = $invoiceResponse['Errors'][0]['errorCode'] ?? null;
+    $userMessage = 'Не удалось выставить счёт. Попробуйте ещё раз или обратитесь в поддержку.';
+
+    if ($errorCode === 'Something going wrong'
+        && str_contains($invoiceResponse['Errors'][0]['message'] ?? '', 'tax code')) {
+        $userMessage = 'ИНН не существует. Проверьте правильность ввода.';
+    }
+
+    // подробности — в лог
+    error_log('Tochka invoice error: ' . json_encode($invoiceResponse, JSON_UNESCAPED_UNICODE));
+
+    echo json_encode(['success' => false, 'error' => $userMessage], JSON_UNESCAPED_UNICODE);
     exit;
 }

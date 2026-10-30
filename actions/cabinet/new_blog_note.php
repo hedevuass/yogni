@@ -6,57 +6,6 @@ session_start();
 $forbidden_words = getForbiddenWords();
 $specialist = get_specialist($_SESSION['user']['id']);
 
-function fix_image_orientation($file_path) {
-    if (!function_exists('exif_read_data')) {
-        return; // Если на сервере не включено расширение EXIF, пропускаем
-    }
-
-    // Читаем метаданные только у файлов JPG/JPEG
-    $mime = mime_content_type($file_path);
-    if ($mime !== 'image/jpeg') {
-        return; 
-    }
-
-    $exif = @exif_read_data($file_path);
-    if (empty($exif['Orientation'])) {
-        return; // Ориентация нормальная или тега нет
-    }
-
-    $orientation = $exif['Orientation'];
-    if ($orientation <= 1) {
-        return; // Поворот не требуется
-    }
-
-    // Загружаем исходник в память для вращения
-    $image = imagecreatefromjpeg($file_path);
-    if (!$image) return;
-
-    $degrees = 0;
-    switch ($orientation) {
-        case 3: // Перевернуто вверх ногами (180°)
-            $degrees = 180;
-            break;
-        case 6: // Повернуто на 90° по часовой стрелке
-            $degrees = -90; // или 270
-            break;
-        case 8: // Повернуто на 90° против часовой стрелки
-            $degrees = 90;
-            break;
-    }
-
-    if ($degrees !== 0) {
-        // Физически вращаем картинку
-        $rotated = imagerotate($image, $degrees, 0);
-        if ($rotated) {
-            // Перезаписываем временный файл уже в правильном положении
-            imagejpeg($rotated, $file_path, 95); 
-            imagedestroy($rotated);
-        }
-    }
-    
-    imagedestroy($image);
-}
-
 if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
     // Переопределяем статью, если это редактирование, чтобы управлять файлами
@@ -74,7 +23,15 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
     $data = [];
     foreach ($_POST as $key => $value) {
+        if ($key === 'title') {
+            continue; // title обрабатываем отдельно, ниже
+        }
         $data[$key] = clean_elem_form($value);
+    }
+
+    // Отдельная очистка для заголовка
+    if (isset($_POST['title'])) {
+        $data['title'] = clean_elem_blog_title($_POST['title']);
     }
 
     $blog = get_blog_by_id(intval($data['blog_id']))['specialist_id'];
@@ -84,18 +41,18 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
         // --- ВАЛИДАЦИЯ КОНТЕНТА (проверяем по $raw_content) ---
         if (!$raw_content) {
-            $json['error']['content'] = 'Введите текст записи.';
+            $json['error']['content'] = 'Введите текст записи';
         } else {
             $security_check_content = preg_replace('/[\t\r\n]+/', '', $normalized_content);
             // 1. Проверка на опасный HTML (XSS)
             $dangerous_html = '/<(script|iframe|object|embed|form|meta|link|a)\b[^>]*>|on\w+\s*=|javascript:/i';
             if (preg_match($dangerous_html, $security_check_content)) {
-                $json['error']['content'] = 'Текст содержит недопустимые или опасные HTML-теги (скрипты, фреймы).';
+                $json['error']['content'] = 'Текст содержит недопустимые или опасные HTML-теги (скрипты, фреймы)';
             }
 
             // 2. Проверка на любые ссылки (http/https)
             if (preg_match('/https?:\/\/[^\s"\'<>]+/i', $security_check_content)) {
-                $json['error']['content'] = 'Вставка ссылок в текст записи запрещена.';
+                $json['error']['content'] = 'Вставка ссылок в текст записи запрещена';
             }
 
             // 3. Проверка на запрещенные слова (ищем в тексте без тегов)
@@ -110,30 +67,30 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
                 $quoted_word = preg_quote(mb_strtolower($word, 'UTF-8'), '/');
                 if (preg_match('/(?<!\p{L})' . $quoted_word . '(?!\p{L})/iu', $clean_content_text)) {
-                    $json['error']['content'] = 'Текст содержит запрещенное слово: "' . htmlspecialchars($word) . '".';
+                    $json['error']['content'] = 'Текст содержит запрещенное слово: "' . htmlspecialchars($word) . '"';
                     break;
                 }
             }
 
             // 4. Проверка длины строки (по исходному тексту, чтобы сущности &lt; не раздували длину)
             if (strlen(str_replace(' ', '', $raw_content)) > 25000) {
-                $json['error']['content'] = 'Текст записи слишком большой.';
+                $json['error']['content'] = 'Текст записи слишком большой';
             }
         }
 
         // --- ВАЛИДАЦИЯ ЗАГОЛОВКА (проверяем по $raw_title) ---
         if (empty($raw_title)) {
-            $json['error']['title'] = 'Введите заголовок записи.';
+            $json['error']['title'] = 'Введите заголовок записи';
         } else {
             $security_check_title = preg_replace('/[\t\r\n]+/', '', $normalized_title);
             // 1. В заголовке строго запрещен ЛЮБОЙ HTML
             if (preg_match('/<[^>]+>/', $normalized_title)) {
-                $json['error']['title'] = 'Заголовок не должен содержать HTML-теги.';
+                $json['error']['title'] = 'Заголовок не должен содержать HTML-теги';
             }
             
             // 2. В заголовке запрещены ссылки
             if (preg_match('/https?:\/\/[^\s"\'<>]+/i', $security_check_title)) {
-                $json['error']['title'] = 'Заголовок не должен содержать ссылки.';
+                $json['error']['title'] = 'Заголовок не должен содержать ссылки';
             }
 
             // 3. Проверка заголовка на запрещенные слова
@@ -142,7 +99,7 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
                 if (empty(trim($word))) continue;
                 $quoted_word = preg_quote(mb_strtolower($word, 'UTF-8'), '/');
                 if (preg_match('/(?<!\p{L})' . $quoted_word . '(?!\p{L})/iu', $clean_title)) {
-                    $json['error']['title'] = 'Заголовок содержит запрещенное слово: "' . htmlspecialchars($word) . '".';
+                    $json['error']['title'] = 'Заголовок содержит запрещенное слово: "' . htmlspecialchars($word) . '"';
                     break;
                 }
             }
@@ -151,14 +108,14 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
             if (!isset($json['error']['title'])) {
                 $data['alias'] = generateAlias($data['title']);
                 if ($data['alias'] == '') {
-                    $json['error']['title'] = 'Заголовок записи не может быть конвертирован в алиас. Придумайте другой заголовок.';
+                    $json['error']['title'] = 'Заголовок записи не может быть конвертирован в алиас. Придумайте другой заголовок';
                 }
             }
         }
 
         $data['theme_id'] = intval($data['theme']);
         if ($data['theme'] == 0) {
-            $json['error']['theme'] = 'Выберите раздел записи.';
+            $json['error']['theme'] = 'Выберите раздел записи';
         }
 
         if (isset($json['error'])) {
@@ -194,13 +151,13 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
             // Валидация расширения файла по вашим глобам
             if (!in_array($ext, $allow) || in_array($ext, $deny)) {
-                $json['error']['main_image'] = 'Допустимы только jpeg, jpg, png, heic, jfif.'; // выведем ошибку
+                $json['error']['main_image'] = 'Недопустимый формат изображения'; // выведем ошибку
                 responseJson($json);
             }
 
             // Валидация веса (до 5 МБ)
             if ($file['size'] > 5 * 1024 * 1024) {
-                $json['error']['main_image'] = 'Файл обложки слишком большой (максимум 5 МБ).';
+                $json['error']['main_image'] = 'Файл обложки слишком большой (максимальный размер - до 5 МБ) ';
                 responseJson($json);
             }
 
@@ -232,7 +189,7 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
 
                     @unlink($jpgPath); // Чистим временный JPG
                 } else {
-                    $json['error']['main_image'] = 'Не удалось конвертировать HEIC → JPG.';
+                    $json['error']['main_image'] = 'Не удалось конвертировать HEIC → JPG';
                     responseJson($json);
                 }
             } else {
@@ -269,7 +226,7 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
         }
 
         // Сохраняем чистый HTML-текст для email уведомлений (без html_entities)
-        $original_content = strip_tags($data['content']);
+        $original_content = strip_tags(html_entity_decode($data['content'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
         // Запись или обновление данных в БД (ключ 'photo' будет передан внутри $data)
         if (empty($json['error'])) {
@@ -292,7 +249,7 @@ if (isset($_POST['blog_id']) && isset($_POST['is_edit'])) {
             'date'  => date('d.m.Y'),
             'name'  => !empty($specialist['company']) ? $specialist['company'] : trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? '')),
             'title' => $data['title'],
-            'link'  => 'https://yogni.ru/mukadhoha96/posts',
+            'link'  => 'https://yogoort.ru/mukadhoha96/posts',
             'text'  => $original_content
         ];
 

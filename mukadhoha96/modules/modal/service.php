@@ -11,7 +11,7 @@
                     <div class="col-3 position-relative">
                         <div class="image-container">
                             <img src="<?= htmlspecialchars($service['img']) ?>" class="avatar" alt="service-<?= htmlspecialchars($service['id']) ?>">
-                            <span class="upload-avatar">Изменить</span>
+                            <span class="upload-avatar upload-avatar-actions">Изменить</span>
                         </div>
                         <input type="file" style="display: none" name="photo" id="input-img">
                     </div>

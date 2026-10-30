@@ -91,7 +91,7 @@
                                 <div class="mb-2">
                                     <label class="form-label">Ссылка</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">https://urfaq.ru/</span>
+                                        <span class="input-group-text">https://yogoort.ru/</span>
                                         <input type="text" class="form-control alternative-slug-input"
                                             value="<?= htmlspecialchars($alternative['slug'] ?? '') ?>">
                                     </div>

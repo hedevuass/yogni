@@ -15,7 +15,7 @@ foreach ($socials as $social) {
       continue;
     }
 
-    $image_src = 'https://urfaq.ru/assets/img/login-parol/';
+    $image_src = 'https://yogoort.ru/assets/img/login-parol/';
     $height = 24;
     $width = 30;
 
@@ -31,6 +31,11 @@ foreach ($socials as $social) {
         $width = 24;
         break; */
       case 'Vk':
+        $image_src .= $social['image'];
+        $height = 24;
+        $width = 24;
+        break;
+      case 'MAX':
         $image_src .= $social['image'];
         $height = 24;
         $width = 24;
@@ -62,6 +67,10 @@ foreach ($socials as $social) {
 
 $social_html .= '</tr>';
 
+$support_site_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+$support_link = $support_site_url . '/o-proekte';
+$site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+
 if (isset($_GET['reg'])) {
   $data['title'] = 'Завершение регистрации';
   $user_id = clean_elem_form($_GET['user_id']);
@@ -78,7 +87,7 @@ if (isset($_GET['reg'])) {
     $activate = activate_user($hash, $user_id);
 
     if ($activate) {
-      $mail_title = 'ЮРФАК - успешная регистрация';
+      $mail_title = 'ЙОГУРТ - успешная регистрация';
       $mail_name = !empty($specialist['company']) ? $specialist['company'] : ($specialist['name'] . ' ' . $specialist['lastname']);
       $site_url = $link_url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
       $link_url .= '/cabinet?successfullconfirmation&user_id=' . $user_id . '&hash=' . $hash;
@@ -90,7 +99,7 @@ if (isset($_GET['reg'])) {
               <meta name="x-apple-disable-message-reformatting">
               <meta http-equiv="X-UA-Compatible" content="IE=edge">
               <meta content="telephone=no" name="format-detection">
-              <title>Юрфак - регистрация завершена</title><!--[if (mso 16)]>
+              <title>Йогурт - регистрация завершена</title><!--[if (mso 16)]>
                 <style type="text/css">
                 a {text-decoration: none;}
                 </style>
@@ -182,10 +191,10 @@ if (isset($_GET['reg'])) {
                               <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
                                <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                  <tr class="es-mobile-hidden" style="border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6249_2.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/group_6249_2.png?ver=4" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                                  </tr><!--[if !mso]><!-- -->
                                  <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6250_2.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/group_6250_2.png?ver=4" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                                  </tr><!--<![endif]-->
                                </table></td>
                              </tr>
@@ -204,7 +213,7 @@ if (isset($_GET['reg'])) {
                                   <td class="es-m-txt-l es-m-p20b" align="left" style="padding:0;Margin:0;padding-top:30px;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Теперь вы можете отредактировать личную информацию, добавить фото и прикрепить документы.</h3></td>
                                  </tr>
                                  <tr style="border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;padding-left:15px;padding-right:15px;padding-top:40px"><span class="es-button-border" style="border-style:solid;border-color:transparent;background:#ff8139;border-width:0px;display:block;border-radius:32px;width:auto"><a href="{$link_url}" class="es-button es-button-1701729247556" target="_blank" style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:12px;display:block;background:#ff8139;border-radius:32px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-weight:normal;font-style:normal;line-height:14px;width:auto;text-align:center;padding:15px 5px;mso-padding-alt:0;mso-border-alt:10px solid #ff8139">Перейти в личный кабинет</a></span></td>
+                                  <td align="center" style="padding:0;Margin:0;padding-left:15px;padding-right:15px;padding-top:40px"><span class="es-button-border" style="border-style:solid;border-color:transparent;background:#ff8139;border-width:0px;display:block;border-radius:32px;width:auto"><a href="{$link_url}" class="es-button es-button-1701729247556" target="_blank" style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:12px;display:block;background:#F2606C;border-radius:32px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-weight:normal;font-style:normal;line-height:14px;width:auto;text-align:center;padding:15px 5px;mso-padding-alt:0;mso-border-alt:10px solid #ff8139">Перейти в личный кабинет</a></span></td>
                                  </tr>
                                </table></td>
                              </tr>
@@ -223,19 +232,19 @@ if (isset($_GET['reg'])) {
                                      </tbody></table></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
+                                     <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: осуществляется через форму обратной связи на странице сайта <a target="_blank" href="{$support_link}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;font-size:12px">&#8220;О проекте&#8221;.</a></p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
                                      <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
+                                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">yogoort.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЙОГУРТ 2020 © - удобный сервис по поиску лучших студий йоги. Все права защищены.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                                     <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogoort.ru/assets/img/login-parol/yogoortru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="18"></a></td>
                                      </tr>
                                  </tbody></table></td>
                              </tr>
@@ -263,7 +272,7 @@ if (isset($_GET['reg'])) {
 if (isset($_GET['confirmation'])) {
   $data['title'] = 'Завершение подтверждения страницы';
   $data['after_mail_content'] = 'Доступ к странице уже был подтвержден ранее.';
-  $mail_title = 'ЮРФАК - успешное подтверждение прав';
+  $mail_title = 'ЙОГУРТ - успешное подтверждение прав';
   $user_id = clean_elem_form($_GET['user_id']);
   $email = clean_elem_form($_GET['email']);
   $specialist = get_specialist($user_id);
@@ -285,7 +294,7 @@ if (isset($_GET['confirmation'])) {
               <meta name="x-apple-disable-message-reformatting">
               <meta http-equiv="X-UA-Compatible" content="IE=edge">
               <meta content="telephone=no" name="format-detection">
-              <title>Юрфак - регистрация завершена</title><!--[if (mso 16)]>
+              <title>Йогурт - регистрация завершена</title><!--[if (mso 16)]>
                 <style type="text/css">
                 a {text-decoration: none;}
                 </style>
@@ -377,10 +386,10 @@ if (isset($_GET['confirmation'])) {
                               <td align="center" valign="top" style="padding:0;Margin:0;width:600px">
                                <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                                  <tr class="es-mobile-hidden" style="border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6249_2.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
+                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/group_6249_2.png?ver=4" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="226"></td>
                                  </tr><!--[if !mso]><!-- -->
                                  <tr class="es-desk-hidden" style="display:none;float:left;overflow:hidden;width:0;max-height:0;line-height:0;mso-hide:all;border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://urfaq.ru/assets/img/login-parol/group_6250_2.png" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
+                                  <td align="center" style="padding:0;Margin:0;font-size:0px"><img class="adapt-img" src="https://yogoort.ru/assets/img/login-parol/group_6250_2.png?ver=4" alt style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="600" height="377"></td>
                                  </tr><!--<![endif]-->
                                </table></td>
                              </tr>
@@ -399,7 +408,7 @@ if (isset($_GET['confirmation'])) {
                                   <td class="es-m-txt-l es-m-p20b" align="left" style="padding:0;Margin:0;padding-top:30px;padding-bottom:30px"><h3 style="Margin:0;line-height:17px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:14px;font-style:normal;font-weight:normal;color:#373737">Теперь вы можете отредактировать личную информацию, добавить фото и прикрепить документы.</h3></td>
                                  </tr>
                                  <tr style="border-collapse:collapse">
-                                  <td align="center" style="padding:0;Margin:0;padding-left:15px;padding-right:15px;padding-top:40px"><span class="es-button-border" style="border-style:solid;border-color:transparent;background:#ff8139;border-width:0px;display:block;border-radius:32px;width:auto"><a href="{$link_url}" class="es-button es-button-1701729247556" target="_blank" style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:12px;display:block;background:#ff8139;border-radius:32px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-weight:normal;font-style:normal;line-height:14px;width:auto;text-align:center;padding:15px 5px;mso-padding-alt:0;mso-border-alt:10px solid #ff8139">Перейти в личный кабинет</a></span></td>
+                                  <td align="center" style="padding:0;Margin:0;padding-left:15px;padding-right:15px;padding-top:40px"><span class="es-button-border" style="border-style:solid;border-color:transparent;background:#ff8139;border-width:0px;display:block;border-radius:32px;width:auto"><a href="{$link_url}" class="es-button es-button-1701729247556" target="_blank" style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:12px;display:block;background:#F2606C;border-radius:32px;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-weight:normal;font-style:normal;line-height:14px;width:auto;text-align:center;padding:15px 5px;mso-padding-alt:0;mso-border-alt:10px solid #ff8139">Перейти в личный кабинет</a></span></td>
                                  </tr>
                                </table></td>
                              </tr>
@@ -418,19 +427,19 @@ if (isset($_GET['confirmation'])) {
                                      </tbody></table></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: <strong><a target="_blank" href="mailto:support@urfaq.ru" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#373737;font-size:12px">support@urfaq.ru</a></strong></p></td>
+                                     <td class="es-m-txt-l es-m-p0t" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Поддержка: осуществляется через форму обратной связи на странице сайта <a target="_blank" href="{$support_link}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;font-size:12px">&#8220;О проекте&#8221;.</a></p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
                                      <td class="es-m-txt-l" align="left" style="padding:0;Margin:0;padding-top:10px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">ИП Швырков ИД ИНН 772788549260</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">urfaq.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
+                                     <td class="es-m-txt-l es-m-p0b" align="left" style="padding:0;Margin:0;padding-bottom:10px;padding-top:15px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:14px;color:#373737;font-size:12px">Вы получили это письмо, так как по этому адресу был зарегистрирован аккаунт на <a target="_blank" href="{$site_url}">yogoort.ru</a> Если вы не регистрировались на сайте, просто проигнорируйте это сообщение.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЮРФАК 2025 © - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов. Все права защищены.</p></td>
+                                     <td class="es-m-txt-c es-m-p35t" align="center" style="padding:0;Margin:0;padding-top:40px"><p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:17px;color:#373737;font-size:14px">ЙОГУРТ 2020 © - удобный сервис по поиску лучших студий йоги. Все права защищены.</p></td>
                                      </tr>
                                      <tr style="border-collapse:collapse">
-                                     <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://urfaq.ru/assets/img/login-parol/urfakru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="15"></a></td>
+                                     <td align="center" style="padding:0;Margin:0;padding-top:25px;font-size:0px"><a target="_blank" href="{$site_url}" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;text-decoration:none;color:#3E8EB8;font-size:14px"><img src="https://yogoort.ru/assets/img/login-parol/yogoortru.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic" width="105" height="18"></a></td>
                                      </tr>
                                  </tbody></table></td>
                              </tr>

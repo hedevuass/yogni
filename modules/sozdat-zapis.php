@@ -101,7 +101,7 @@ $data['blog_id_input'] = '<input type="hidden" name="blog_id" value="'.$blog_id.
 
 //вывод разделов в выбор раздела
 $themes = get_blog_filter_themes();
-$data['themes'] = "<option value='0' class='hidden'>Выбрать раздел</option>";
+$data['themes'] = "<option value='0' class='hidden'>Раздел не выбран</option>";
 
 $themes_btn_class = 'not-chosen';
 $themes_btn_text = 'Раздел не выбран';

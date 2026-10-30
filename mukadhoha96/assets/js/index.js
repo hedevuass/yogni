@@ -35,80 +35,146 @@ let MainPage = {
         $(this.selectors.pageSelector).on('submit', this.selectors.formSelectorAdmin, this.submitAdminForm);
     },
     initTinyMCE: function () {
-        if (typeof tinymce !== 'undefined') {
-            
-            tinymce.remove(`${MainPage.selectors.contentSelector}`);
+        if (typeof tinymce !== "undefined") {
+          tinymce.remove(`${MainPage.selectors.contentSelector}`);
+    
+          tinymce.init({
+            selector: `${MainPage.selectors.contentSelector}`,
+            plugins: "lists autolink code", // удалили 'link'
+            toolbar:
+              "undo redo | formatselect | fontselect fontsizeselect | bold italic | alignleft aligncenter alignright | bullist numlist",
+            branding: false,
+            content_css:
+              "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap",
+            content_style: `
+                        body, p, h1, h2, h3, div, span {
+                            font-family: Roboto, sans-serif !important;
+                            font-size: 14px !important;
+                        }
+                    `,
+    
+            font_family_formats:
+              "Roboto=Roboto, sans-serif;Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;",
+            font_size_formats:
+              "8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 24pt 36pt 48pt",
+            block_formats: "Header 1=h1; Header 2=h2; Header 3=h3; Paragraph=p",
+            style_formats: [
+              { title: "Header 1", block: "h1" },
+              { title: "Header 2", block: "h2" },
+              { title: "Header 3", block: "h3" },
+              { title: "Paragraph", block: "p" },
+            ],
+            force_br_newlines: true,
+            force_p_newlines: false,
+            forced_root_block: "div",
+            invalid_elements: "div div",
+    
+            // Отключаем настройки, связанные со ссылками
+            relative_urls: false,
+            remove_script_host: false,
+            convert_urls: false,
+            readonly: false,
+            paste_preprocess: function (plugin, args) {
+              let content = args.content;
 
-            tinymce.init({
-                selector: `${MainPage.selectors.contentSelector}`,
-                plugins: 'lists autolink code', // удалили 'link'
-                toolbar: 'undo redo | formatselect | fontselect fontsizeselect | bold italic | alignleft aligncenter alignright | bullist numlist',
-                branding: false,
-                content_css: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap',
-                content_style: `
-                    body, p, h1, h2, h3, div, span {
-                        font-family: Roboto, sans-serif !important;
-                        font-size: 14px !important;
+              // Преобразуем списки и блоки в переносы строк <br>, чтобы текст не слипался
+              content = content.replace(/<\/li>\s*<li[^>]*>/gi, "<br>");
+              content = content.replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li)>/gi, "<br>");
+              content = content.replace(/<\/?(ul|ol)[^>]*>/gi, "");
+
+              const allowedTags = "b|strong|i|em|u|a|br";
+              const regex = new RegExp(
+                `<(?!\\/?(${allowedTags})(\\s|>))[^>]+>`,
+                "gi"
+              );
+              content = content.replace(regex, "");
+
+              // Очищаем ссылки, оставляя только href
+              content = content.replace(
+                /<a\b[^>]*href\s*=\s*["']([^"']*)["'][^>]*>/gi,
+                '<a href="$1">'
+              );
+
+              // Чистим неразрывные пробелы и дублирующиеся переносы
+              args.content = content
+                .replace(/&nbsp;/g, " ")
+                .replace(/(<br\s*\/?>\s*)+/gi, "<br>")
+                .trim();
+            },
+            setup: function (editor) {
+              let modalEl = document.querySelector(
+                MainPage.selectors.modalEditSelector
+              );
+              let modalInstance = modalEl
+                ? bootstrap.Modal.getInstance(modalEl)
+                : null;
+    
+              function disableFocusTrap() {
+                if (modalInstance && modalInstance._focustrap) {
+                  modalInstance._focustrap.deactivate();
+                }
+              }
+    
+              function enableFocusTrap() {
+                if (modalInstance && modalInstance._focustrap) {
+                  modalInstance._focustrap.activate();
+                }
+              }
+    
+              function normalizeRootDiv() {
+                const body = editor.getBody();
+    
+                let changed = true;
+                while (changed) {
+                  changed = false;
+                  Array.from(body.querySelectorAll("div")).forEach((div) => {
+                    if (
+                      div.parentElement &&
+                      div.parentElement !== body &&
+                      div.parentElement.tagName === "DIV"
+                    ) {
+                      const parent = div.parentElement;
+                      parent.parentNode.insertBefore(div, parent.nextSibling);
+                      changed = true;
                     }
-                `,
-            
-                font_family_formats: "Roboto=Roboto, sans-serif;Arial=arial,helvetica,sans-serif;Courier New=courier new,courier;",
-                font_size_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 24pt 36pt 48pt',
-                block_formats: 'Header 1=h1; Header 2=h2; Header 3=h3; Paragraph=p',
-                style_formats: [
-                    { title: 'Header 1', block: 'h1' },
-                    { title: 'Header 2', block: 'h2' },
-                    { title: 'Header 3', block: 'h3' },
-                    { title: 'Paragraph', block: 'p' }
-                ],
-                force_br_newlines: true,
-                force_p_newlines: false,
-                forced_root_block: 'div',
-                invalid_elements: 'div div',
-                
-                // Отключаем настройки, связанные со ссылками
-                relative_urls: false,
-                remove_script_host: false,
-                convert_urls: false,
-                readonly: false,
-                setup: function (editor) {
-                    let modalEl = document.querySelector(MainPage.selectors.modalEditSelector);
-                    let modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
-                
-                    function disableFocusTrap() {
-                        if (modalInstance && modalInstance._focustrap) {
-                            modalInstance._focustrap.deactivate();
-                        }
-                    }
-                
-                    function enableFocusTrap() {
-                        if (modalInstance && modalInstance._focustrap) {
-                            modalInstance._focustrap.activate();
-                        }
-                    }
-                
-                    editor.on('OpenWindow', function () {
-                        disableFocusTrap();
-                        setTimeout(() => {
-                            const input = document.querySelector('.tox-dialog input');
-                            if (input) input.focus();
-                        }, 50);
-                    });
-                
-                    editor.on('CloseWindow', function () {
-                        enableFocusTrap();
-                    });
-                
-                    editor.on('init', function () {
-                        console.log('Editor initialized');
-                    });
-                },
-            });
-            
+                  });
+                }
+    
+                Array.from(body.querySelectorAll("div")).forEach((div) => {
+                  if (
+                    !div.textContent.trim() &&
+                    div.querySelectorAll("img").length === 0
+                  ) {
+                    div.remove();
+                  }
+                });
+              }
+    
+              editor.on("OpenWindow", function () {
+                disableFocusTrap();
+                setTimeout(() => {
+                  const input = document.querySelector(".tox-dialog input");
+                  if (input) input.focus();
+                }, 50);
+              });
+    
+              editor.on("PastePostProcess", normalizeRootDiv);
+    
+              editor.on("SetContent", normalizeRootDiv);
+    
+              editor.on("CloseWindow", function () {
+                enableFocusTrap();
+              });
+    
+              editor.on("init", function () {
+                console.log("Editor initialized");
+              });
+            },
+          });
         } else {
-            console.error('TinyMCE не загружен.');
+          console.error("TinyMCE не загружен.");
         }
-    },
+      },
     submitForm: function (event) {
         event.preventDefault();
         let form = $(this);

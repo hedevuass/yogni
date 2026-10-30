@@ -1,4 +1,5 @@
 <?php
+$requests = get_requests();
 $tariffs = get_tariffs();
 $options = get_options();
 $promotions = get_promotions();
@@ -72,8 +73,8 @@ function renderTableRows($connections, $type)
         $specialistName = $specialist
             ? (!empty($specialist['company']) ? $specialist['company'] : $specialist['name'] . ' ' . $specialist['lastname'])
             : '';
-        $connectDate = !empty($item['createdAt']) 
-            ? date('d.m.Y', strtotime($item['createdAt'])) . '<br>' . date('H:i:s', strtotime($item['createdAt'])) 
+        $connectDate = !empty($item['createdAt'])
+            ? date('d.m.Y', strtotime($item['createdAt'])) . '<br>' . date('H:i:s', strtotime($item['createdAt']))
             : '';
         $period = '';
         if (!empty($item['date_start'])) $period .= 'с ' . date('d.m.Y', strtotime($item['date_start']));
@@ -112,6 +113,47 @@ function renderTableRows($connections, $type)
 
 ?>
 <div id="tariffPage" class="wrapper">
+
+    <p class="h1 text-center">
+        Заявки
+    </p>
+
+    <div class="table-responsive">
+        <div class="container-fluid">
+            <table id="requestPromo" class="table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <td class="text-nowrap col-2">Заголовок</td>
+                        <td class="text-nowrap col-4">Описание</td>
+                        <td class="text-nowrap col-2">Цена</td>
+                        <td class="text-nowrap col-2">Описание акции</td>
+                        <td class="text-nowrap col-2">Текст комментария</td>
+                        <td class="text-nowrap">Действие</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($requests as $request): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($request['title']) ?></td>
+                            <td><?= strip_tags($request['description'], '<span>') ?></td>
+                            <td><?= strip_tags($request['price'], '<span>') ?></td>
+                            <td><?= strip_tags($request['promo_description'], '<span>') ?></td>
+                            <td><?= htmlspecialchars($request['comment_text']) ?></td>
+                            <td>
+                                <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                                    <button type="submit" class="btn btn btn-info modalEdit" data-type="request" data-id="<?= $request['id'] ?>">
+                                        Редактировать
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
     <p class="h1 text-center">
         Тарифы
     </p>

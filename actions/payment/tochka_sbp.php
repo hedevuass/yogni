@@ -5,7 +5,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/actions/mail/send_mail.php';
 // Настройки
 $apiBaseUrl      = 'https://enter.tochka.com/uapi/';
 $sbpApiBaseUrl   = 'https://enter.tochka.com/uapi/sbp/v1.0/';
-$authToken     = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ6ekhySFVta1lUU3ZuMERVdGdnVnNMRHF0TnBYaGVrUiJ9.jUpIG6PtuYA7jG59dzw-9r6mwPWvJGyTI-rDI_Sx4EIhakXYt48wy4UHavP9UR5Yy_U3LJDVFN0w7Bimrd3B8aRAvI4yDt1ZneMwfkOiYLato9ZLkKrZqHQjgty8kKEuCKf1-gEKcSYFor9sdFP4XBjRIBenxDKYjjI9Lb6UMFXUr_ET9QsIySvE8Boo6MSIneucWuXRIQnQRcLDwbde7UmfmQpK7HzG4dlNU1Y-6TSxqdbCnM8YQ90Hh-2R0stR4oNGbWxlhvaIIEPDsdmQXyHWJvzYzzktRn5uI51rOHs02j9uIXEcnHyn3Ctp7Du8FagdppCz-KJmflkxXejNON7nHUJaTOpbRjRQAZdw_YV2hZwxZd4NxiuNr4dizH6rbVkevs748SkXZzCPvMvKUnUZPciylsvByjTRJLyets01Ix6PRM695J5bchWCmlzi6uGamIm-sGSFtNjq6JvdNkKgGQbx5f34oeY5Owpb7MhWVh1gfNxRH9UIDCqN-UM_';
+$authToken = TOCHKA_TOKEN;
 $sumKopek = isset($_GET['sumKopek']) ? (int)$_GET['sumKopek'] : 0;
 $orderId  = isset($_GET['orderId']) ? trim($_GET['orderId']) : null;
 $serviceName = isset($_GET['serviceName']) ? trim($_GET['serviceName']) : null;

@@ -172,6 +172,11 @@ footer {
     font-size: 10px;
 }
 
+#requestPromo .highlight {
+    color: #F2606C;
+    --bs-table-accent-bg: transparent !important;
+      background-color: transparent !important;
+  }  
 
 .table-avatar {
     width: 100%;
@@ -188,6 +193,12 @@ footer {
     padding: 5px 10px;
     background: #ffffffa3;
     border-radius: 10px;
+    box-shadow: 0px 2px 5px #21252975;
+    cursor: pointer;
+}
+
+.btn-upload-favicon {
+    background: #ffffffa3;
     box-shadow: 0px 2px 5px #21252975;
     cursor: pointer;
 }

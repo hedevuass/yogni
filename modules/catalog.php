@@ -32,7 +32,7 @@ if (in_array($last_segment, ['private', 'company'])) {
 }
 // Если путь пустой — ставим корень
 if (empty($uri_arr)) {
-    $uri_arr = ['yuristy-i-advokaty'];
+    $uri_arr = ['yoga-studii'];
 }
 
 $first = $uri_arr[0];
@@ -140,7 +140,7 @@ if (!$specialists_with_tarrifs) {
 // Данные пагинации
 $start = 0;
 
-$total_filters_count = count($selected_amenities) + count($selected_equipment) +count($selected_price);
+$total_filters_count = count($selected_amenities) + count($selected_equipment) + count($selected_price);
 
 $mobile_btn_title = "Фильтры";
 // Если выбрано больше 0, добавляем общее число в скобках
@@ -275,7 +275,7 @@ if ($category) {
     $specialists = get_specialists_by_service($services, $limit, $start);
     $specialists_with_tarrifs = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $limit, $start, null, false, $selected_amenities, $selected_equipment, $selected_price);
     $specialists_with_tarrifs = loadSpecializationList($specialists_with_tarrifs);
-    
+
     // Формирование JSON LD
     $jsonld_limit = 20;
     $jsonld_start = ($page - 1) * $jsonld_limit;
@@ -283,7 +283,7 @@ if ($category) {
     // Получаем специалистов для JSON-LD
     $specialists_jsonld = get_specialists_by_service_with_tariffs($category['classification_array'], $services, $jsonld_limit, $jsonld_start);
     $specialists_without_limit = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start);
-    $specialists_to_map = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start, null, true);
+    $specialists_to_map = get_specialists_by_service_with_tariffs($category['classification_array'], $services, 9999, $jsonld_start, null, true, $selected_amenities, $selected_equipment, $selected_price);
 
     $data['catalog_specialists'] = block_catalog($specialists_with_tarrifs);
     $data['catalog_specialists_mob'] = block_mobile($specialists_with_tarrifs);
@@ -365,10 +365,15 @@ if (!$category) {
             'class' => 'find_expert',
             'text'  => 'Все ' . mb_strtolower($service_parent['title'] ?? 'Студии йоги')
         ],
-        'default' => [
+        /* 'default' => [
             'slug'  => 'yuristy-i-advokaty',
             'class' => 'find_lawyer',
             'text'  => 'Все ' . mb_strtolower($service_parent['title'] ?? 'юристы и адвокаты')
+        ], */
+        'default' => [
+            'slug'  => 'yoga-studii',
+            'class' => 'find_expert',
+            'text'  => 'Все ' . mb_strtolower($service_parent['title'] ?? 'Студии йоги')
         ],
     ];
 
@@ -512,7 +517,7 @@ if (!$category) {
     // Получаем специалистов для JSON-LD
     $specialists_jsonld = get_specialists_by_classification_with_tariffs($vars['classification'], $jsonld_limit, $jsonld_start);
     $specialists_without_limit = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start);
-    $specialists_to_map = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start, null, [], true);
+    $specialists_to_map = get_specialists_by_classification_with_tariffs($vars['classification'], 9999, $jsonld_start, null, [], true, $selected_amenities, $selected_equipment, $selected_price);
 
     $data['catalog_specialists'] = block_catalog($specialists_with_tarrifs, false, true);
     $data['catalog_specialists_mob'] = block_mobile($specialists_with_tarrifs, false, true);
@@ -1180,7 +1185,7 @@ function vars(
 
     if ($classification) {
         $vars = match ($classification) {
-            1, 2 => [
+            /* 1, 2 => [
                 'title'       => $service_parent['title'],
                 'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'        => 'yuristy-i-advokaty',
@@ -1189,7 +1194,7 @@ function vars(
                 'h1'          => 'Юристы и адвокаты по направлению ',
                 'block'       => 1,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
-            ],
+            ], */
             3 => [
                 'title'       => $service_parent['title'],
                 'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
@@ -1200,7 +1205,7 @@ function vars(
                 'block'       => 2,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
             ],
-            4 => [
+            /* 4 => [
                 'title'       => $service_parent['title'],
                 'meta_title'  => add_city_to_text($service_parent['meta_title'], $cityGenitive),
                 'slug'        => 'notariusy',
@@ -1209,7 +1214,7 @@ function vars(
                 'h1'          => 'Все нотариусы по направлению ',
                 'block'       => 3,
                 'pre_list'    => 'Топ ' . mb_strtolower($service_parent['title']),
-            ]
+            ] */
         };
     }
 
@@ -1240,12 +1245,12 @@ function vars(
             default => [
                 'title'             => $service_parent['title'],
                 'meta_title'        => add_city_to_text($service_parent['meta_title'], $cityGenitive),
-                'slug'              => 'yuristy-i-advokaty',
+                'slug'              => 'yoga-studii',
                 'description'       => $service_parent['meta_description'],
                 'keywords'          => $service_parent['meta_keywords'],
                 'h1'                => $service_parent['title'],
-                'classification'    => [1, 2, 5, 6, 7],
-                'block'             => 1,
+                'classification'    => [3, 8],
+                'block'             => 2,
                 'pre_list'          => 'Топ ' . mb_strtolower($service_parent['title']),
             ]
         };
@@ -1362,7 +1367,7 @@ function generateSpecialistsCollectionPageJsonLd(
 
     // Собираем URL
     $parentSlug = $service_parent['slug'] ?? $service_parent['base_slug'] ?? $vars['slug'] ?? '';
-    $url = 'https://urfaq.ru/' . trim($parentSlug, '/');
+    $url = 'https://yogoort.ru/' . trim($parentSlug, '/');
 
     if (!empty($category['slug'])) {
         $url .= '/' . ltrim($category['slug'], '/');
@@ -1373,7 +1378,7 @@ function generateSpecialistsCollectionPageJsonLd(
         "@context" => "https://schema.org",
         "@type"    => "CollectionPage",
         "url"      => $url,
-        "name"     => "ЮРФАК-каталог: " . $h1
+        "name"     => "ЙОГУРТ-каталог: " . $h1
     ];
 
     return '<script type="application/ld+json">' . PHP_EOL .
@@ -1395,7 +1400,7 @@ function generateCatalogBreadcrumbsJsonLd(array $vars, array $category = null, ?
         "@type" => "ListItem",
         "position" => $position++,
         "name" => "Главная",
-        "item" => "https://urfaq.ru/"
+        "item" => "https://yogoort.ru/"
     ];
 
     // Формируем путь
@@ -1444,7 +1449,7 @@ function generateCatalogBreadcrumbsJsonLd(array $vars, array $category = null, ?
             "@type" => "ListItem",
             "position" => $position++,
             "name" => $name,
-            "item" => "https://urfaq.ru" . $currentPath
+            "item" => "https://yogoort.ru" . $currentPath
         ];
     }
 
@@ -1596,6 +1601,9 @@ function generateSpecialistsItemListJsonLd(
     }
 
     // Элементы списка специалистов
+    $all_equipments = get_all_equipment();
+
+    // Элементы списка специалистов
     $itemListElements = [];
     foreach ($specialists as $i => $spec) {
         $knowsAbout = '';
@@ -1609,24 +1617,72 @@ function generateSpecialistsItemListJsonLd(
             }
         }
 
+        // --- Галерея ---
+        $gallery_photos = json_decode($spec['gallery'] ?? '[]', true) ?: [];
+        $imageUrls = [];
+        if (!empty($spec['photo'])) {
+            $imageUrls[] = full_url('/uploads/avatars/' . $spec['photo']);
+        }
+        foreach ($gallery_photos as $photo) {
+            $imageUrls[] = full_url('/uploads/gallery/' . $photo);
+        }
+
+        // --- Рейтинг ---
+        $ratingClamped = min(max((float)($spec['rating'] ?? 0), 0), 5);
+        $ratingValue = number_format($ratingClamped, 1, '.', '');
+
+        // --- Цена (минимальная) ---
+        $services = get_specialist_service($spec['id']);
+        $minPrice = null;
+        if ($services && is_array($services)) {
+            foreach ($services as $svc) {
+                if (preg_match('/\d+/', trim($svc['price'] ?? ''), $matches)) {
+                    $priceNum = (int)$matches[0];
+                    if ($minPrice === null || $priceNum < $minPrice) $minPrice = $priceNum;
+                }
+            }
+        }
+
+        // --- Удобства и оборудование ---
+        $selected_equipment = get_specialist_equipment($spec['id']);
+        $amenityFeature = [];
+        foreach ($all_equipments as $item) {
+            if (array_key_exists($item['id'], $selected_equipment)) {
+                $category = trim($item['category']);
+                if (in_array($category, ['equipment', 'equipments', 'amenity', 'amenities'])) {
+                    $amenityFeature[] = [
+                        "@type" => "LocationFeatureSpecification",
+                        "name" => trim($item['name']),
+                        "value" => "True"
+                    ];
+                }
+            }
+        }
+        usort($amenityFeature, fn($a, $b) => mb_strtolower($a['name']) <=> mb_strtolower($b['name']));
+
         $itemListElements[] = [
             "@type" => "ListItem",
             "position" => $startPosition + $i,
-            "item" => [
-                "@type" => "LegalService",
-                "url" => full_url('specialist/id' . ($spec['id'] ?? '')),
-                "image" => !empty($spec['photo']) ? full_url('/uploads/avatars/' . $spec['photo']) : '',
+            "item" => array_filter([
+                "@type" => "SportsActivityLocation",
+                "url" => full_url('studio/' . ($spec['slug'] ?? '')),
+                "image" => !empty($imageUrls) ? (count($imageUrls) === 1 ? $imageUrls[0] : $imageUrls) : null,
                 "name" => !empty($spec['company_name'])
                     ? $spec['company_name']
                     : trim(($spec['name'] ?? '') . ' ' . ($spec['lastname'] ?? '')),
                 "additionalType" => $spec['classification_title'] ?? '',
-                "knowsAbout" => $knowsAbout,
                 "address" => [
                     "@type" => "PostalAddress",
                     "streetAddress" => $spec['metro_name'] ?? '',
                     "addressLocality" => $spec['city_name'] ?? ''
-                ]
-            ]
+                ],
+                "aggregateRating" => [
+                    "@type" => "AggregateRating",
+                    "ratingValue" => $ratingValue
+                ],
+                "priceRange" => $minPrice !== null ? 'от ' . number_format($minPrice, 0, '.', "'") . ' ₽' : null,
+                "amenityFeature" => !empty($amenityFeature) ? $amenityFeature : null
+            ], fn($v) => !is_null($v) && $v !== '')
         ];
     }
 
@@ -1643,7 +1699,7 @@ function generateSpecialistsItemListJsonLd(
         "@type" => "ItemList",
         "name" => $categoryTitle ?: "Специалисты",
         "description" => strip_tags($description),
-        "url" => "https://urfaq.ru/" . $parentSlug,   // <-- ключевой фикс
+        "url" => "https://yogoort.ru/" . $parentSlug,   // <-- ключевой фикс
         "numberOfItems" => count($specialist_wihout_limit),
         "itemListOrder" => "Descending",
         "itemListElement" => $itemListElements
@@ -1675,7 +1731,7 @@ if (!empty($category) && !empty($category['slug'])) {
         let metro_ids = <?= json_encode($_SESSION['metro'] ?? []) ?>;
         let filter = <?= $filter !== null ? "'" . addslashes($filter) . "'" : 'null' ?>;
         let filter_type_url = <?= $filter_type_url !== null ? "'" . addslashes($filter_type_url) . "'" : 'null' ?>;
-        
+
         let selected_amenities = <?= json_encode($selected_amenities ?? []) ?>;
         let selected_equipment = <?= json_encode($selected_equipment ?? []) ?>;
         let selected_price = <?= json_encode($selected_price ?? []) ?>;

@@ -16,8 +16,17 @@ if (isset($_POST['name'])) {
     foreach ($_POST as $key => $value) {
         if ($key === 'university') {
             $data[$key] = $value;  // НЕ чистим JSON!
+        } elseif (in_array($key, ['employees', 'documents', 'rooms', 'services'])) {
+            $data[$key] = clean_elem_blog_title($value);
         } else {
             $data[$key] = clean_elem_form($value);
+        }
+    }
+
+    if (!empty($_POST['request_statuses']) && !empty($_POST['id'])) {
+        $changes = json_decode($_POST['request_statuses'], true);
+        if (is_array($changes)) {
+            update_request_statuses((int)$_POST['id'], $changes);
         }
     }
 
@@ -62,7 +71,7 @@ if (isset($_POST['name'])) {
             'http' => [
                 'method' => 'GET',
                 'header' => "User-Agent: PHP-Backend\r\n"
-                    . "Referer: https://yogni.ru/\r\n"
+                    . "Referer: https://yogoort.ru/\r\n"
             ]
         ]);
 
@@ -115,6 +124,16 @@ if (isset($_POST['name'])) {
     // Проверка компании
     if (!isset($data['remove_company']) && empty($data['company_name']) && $data['company_name'] == '') {
         $json['error']['company_name'] = 'Укажите название компании';
+    }
+    if (isset($data['inn']) && $data['inn'] !== '') {
+        $data['inn'] = preg_replace('/\D/', '', $data['inn']);
+        $inn_len = strlen($data['inn']);
+
+        if ($inn_len < 10 || $inn_len > 12) {
+            $json['error']['inn'] = 'ИНН (10 или 12 символов)';
+        }
+    } else {
+        $data['inn'] = null;
     }
 
     $universityJson = $data['university'] ?? '[]';
@@ -466,7 +485,7 @@ if (isset($_POST['name'])) {
 
     if (!empty($_POST['rooms']) && is_array($_POST['rooms'])) {
         foreach ($_POST['rooms'] as $roomKey => $roomData) {
-            $roomName = clean_elem_form($roomData['name'] ?? '');
+            $roomName = clean_elem_blog_title($roomData['name'] ?? '');
             $existingPhotos = $roomData['existing_photos'] ?? [];
             $roomPhotos = [];
 
@@ -613,6 +632,10 @@ if (isset($_POST['name'])) {
 
     if (!isset($data['remove_company']) && $hasEmployeePhotos || $hasEmployeesData && !empty($hasEmployeesData)) {
         foreach ($data['employees'] as $employeeId => $employee) {
+            if (isset($employee['name']))     $employee['name']     = clean_elem_blog_title($employee['name']);
+            if (isset($employee['lastname'])) $employee['lastname'] = clean_elem_blog_title($employee['lastname']);
+            if (isset($employee['post']))     $employee['post']     = clean_elem_blog_title($employee['post']);
+
             if (empty($employee['name']) || empty($employee['post'])) {
                 continue;
             }
@@ -632,7 +655,12 @@ if (isset($_POST['name'])) {
                     'size' => $_FILES['employees']['size'][$employeeId]['photo'],
                 ];
 
-                $image_employee = load_image($file, 'employee');
+                $image_employee = load_image_webp(
+                    $file,
+                    'employee',
+                    "employee_{$company_id}_{$employeeId}_" . uniqid()
+                );
+
                 if (isset($image_employee['error'])) {
                     responseJson(['error' => $image_employee['error']]);
                 }
@@ -695,7 +723,7 @@ if (isset($_POST['name'])) {
                 $file = $existingDocs[$docKey]['file'] ?? null;
             }
             $docsArr[$docKey] = [
-                'name' => $docData['name'],
+                'name' => clean_elem_blog_title($docData['name'] ?? ''),
                 'file' => $file,
             ];
         }
@@ -721,7 +749,6 @@ if (isset($_POST['name'])) {
         }
     }
 
-    // Обработка файлов загрузки
     if (!empty($_FILES['documents'])) {
         foreach ($docsArr as $docKey => &$doc) {
             if (!empty($_FILES['documents']['tmp_name'][$docKey]['file'])) {
@@ -732,7 +759,7 @@ if (isset($_POST['name'])) {
                     'error' => $_FILES['documents']['error'][$docKey]['file'],
                     'size' => $_FILES['documents']['size'][$docKey]['file'],
                 ];
-                $uploaded = load_image($fileArr, 'documents');
+                $uploaded = load_image_webp($fileArr, 'documents');
                 if (isset($uploaded['error'])) {
                     responseJson(['error' => $uploaded['error']]);
                 }
@@ -761,7 +788,7 @@ if (isset($_POST['name'])) {
             foreach ($postedServices as $service) {
                 if (!empty($service['name']) && isset($service['price'])) {
                     $services[] = [
-                        'name' => clean_elem_form($service['name']),
+                        'name' => clean_elem_blog_title($service['name']),
                         'price' => intval(str_replace("'", '', $service['price'])),
                         'is_active' => !empty($service['is_active']) ? 1 : 0,
                     ];
@@ -780,6 +807,7 @@ if (isset($_POST['name'])) {
         'slug' => $data['slug'],
         'email' => $data['email'],
         'password' => $data['password'],
+        'inn' => $data['inn'],
         'hash' => $hash ?? '',
         'universityJson' => $universityJson ?? '',
         'classification_id' => $data['classification_id'],
@@ -817,6 +845,7 @@ if (isset($_POST['name'])) {
         'slug' => $data['slug'],
         'email' => $data['email'],
         'password' => $data['password'],
+        'inn' => $data['inn'],
         'hash' => $hash ?? '',
         'universityJson' => $universityJson ?? '',
         'classification_id' => $data['classification_id'],

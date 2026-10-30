@@ -40,7 +40,7 @@ $data['cabinet_contacts'] .= <<<EOF
 	</div>
 	<div class="item">
 		<p>Сайт</p>
-		<input type="text" name="site" placeholder="Адрес сайта (в формате urfaq.ru)" value="{$other_contacts['site']}">
+		<input type="text" name="site" placeholder="Адрес сайта (в формате yogoort.ru)" value="{$other_contacts['site']}">
 	</div>
 	<div class="item">
 		<p>Вконтакте</p>

@@ -155,7 +155,7 @@ $inline_js = "<script>
         [b, bm].forEach(function(cont){
             if(!cont) return;
             loadAndClamp(cont.querySelectorAll('.cut-text'), 4);
-            loadAndClamp(cont.querySelectorAll('.cut-text-cards'), 3);
+            loadAndClamp(cont.querySelectorAll('.cut-text-cards'), 4);
             loadAndClamp(cont.querySelectorAll('.cut-text-catalog'), 2);
             loadAndClamp(cont.querySelectorAll('.cut-title-catalog'), 3);
         });

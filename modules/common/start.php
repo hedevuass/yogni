@@ -335,29 +335,23 @@ function resolve_meta($alias, $section, $category_meta, $cityName, $cityPreposit
         }
 
         // ключевые слова — в зависимости от классификации
-        if (in_array($titleCode, [1, 2, 5, 6, 7], true)) {
-            // Юристы и адвокаты (индивидуальные и корпоративные)
-            $keywords = 'юрист, адвокат, поиск адвоката, поиск юриста, юридические услуги, помощь юриста, юридическая помощь, юридическая консультация, помощь адвоката';
-        } elseif (in_array($titleCode, [3, 8], true)) {
+        if (in_array($titleCode, [3, 8], true)) {
             // Эксперты и экспертные учреждения
             $keywords = 'йога, йога-студии, студии йоги, записаться на йогу, йога Москва';
-        } elseif ($titleCode === 4) {
-            // Нотариусы
-            $keywords = 'нотариус, заверение документов, нотариальная контора, нотариальные услуги, нотариальные действия, оформление доверенности, наследственные дела';
         } else {
             // Универсальный фолбэк (например, для «специалиста»)
-            $keywords = 'юрист, адвокат, юридические услуги, помощь юриста, консультация';
+            $keywords = 'йога, йога-студии, студии йоги, записаться на йогу, йога Москва';
         }
 
-        $domain = 'https://yogni.ru'; // Укажите ваш основной домен с протоколом
+        $domain = 'https://yogoort.ru';
 
         // 1. Определение файла аватарки / фото
         if (!empty($specialist['photo'])) {
             $photoFile = $specialist['photo'];
-            $photoPath = "/uploads/specialists/{$photoFile}"; // Укажите реальный путь к фото
+            $photoPath = "/uploads/avatars/{$photoFile}";
         } else {
             $photoFile = $hasCompany ? '022.webp' : '02.webp';
-            $photoPath = "/assets/img/{$photoFile}"; // Укажите реальный путь к дефолтным картинкам
+            $photoPath = "/assets/img/{$photoFile}";
         }
     
         // 2. Формируем АБСОЛЮТНЫЙ URL картинки
@@ -420,9 +414,15 @@ if ($page_meta['title'] === 'Статья не найдена') {
     if (isset($Favicon[$alias])) {
         $HTML = str_replace('<!--favicon-->', $favicon, $HTML);
     }
+    // Добавляем og_image / og_url и для этой ветки (дефолтные значения)
+    $HTML = str_replace('<!--og_image-->', htmlspecialchars($page_meta['og_image'] ?? $domain . '/assets/img/default-og.jpg'), $HTML);
+    $HTML = str_replace('<!--og_url-->', htmlspecialchars($page_meta['og_url'] ?? $domain), $HTML);
 } else {
-    $HTML = str_replace('<!--title-->', htmlspecialchars($page_meta['title']), $HTML);
-    $HTML = str_replace('<!--description-->', htmlspecialchars($page_meta['description']), $HTML);
-    $HTML = str_replace('<!--keywords-->', htmlspecialchars($page_meta['keywords']), $HTML);
-    $HTML = str_replace('<!--favicon-->', htmlspecialchars($faviconPath), $HTML);
+    $HTML = str_replace('<!--title-->', htmlspecialchars($page_meta['title'] ?? ''), $HTML);
+    $HTML = str_replace('<!--description-->', htmlspecialchars($page_meta['description'] ?? ''), $HTML);
+    $HTML = str_replace('<!--keywords-->', htmlspecialchars($page_meta['keywords'] ?? ''), $HTML);
+    $HTML = str_replace('<!--favicon-->', htmlspecialchars($faviconPath ?? ''), $HTML);
+    // Вот этого не хватало
+    $HTML = str_replace('<!--og_image-->', htmlspecialchars($page_meta['og_image'] ?? ''), $HTML);
+    $HTML = str_replace('<!--og_url-->', htmlspecialchars($page_meta['og_url'] ?? ''), $HTML);
 }

@@ -9,9 +9,28 @@
     background: transparent !important;
   }
 
+  .flatpickr-day.today {
+    border-radius: 50% !important;
+  }
+
   .flatpickr-months .flatpickr-prev-month,
   .flatpickr-months .flatpickr-next-month {
     position: static !important;
+  }
+
+  .flatpickr-current-month .numInputWrapper {
+    width: 5ch !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month.flatpickr-disabled, .flatpickr-months .flatpickr-next-month.flatpickr-disabled {
+    display: block !important;
+  }
+  .numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown {
+    display: none !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month.flatpickr-prev-month, .flatpickr-months .flatpickr-next-month.flatpickr-next-month {
+    align-content: center !important;
   }
 
   .flatpickr-month {
@@ -163,18 +182,47 @@
 
   .select-toggle {
     cursor: pointer;
-    padding: 7px;
+    padding: 7px 7px 7px 17px;
     border: 1px solid #ccc;
     background: #fff;
     display: block;
     position: relative;
     margin-top: 10px;
-    color: #373737;
+    color: #7e7e7e;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     padding-right: 30px;
     box-sizing: border-box;
+  }
+
+  .popup .popup-content #promo-date-select::-webkit-input-placeholder {
+    color: #7e7e7e;
+    opacity: 1; /* Отключаем полупрозрачность Chrome */
+  }
+  .popup .popup-content #promo-date-select::placeholder {
+      color: #7e7e7e;
+      opacity: 1;
+  }
+
+  .popup .popup-content #promo-date-select {
+    padding: 7px 7px 7px 17px;
+    transition: background 0.3s ease;
+  }
+
+  @media (min-width: 769px) {
+    
+    .popup .popup-content #promo-date-select:hover::-webkit-input-placeholder {
+      color: #0f86f3;
+    }
+    .popup .popup-content #promo-date-select:hover::placeholder {
+        color: #0f86f3;
+    }
+
+    .popup .popup-content #promo-date-select:hover {
+      color: #0f86f3;
+    }
+
   }
 
   #select-option-promo {
@@ -194,25 +242,51 @@
     border-radius: 8px !important;
   }
 
+  .select-toggle.promo-selected {
+    color: #000;
+  }
+
+  @media (min-width: 769px) {
+    .select-toggle:hover {
+      color: #0f86f3;
+    }
+    .select-toggle:hover:after {
+      background-image: url(../assets/img/select2.svg);
+    }
+    .select-toggle-parrent:hover::after {
+      content: '';
+      position: absolute;
+      right: 17px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 11px;
+      height: 16px;
+      background: url(../assets/img/cabinet/mob-menu-arrow_hover.svg) no-repeat center center;
+      background-size: contain;
+    }
+    .service-icon.select-option:hover, .select-option>span:hover, .service-icon.select-option:hover span {
+      color: #0f86f3 !important;
+    }
+  }
+
   .select-toggle:after {
     content: '';
     position: absolute;
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    width: 16px;
-    height: 10px;
-    background: url(../assets/img/cabinet/mob-menu-arrow.svg) no-repeat center center;
+    width: 8px;
+    height: 14px;
+    background: url(../assets/img/select.svg) no-repeat center center;
     transition: background 0.3s ease;
   }
 
-  /* Когда .select-toggle содержит класс .expanded, меняем изображение на крест */
-  .select-toggle.expanded:after {
+
+  /* .select-toggle.expanded:after {
     background: url(../assets/img/cabinet/select-close.svg) no-repeat center center;
     width: 16px;
-    /* Обновляем размеры в зависимости от картинки */
     height: 16px;
-  }
+  } */
 
   .select-dropdown {
     display: none;
@@ -261,7 +335,7 @@
   }
 
   .select-option>span {
-    color: #373737;
+    color: #222222;
     width: 90%;
   }
 
@@ -492,7 +566,7 @@
   .select-toggle-parrent::after {
     content: '';
     position: absolute;
-    right: 18px;
+    right: 17px;
     top: 50%;
     transform: translateY(-50%);
     width: 11px;
@@ -608,6 +682,10 @@
       <!--data:top_cards_mobile--><!--data:top_cards_mobile-->
     </div>
 
+    <div class="request-section section mobile-only">
+      <!--data:mobile_request_content--><!--data:mobile_request_content-->
+    </div>
+
     <div id="banner-block" class="banner-promo">
       <span class="name-promo">Мощный старт вашей страницы</span><br>
       <span>Эффективные инструменты для продвижения ваших услуг</span>
@@ -634,7 +712,7 @@
         <div class="element-promo">
           <div class="icon-promo"></div>
           <div class="promo-options">Опции</div>
-          <p>Отдельные опции для индивидуальной настройки продвижения</p>
+          <p>Отдельные инструменты для индивидуальной настройки продвижения</p>
           <a href="#option-href">Подробнее</a>
         </div>
       </div>
@@ -669,7 +747,7 @@
             <div class="element-promo promo-options">
               <div class="icon-promo"></div>
               <div class="promo-options">Опции</div>
-              <p>Отдельные опции для индивидуальной настройки продвижения</p>
+              <p>Отдельные инструменты для индивидуальной настройки продвижения</p>
               <a class="promo-button-mob" data-target="#option-href">Подробнее</a>
             </div>
           </div>
@@ -678,6 +756,9 @@
         <div class="swiper-pagination"></div>
       </div>
     </div>
+  </div>
+  <div id="request-href" class="request-section section hidden-comp">
+    <!--data:request_content--><!--data:request_content-->
   </div>
   <div id="tariff-href" class="tariff-section section hidden-comp">
     <h2>Выберите <span class="highlight">подходящий тариф</span></h2>
@@ -791,7 +872,7 @@
     </div>
     <hr class="divider hidden-comp" />
     <div class="options-table">
-      <div class="table-row table-header">
+      <div class="table-row table-row-option table-header">
         <div class="table-cell">Опция</div>
         <div class="table-cell center-status">Статус</div>
         <div class="table-cell hidden-comp table-cell-descr"></div>
@@ -1390,6 +1471,20 @@
           adjustCalendarWidth(instance);
           highlightDisabledDates(instance);
 
+          let wasOpenOnMouseDown = false;
+
+          instance.input.addEventListener('mousedown', function () {
+            wasOpenOnMouseDown = instance.isOpen;
+          });
+
+          instance.input.addEventListener('click', function (e) {
+            if (wasOpenOnMouseDown && instance.isOpen) {
+              e.stopPropagation();
+              instance.close();
+              instance.input.blur();
+            }
+            wasOpenOnMouseDown = false;
+          });
           // Если есть диапазоны для отключения – подсвечиваем их красным
           if (disableRanges.length) {
             const disabledElements = instance.calendarContainer.querySelectorAll('.flatpickr-day.flatpickr-disabled');
@@ -1475,15 +1570,14 @@
         },
 
         onOpen: function (selectedDates, dateStr, instance) {
-          console.log('active');
           adjustCalendarWidth(instance);
           highlightDisabledDates(instance);
 
-          startDate = null;
-          endDate = null;
-          isRangeFinalized = false;
+          // startDate = null;
+          // endDate = null;
+          // isRangeFinalized = false;
 
-          instance.clear();
+          // instance.clear(); // Убран сброс поля ввода
 
           const input = instance.input;
           const calendarContainer = instance.calendarContainer;
@@ -1740,6 +1834,14 @@
       errorMessage: "Пожалуйста, выберите диапазон, кратный одной или нескольким неделям."
     });
 
+    // Открытие календаря при клике на поле
+    $(document).on('click', '#promo-date-select, #date-select-journal, #date-select', function() {
+      const flatpickrInstance = this._flatpickr;
+      if (flatpickrInstance && !flatpickrInstance.isOpen) {
+        flatpickrInstance.open();
+      }
+    });
+
     $('input[name="service_ids[]"], input[name="promo_id"]').on('change', function () {
       console.log('change');
       const selectedSlug = $('input[name="service_ids[]"]:checked').val();
@@ -1955,6 +2057,7 @@
 
           // Обновляем текст выбранного элемента
           const selectedText = item.getAttribute('data-name');
+          toggle.classList.add('promo-selected');
           toggle.textContent = selectedText;
         });
       });

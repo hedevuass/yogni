@@ -135,7 +135,7 @@ foreach ($items as $key => $item) {
     $text = $title ? 'Все ' . mb_strtolower($title) : $item['text'];
 
     $style = $icon
-        ? ' style="background-image: url(https://yogni.ru/assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
+        ? ' style="background-image: url(https://yogoort.ru/assets/img/' . htmlspecialchars($icon) . '); background-size: 16px 14px;"'
         : '';
 
     $data[$key] = '<li class="' . $item['class'] . '"' . $style . '><a href="/' . $item['slug'] . '">' . htmlspecialchars($text) . '</a></li>';
@@ -368,7 +368,7 @@ if (isset($_SESSION['user'])) {
 $data['footer_registration'] = '<div class="footer__reg-wrapper">
 <div class="wrap">
     <div class="flex">
-        <span class="text__reg-wrapper">У вас есть студия йоги? Тогда чего же вы ждёте – присоединяйтесь!<img style="width: 23px;" src="../assets/img/header/arrow-right.svg"></span>
+        <span class="text__reg-wrapper">У вас есть студия йоги? Тогда чего же вы ждёте – присоединяйтесь!<img style="width: 23px;" src="/assets/img/header/arrow-right.svg"></span>
         ' . $footer_reg_btn . '
     </div>
 </div>

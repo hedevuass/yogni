@@ -94,6 +94,8 @@ foreach ($first_banners as $slide) {
 
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
 
+    $studioSlug = !empty($slide['slug']) ? $slide['slug'] : 'id' . $specId;
+
     if (!empty($image)) {
         $data['first_slider'] .= '
                 <div class="swiper-slide banner-slide">
@@ -123,7 +125,7 @@ foreach ($first_banners as $slide) {
                         </div>
                         <a href="'
             . ($specId
-                ? '/studio/id' . $specId
+                ? '/studio/' . $studioSlug
                 : htmlspecialchars($slide['button_link'])
             )
             . '" class="btn btn__main-slide">'
@@ -169,9 +171,11 @@ foreach ($second_banners as $slide) {
 
     // 3) ID специалиста (для ссылки)
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
+    $studioSlug = !empty($slide['slug']) ? $slide['slug'] : 'id' . $specId;
+
     // URL для перехода — на страницу специалиста, если есть ID, иначе на общий link
     $targetLink = $specId
-        ? '/studio/id' . $specId
+        ? '/studio/' . $studioSlug
         : ($slide['link'] ?: '#');
 
     $data['second_slider'] .= '
@@ -310,8 +314,11 @@ foreach ($fourth_banners as $slide) {
         : $slide['classification'];
 
     $specId = isset($slide['specialist_id']) ? (int) $slide['specialist_id'] : null;
+    $studioSlug = !empty($slide['slug']) ? $slide['slug'] : 'id' . $specId;
+
+    // URL для перехода — на страницу специалиста, если есть ID, иначе на общий link
     $targetLink = $specId
-        ? '/studio/id' . $specId
+        ? '/studio/' . $studioSlug
         : ($slide['link'] ?: '#');
 
     $data['fourth_slider'] .= '
@@ -453,7 +460,7 @@ foreach ($posts as $post) {
     </div>
     <a href="' . $post_alias . '" class="stretched-link"></a>
     <a href="' . $post_alias . '" class="name">' . $post_title_clean . '</a>';
-    
+
     if ($post['photo'] != '' && !is_null($post['photo'])) {
         // Заменяем фон на полноценный <img> с жесткими инлайн-стилями
         $data['posts'] .= '<a href="' . $post_alias . '" class="image" style="display: block; overflow: hidden; position: relative;">
@@ -463,9 +470,9 @@ foreach ($posts as $post) {
                  style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; pointer-events: none;">
         </a>';
     }
-    
+
     $data['posts'] .= '<a class="content cut-text" href="' . $post_alias . '">' . strip_tags(html_entity_decode($post['content'])) . '</a>';
-    
+
     $article_tags = get_article_tags($post['id']);
     if ($post['post_type'] != 'blogs' && $article_tags) {
         $data['posts'] .= '<div class="tags">';
@@ -584,7 +591,7 @@ function generateHomePagePublicationsJsonLdWithTags(array $news, array $articles
                 : trim(($authorData['name'] ?? '') . ' ' . ($authorData['lastname'] ?? ''));
         } else {
             $authorType = "Organization";
-            $authorName = "ЮРФАК";
+            $authorName = "ЙОГУРТ";
         }
 
         return [
@@ -643,7 +650,7 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
                     $types[] = 'Юристы и адвокаты';
                     break;
                 case 'experts':
-                    $types[] = 'студии йоги';
+                    $types[] = 'Студии йоги';
                     break;
                 case 'notaries':
                     $types[] = 'нотариусы';
@@ -655,6 +662,9 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
     if ($city) {
         $categoryTitle .= ' ' . $city;
     }
+
+    // Общий справочник оборудования/удобств — один раз до цикла
+    $all_equipments = get_all_equipment();
 
     // Формируем элементы ItemList
     $itemListElements = [];
@@ -683,18 +693,64 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
             ? $spec['company_name']
             : trim(($spec['name'] ?? '') . ' ' . ($spec['lastname'] ?? ''));
 
+        // --- Галерея ---
+        $gallery_photos = json_decode($spec['gallery'] ?? '[]', true) ?: [];
+        $imageUrls = [];
+        if (!empty($spec['photo'])) {
+            $imageUrls[] = full_url('/uploads/avatars/' . $spec['photo']);
+        }
+        foreach ($gallery_photos as $photo) {
+            $imageUrls[] = full_url('/uploads/gallery/' . $photo);
+        }
+
+        // --- Рейтинг (0, если нет отзывов) ---
+        $ratingClamped = min(max((float)($spec['rating'] ?? 0), 0), 5);
+        $ratingValue = number_format($ratingClamped, 1, '.', '');
+
+        // --- Цена (минимальная) ---
+        $services = get_specialist_service($spec['id']);
+        $minPrice = null;
+        if ($services && is_array($services)) {
+            foreach ($services as $svc) {
+                if (preg_match('/\d+/', trim($svc['price'] ?? ''), $matches)) {
+                    $priceNum = (int)$matches[0];
+                    if ($minPrice === null || $priceNum < $minPrice) $minPrice = $priceNum;
+                }
+            }
+        }
+
+        // --- Удобства и оборудование ---
+        $selected_equipment = get_specialist_equipment($spec['id']);
+        $amenityFeature = [];
+        foreach ($all_equipments as $item) {
+            if (array_key_exists($item['id'], $selected_equipment)) {
+                $category = trim($item['category']);
+                if (in_array($category, ['equipment', 'equipments', 'amenity', 'amenities'])) {
+                    $amenityFeature[] = [
+                        "@type" => "LocationFeatureSpecification",
+                        "name" => trim($item['name']),
+                        "value" => "True"
+                    ];
+                }
+            }
+        }
+        usort($amenityFeature, fn($a, $b) => mb_strtolower($a['name']) <=> mb_strtolower($b['name']));
+
         $itemListElements[] = [
             "@type" => "ListItem",
             "position" => $i + 1,
-            "item" => [
-                "@type" => "LegalService",
-                "url" => full_url('studio/id' . ($spec['id'] ?? '')),
-                "image" => full_url('/uploads/avatars/' . ($spec['photo'] ?? '')),
+            "item" => array_filter([
+                "@type" => "SportsActivityLocation",
+                "url" => full_url('studio/' . ($spec['slug'] ?? '')),
+                "image" => !empty($imageUrls) ? (count($imageUrls) === 1 ? $imageUrls[0] : $imageUrls) : null,
                 "name" => $name,
                 "additionalType" => $spec['classification_title'] ?? '',
-                "knowsAbout" => $knowsAbout,
-                "address" => $address
-            ]
+                "address" => $address,
+                "aggregateRating" => [
+                    "@type" => "AggregateRating",
+                    "ratingValue" => $ratingValue
+                ],
+            ], fn($v) => !is_null($v) && $v !== '')
         ];
     }
 
@@ -710,12 +766,15 @@ function generateHomePageSpecialistsItemListJsonLd(array $specialistsBlocks, ?st
 function generateHomePageWebSiteJsonLd(): string
 {
     // Год для copyright
-    $year = date('Y');
+    $year = '2020';
 
     // Социальные сети
     $socialLinks = get_all_social(); // предполагаемая функция
     $sameAs = [];
     foreach ($socialLinks as $social) {
+        if ($social['alt'] === 'Telegram') {
+            continue;
+        }
         if (!empty($social['link'])) {
             $sameAs[] = $social['link'];
         }
@@ -725,31 +784,26 @@ function generateHomePageWebSiteJsonLd(): string
     $jsonLd = [
         "@context" => "https://schema.org",
         "@type" => "WebSite",
-        "url" => "https://urfaq.ru",
-        "name" => "ЮРФАК.РУ - удобный сервис по поиску лучших юристов, адвокатов, экспертов и нотариусов",
+        "url" => "https://yogoort.ru",
+        "name" => "ЙОГУРТ.РУ - это удобный сервис по поиску лучших студий йоги",
         "inLanguage" => "ru-RU",
         "copyrightYear" => $year,
-        "license" => "https://urfaq.ru/o-proekte",
+        "license" => "https://yogoort.ru/o-proekte",
         "publisher" => [
             "@type" => "Organization",
-            "name" => "ЮРФАК.РУ (URFAQ.RU)",
-            "url" => "https://urfaq.ru",
+            "name" => "ЙОГУРТ.РУ (yogoort.ru)",
+            "url" => "https://yogoort.ru",
             "address" => [
                 "@type" => "PostalAddress",
                 "addressCountry" => "RU",
                 "addressRegion" => "Россия",
                 "addressLocality" => "Москва"
             ],
-            "contactPoint" => [
-                "@type" => "ContactPoint",
-                "email" => "info@yogoort.ru",
-                "availableLanguage" => "Russian"
-            ],
         ],
         "copyrightHolder" => [
             "@type" => "Organization",
-            "name" => "ЮРФАК.РУ (URFAQ.RU)",
-            "url" => "https://urfaq.ru"
+            "name" => "ЙОГУРТ.РУ (yogoort.ru)",
+            "url" => "https://yogoort.ru"
         ],
         "sameAs" => $sameAs,
         "potentialAction" => [
@@ -757,7 +811,7 @@ function generateHomePageWebSiteJsonLd(): string
             "name" => "Поиск по сайту",
             "target" => [
                 "@type" => "EntryPoint",
-                "urlTemplate" => "https://urfaq.ru/search?text={search_term_string}"
+                "urlTemplate" => "https://yogoort.ru/search?text={search_term_string}"
             ],
             "query-input" => "required name=search_term_string"
         ]

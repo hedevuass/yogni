@@ -9,57 +9,6 @@ header('Content-Type: application/json');
 $json = [];
 
 /**
- * Исправление ориентации фото по EXIF (только для JPEG)
- */
-function fix_image_orientation($file_path)
-{
-    if (!function_exists('exif_read_data')) {
-        return; // Если на сервере не включено расширение EXIF, пропускаем
-    }
-
-    $mime = mime_content_type($file_path);
-    if ($mime !== 'image/jpeg') {
-        return;
-    }
-
-    $exif = @exif_read_data($file_path);
-    if (empty($exif['Orientation'])) {
-        return;
-    }
-
-    $orientation = $exif['Orientation'];
-    if ($orientation <= 1) {
-        return;
-    }
-
-    $image = imagecreatefromjpeg($file_path);
-    if (!$image) return;
-
-    $degrees = 0;
-    switch ($orientation) {
-        case 3:
-            $degrees = 180;
-            break;
-        case 6:
-            $degrees = -90;
-            break;
-        case 8:
-            $degrees = 90;
-            break;
-    }
-
-    if ($degrees !== 0) {
-        $rotated = imagerotate($image, $degrees, 0);
-        if ($rotated) {
-            imagejpeg($rotated, $file_path, 95);
-            imagedestroy($rotated);
-        }
-    }
-
-    imagedestroy($image);
-}
-
-/**
  * Проверка названий залов на запрещённые слова / опасный HTML.
  * Возвращает плоский список уникальных "нарушителей" (слово или "HTML-вставка").
  */
@@ -184,7 +133,7 @@ if (!empty($_POST['rooms']) && is_array($_POST['rooms'])) {
     $foundForbidden = checkRoomsForbiddenWords($_POST['rooms'], $forbiddenWordsList);
 
     if (!empty($foundForbidden)) {
-        $json['error'] = 'Название зала содержит недопустимые слова или символы.';
+        $json['error'] = 'Название зала содержит недопустимые слова или символы';
         $json['forbidden_words'] = $foundForbidden;
         echo json_encode($json);
         die();
@@ -198,7 +147,7 @@ $newRooms = [];
 
 if (!empty($_POST['rooms']) && is_array($_POST['rooms'])) {
     foreach ($_POST['rooms'] as $roomKey => $roomData) {
-        $roomName = clean_elem_form($roomData['name'] ?? '');
+        $roomName = clean_elem_blog_title($roomData['name'] ?? '');
         if (mb_strlen($roomName, 'UTF-8') > 35) {
             $roomName = mb_substr($roomName, 0, 35, 'UTF-8');
         }
@@ -243,7 +192,7 @@ if (!empty($_POST['rooms']) && is_array($_POST['rooms'])) {
 
         // Загружены фото, но не указано название — ошибка, сохранение всей формы блокируется
         if ($roomName === '' && !empty($roomPhotos)) {
-            $json['error'] = 'Укажите название зала для загруженных фотографий.';
+            $json['error'] = 'Укажите наименование зала';
             $json['room_key'] = $roomKey;
             $json['field'] = 'name';
             echo json_encode($json);
@@ -252,7 +201,7 @@ if (!empty($_POST['rooms']) && is_array($_POST['rooms'])) {
 
         // Указано название, но не загружено ни одной фотографии — тоже ошибка
         if ($roomName !== '' && empty($roomPhotos)) {
-            $json['error'] = 'Добавьте хотя бы одну фотографию.';
+            $json['error'] = 'Загрузите изображение';
             $json['room_key'] = $roomKey;
             $json['field'] = 'photo';
             echo json_encode($json);

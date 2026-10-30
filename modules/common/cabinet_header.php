@@ -402,7 +402,7 @@ function left_menu(string $page, array $user): array
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор для продвижения</p>
+    <p>Стартовый набор инструментов</p>
     <div class="card-status">
         <span></span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -421,7 +421,7 @@ function left_menu(string $page, array $user): array
         <h4>Опции <span class="status-dot ' . $option_status_data['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
-    <p>Базовые настройки</p>
+    <p>Гибкие настройки</p>
     <div class="card-status">
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>

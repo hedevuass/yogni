@@ -211,7 +211,7 @@
 
                                         <?php
                                         // 1) Базовый домен
-                                        $domain = 'https://urfaq.ru';
+                                        $domain = 'https://yogoort.ru';
 
                                         // 2) Определяем, откуда брать classification и p_id
                                         $alt_class = $alternative['classification'] ?? $menu_item['classification'];

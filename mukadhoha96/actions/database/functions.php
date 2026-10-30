@@ -89,7 +89,8 @@ function get_specialist(int $specialist_id): mixed
                                             c.type as type,
                                             city.name as city,
                                             sd.description as page_description, 
-                                            sd.foundation, 
+                                            sd.foundation,
+                                            sd.inn, 
                                             sd.schedule as schedule, 
                                             sd.document as document,
                                             sd.university as university,
@@ -1199,27 +1200,47 @@ function set_specialist(array $data): string
     return $result;
 }
 
-function getCachedData(string $key, int $ttl, callable $callback)
+function getCachedData(string $baseKey, int $ttl, callable $callback, ?string $version = null)
 {
     $tmpDir = __DIR__ . '/tmp';
-    if (!is_dir($tmpDir)) mkdir($tmpDir, 0777, true);
+    if (!is_dir($tmpDir)) mkdir($tmpDir, 0775, true);
 
-    $cacheFile = $tmpDir . '/cache_' . md5($key);
+    $hash = md5($baseKey);
+    $suffix = $version !== null ? '_' . md5((string)$version) : '';
+    $cacheFile = $tmpDir . '/cache_' . $hash . $suffix . '.cache';
 
     if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $ttl) {
-        return unserialize(file_get_contents($cacheFile));
+        $raw = file_get_contents($cacheFile);
+        $data = @unserialize($raw);
+        if ($raw === serialize(false) || $data !== false) {
+            return $data;
+        }
+    }
+
+    // убираем прошлые версии этого же базового ключа
+    foreach (glob($tmpDir . '/cache_' . $hash . '_*.cache') as $oldFile) {
+        if ($oldFile !== $cacheFile) {
+            @unlink($oldFile);
+        }
     }
 
     $data = $callback();
-    file_put_contents($cacheFile, serialize($data));
+
+    $tmpFile = $cacheFile . '.' . uniqid('', true) . '.tmp';
+    file_put_contents($tmpFile, serialize($data), LOCK_EX);
+    rename($tmpFile, $cacheFile);
 
     return $data;
 }
 
-function clearCache(string $key)
+function clearCache(string $baseKey)
 {
-    $cacheFile = __DIR__ . '/tmp/cache_' . md5($key);
-    if (file_exists($cacheFile)) unlink($cacheFile);
+    $tmpDir = __DIR__ . '/tmp';
+    $hash = md5($baseKey);
+    // удаляем ВСЕ файлы этого базового ключа, независимо от версии в имени
+    foreach (glob($tmpDir . '/cache_' . $hash . '*') as $file) {
+        @unlink($file);
+    }
 }
 
 
@@ -1321,9 +1342,10 @@ function update_specialist($data): bool
 
         if ($count > 0) {
             $updateDescriptionQuery = "UPDATE dt_specialist_description
-            SET schedule = ?, document = ?, foundation = ?, description = ?, university = ?
+            SET inn = ?, schedule = ?, document = ?, foundation = ?, description = ?, university = ?
             WHERE specialist_id = ?";
             $result = $data_base->update($updateDescriptionQuery, [
+                $data['inn'],
                 $data['schedule'],
                 $data['documents'],
                 $foundationValue,
@@ -1410,7 +1432,7 @@ function update_specialist_services($specialist_id, array $services): bool
         if (!empty($service['name']) && isset($service['price'])) {
             $result = $data_base->add($insertQuery, [
                 $specialist_id,
-                clean_elem_form($service['name']),
+                clean_elem_blog_title($service['name']),
                 intval(str_replace("'", "", $service['price'])),
                 (int) $service['is_active']
             ]);
@@ -1439,10 +1461,11 @@ function unset_specialist_services($specialist_id)
 function set_specialist_description(array $data, int $specialist_id): string
 {
     global $data_base;
-    return $data_base->add("INSERT INTO dt_specialist_description (specialist_id, description, university, foundation, document) 
-                        VALUE (?, ?, ?, ?, ?)", [
+    return $data_base->add("INSERT INTO dt_specialist_description (specialist_id, inn, description, university, foundation, document) 
+                        VALUE (?, ?, ?, ?, ?, ?)", [
         $specialist_id,
         $data['page-discription'] ?: null,
+        $data['inn'] ?: null,
         $data['university'] ?: '',
         $data['foundation'] ?: null,
         $data['documents'] ?: null
@@ -1900,6 +1923,113 @@ function get_all_user_requests(): array
         LEFT JOIN dt_company c ON s.company_id = c.id
         ORDER BY ur.created_at DESC
     ");
+}
+
+function request_statuses(): array
+{
+    return [
+        'new'          => ['Новая заявка',   'text-danger'],    // красный
+        'sent'         => ['Отправлена',     'text-dark'],      // чёрный
+        'spam'         => ['Спам',           'text-secondary'], // серый
+        'invoice_sent' => ['Отправлен счет', 'text-primary'],   // синий
+        'paid'         => ['Оплачена',       'text-success'],   // зелёный
+        'unpaid'       => ['Не оплачена',    'text-warning'],   // жёлтый
+    ];
+}
+function request_status_codes(): array
+{
+    return [
+        'sent'         => 1,
+        'spam'         => 2,
+        'new'          => 3,
+        'invoice_sent' => 4,
+        'paid'         => 5,
+        'unpaid'       => 6,
+    ];
+}
+
+function request_status_key(array $r): string
+{
+    $key = array_search((int)($r['moderation'] ?? 0), request_status_codes(), true);
+    return $key === false ? 'new' : $key;
+}
+function update_request_statuses(int $specialistId, array $changes): void
+{
+    global $data_base;
+
+    $codes = request_status_codes();
+    $allowed = ['invoice_sent', 'paid', 'unpaid'];
+    // менять можно только отправленные заявки и заявки со счетами (не новые и не спам)
+    $editable = [$codes['sent'], $codes['invoice_sent'], $codes['paid'], $codes['unpaid']];
+    $editablePh = implode(',', array_fill(0, count($editable), '?'));
+
+    $byStatus = [];
+    foreach ($changes as $id => $status) {
+        $id = (int)$id;
+        if ($id > 0 && in_array($status, $allowed, true)) {
+            $byStatus[$status][] = $id;
+        }
+    }
+
+    foreach ($byStatus as $status => $ids) {
+        $idsPh = implode(',', array_fill(0, count($ids), '?'));
+        $data_base->update(
+            "UPDATE dt_user_request SET moderation = ?
+             WHERE specialist_id = ? AND moderation IN ($editablePh) AND id IN ($idsPh)",
+            array_merge([$codes[$status]], [$specialistId], $editable, $ids)
+        );
+    }
+}
+/**
+ * Заявки одного специалиста
+ *
+ * @param int $specialist_id
+ * @return array
+ */
+function get_specialist_requests(int $specialist_id): array
+{
+    global $data_base;
+
+    return $data_base->selectAll("
+        SELECT 
+            ur.*, 
+            COALESCE(
+                c.title,                         
+                CONCAT(s.name, ' ', s.lastname),
+                '-'                              
+            ) AS specialist_name,
+             s.id AS specialist_id
+        FROM dt_user_request ur
+        LEFT JOIN dt_specialist s ON ur.specialist_id = s.id
+        LEFT JOIN dt_company c ON s.company_id = c.id
+        WHERE ur.specialist_id = " . (int)$specialist_id . "
+        ORDER BY ur.created_at DESC
+    ");
+}
+
+function get_specialist_inn(int $specialistId): string
+{
+    global $data_base;
+    $row = $data_base->selectRow(
+        "SELECT inn FROM dt_specialist_description WHERE specialist_id = ? LIMIT 1",
+        [$specialistId]
+    );
+    return trim((string)($row['inn'] ?? ''));
+}
+
+function parse_request_price(string $raw): float
+{
+    $text = html_entity_decode(strip_tags($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    if (!preg_match('/\d[\d\s\x{00A0}]*(?:[.,]\d+)?/u', $text, $m)) return 0.0;
+    $num = preg_replace('/[\s\x{00A0}]+/u', '', $m[0]);
+    return (float)str_replace(',', '.', $num);
+}
+
+function get_request_price(): float
+{
+    global $data_base;
+    $row = $data_base->selectRow("SELECT price FROM dt_requests ORDER BY id LIMIT 1", []);
+    return parse_request_price((string)($row['price'] ?? ''));
 }
 
 /**
@@ -3109,6 +3239,40 @@ function delete_slide(int $slideId, int $bannerId): bool
     ]);
 }
 
+/**
+ * @return array
+ */
+function get_requests(): array
+{
+    global $data_base;
+    return $data_base->selectAll("SELECT * FROM dt_requests");
+}
+
+function get_request(int $id): array
+{
+    global $data_base;
+    $rows = $data_base->selectAll("SELECT * FROM dt_requests WHERE id = " . (int) $id);
+    return $rows[0] ?? [];
+}
+
+/**
+ * @param array $data
+ * @return bool
+ * @throws Exception
+ */
+function update_request_promo(array $data): bool
+{
+    global $data_base;
+ 
+    return $data_base->update("UPDATE dt_requests SET title = ?, description = ?, price = ?, promo_description = ?, comment_text = ? WHERE id = ?", [
+        $data['title'],
+        $data['description'],
+        $data['price'],
+        $data['promo_description'],
+        $data['comment_text'],
+        (int) $data['id']
+    ]);
+}
 
 /**
  * @param int $id

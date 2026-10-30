@@ -891,14 +891,7 @@ function rating($rating)
 //получение ссылки классификации
 function get_classification_link(int $classification): string
 {
-    if ($classification == 3 || $classification == 8) {
-        $link = 'yoga-studii';
-    } else if ($classification == 4) {
-        $link = 'notariusy';
-    } else {
-        $link = 'yuristy-i-advokaty';
-    }
-    return $link;
+    return 'yoga-studii';
 }
 
 //выводит пост(ы) блога, если переменная is_singe равна true, то выводится публикация полностью (для страницы публикации)

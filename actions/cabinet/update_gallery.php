@@ -7,57 +7,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
 $json = [];
 
-function fix_image_orientation($file_path) {
-    if (!function_exists('exif_read_data')) {
-        return; // Если на сервере не включено расширение EXIF, пропускаем
-    }
-
-    // Читаем метаданные только у файлов JPG/JPEG
-    $mime = mime_content_type($file_path);
-    if ($mime !== 'image/jpeg') {
-        return; 
-    }
-
-    $exif = @exif_read_data($file_path);
-    if (empty($exif['Orientation'])) {
-        return; // Ориентация нормальная или тега нет
-    }
-
-    $orientation = $exif['Orientation'];
-    if ($orientation <= 1) {
-        return; // Поворот не требуется
-    }
-
-    // Загружаем исходник в память для вращения
-    $image = imagecreatefromjpeg($file_path);
-    if (!$image) return;
-
-    $degrees = 0;
-    switch ($orientation) {
-        case 3: // Перевернуто вверх ногами (180°)
-            $degrees = 180;
-            break;
-        case 6: // Повернуто на 90° по часовой стрелке
-            $degrees = -90; // или 270
-            break;
-        case 8: // Повернуто на 90° против часовой стрелки
-            $degrees = 90;
-            break;
-    }
-
-    if ($degrees !== 0) {
-        // Физически вращаем картинку
-        $rotated = imagerotate($image, $degrees, 0);
-        if ($rotated) {
-            // Перезаписываем временный файл уже в правильном положении
-            imagejpeg($rotated, $file_path, 95); 
-            imagedestroy($rotated);
-        }
-    }
-    
-    imagedestroy($image);
-}
-
 if (!isset($_SESSION['user']['id'])) {
     $json['error'] = 'Сессия устарела. Пожалуйста, войдите заново.';
     echo json_encode($json);
@@ -79,18 +28,18 @@ function process_gallery_file($file, $is_avatar, $index, $user_id, &$error_msg)
 
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, $allow) || in_array($ext, $deny)) {
-        $error_msg = 'Допустимы только jpeg, jpg, png, heic, jfif.';
+        $error_msg = 'Недопустимый формат изображения';
         return false;
     }
 
     if ($file['size'] > 5 * 1024 * 1024) {
-        $error_msg = 'Файл слишком большой (максимальный размер - до 5 МБ).';
+        $error_msg = 'Файл слишком большой (максимальный размер - до 5 МБ)';
         return false;
     }
 
     $size = getimagesize($file['tmp_name']);
     if ($size[0] < 50 || $size[1] < 50) {
-        $error_msg = 'Изображение слишком маленькое (минимум 50x50px).';
+        $error_msg = 'Изображение слишком маленькое (минимум 50x50px)';
         return false;
     }
 
@@ -114,16 +63,16 @@ function process_gallery_file($file, $is_avatar, $index, $user_id, &$error_msg)
                 'tmp_name' => $jpgPath,
                 'size' => filesize($jpgPath),
                 'type' => 'image/jpeg'
-            ], $folder, $name, 5, ['width' => 250, 'height' => 250], [], 60, $is_avatar ? 300 : 1200);
+            ], $folder, $name, 5, ['width' => 250, 'height' => 250], [], 80, $is_avatar ? 300 : 1200);
 
             unlink($jpgPath);
         } else {
-            $error_msg = 'Не удалось конвертировать HEIC → JPG.';
+            $error_msg = 'Не удалось конвертировать HEIC → JPG';
             return false;
         }
     } else {
         fix_image_orientation($file['tmp_name']);
-        $image = load_image_webp($file, $folder, $name, 5, ['width' => 250, 'height' => 250], [], 60, $is_avatar ? 300 : 1200);
+        $image = load_image_webp($file, $folder, $name, 5, ['width' => 250, 'height' => 250], [], 80, $is_avatar ? 300 : 1200);
     }
 
     if (isset($image['error'])) {

@@ -45,15 +45,13 @@ $cityPrepositional = GeographicalNamesInflection::getCase($cityName, 'предл
 $_SESSION['city_genitive'] = $cityGenitive;
 $_SESSION['city_prepositional'] = $cityPrepositional;
 
-$slugs = ['yuristy-i-advokaty', 'yoga-studii', 'notariusy'];
+$slugs = ['yoga-studii'];
 
 foreach ($slugs as $slug) {
     $service = get_service_parent_catalog($slug); // вернёт ['title' => ..., 'icon' => ..., ...]
     if ($service) {
         $key = match ($slug) {
-            'yuristy-i-advokaty' => 'menu1_lawyer',
             'yoga-studii'            => 'menu1_expert',
-            'notariusy'          => 'menu1_notarius',
         };
         $data[$key] = htmlspecialchars($service['title']);
     }

@@ -4,17 +4,26 @@ include $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 session_start();
 if (isset($_POST['company_id'])) {
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        if (in_array($key, ['name', 'lastname', 'post'])) {
+            $data[$key] = clean_elem_blog_title($value);
+        } else {
+            $data[$key] = clean_elem_form($value);
+        }
     }
     $bd_employees = get_company_employees($data['company_id']);
 
-    $employees = [];
-    foreach ($bd_employees as $key => $emp) {
-        $employees[] = $emp;
+    // сотрудники этой компании по id
+    $bd_by_id = [];
+    foreach ($bd_employees as $emp) {
+        $bd_by_id[(int)$emp['id']] = $emp;
     }
+
     $new_employees = [];
     foreach ($data['name'] as $key => $name) {
-        if (!$name && !$data['lastname'][$key] && !$data['post'][$key] && !isset($_FILES[$key]) && !isset($employees[$key])) continue;
+        $emp_id   = (int)($data['employee_id'][$key] ?? 0);
+        $existing = $bd_by_id[$emp_id] ?? null;      // чужой или несуществующий id даст null
+
+        if (!$name && !$data['lastname'][$key] && !$data['post'][$key] && !isset($_FILES[$key]) && !$existing) continue;
         if (!$name) {
             $json['error'][$key] = 'Укажите имя';
             continue;
@@ -29,11 +38,11 @@ if (isset($_POST['company_id'])) {
         }
         if ($data['is_mobile'] == "true" && isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
             $img_name = $data['mobile_loaded'][$key];
-        } else if (!isset($_FILES[$key]) && !isset($employees[$key])) {
+        } else if (!isset($_FILES[$key]) && !$existing) {
             $json['error'][$key] = 'Загрузите изображение';
             continue;
-        } else if (!isset($_FILES[$key]) && isset($employees[$key])) {
-            $img_name = $employees[$key]['photo'];
+        } else if (!isset($_FILES[$key]) && $existing) {
+            $img_name = $existing['photo'];
         } else {
             $uniq = uniqid();
             $image = load_image_webp(
@@ -49,29 +58,48 @@ if (isset($_POST['company_id'])) {
             }
         }
         $new_employees[$key] = [
-            'name' => $name,
+            'id'       => $existing ? $emp_id : 0,
+            'name'     => $name,
             'lastname' => $data['lastname'][$key],
-            'post' => $data['post'][$key],
-            'file' => $img_name
+            'post'     => $data['post'][$key],
+            'file'     => $img_name,
         ];
     }
 
     if (isset($json['error'])) responseJson($json);
 
-    foreach ($bd_employees as $emp) {
-        unset_company_employee($emp['id']);
-    }
-    $employee_photos = array();
+    $company_id      = (int)$data['company_id'];
+    $employee_photos = [];
+    $employee_ids    = [];
+    $keep_ids        = [];
+
     foreach ($new_employees as $employee_key => $employee) {
-        if (!set_company_employee($employee, $data['company_id'])) {
-            $json['fatal_error'] = 'Загрузка сотрудников временно недоступна';
-            responseJson($json);
+        if ($employee['id']) {
+            if (!update_company_employee($employee['id'], $company_id, $employee)) {
+                $json['fatal_error'] = 'Загрузка сотрудников временно недоступна';
+                responseJson($json);
+            }
+            $saved_id = (int)$employee['id'];
         } else {
-            $employee_photos[$employee_key] = $employee['file'];
+            $saved_id = (int)set_company_employee($employee, $company_id);
+            if (!$saved_id) {
+                $json['fatal_error'] = 'Загрузка сотрудников временно недоступна';
+                responseJson($json);
+            }
+        }
+        $keep_ids[]                     = $saved_id;
+        $employee_photos[$employee_key] = $employee['file'];
+        $employee_ids[$employee_key]    = $saved_id;
+    }
+
+    // удаляем только тех, кого убрали из формы (и только после успешной записи остальных)
+    foreach ($bd_by_id as $id => $emp) {
+        if (!in_array($id, $keep_ids, true)) {
+            unset_company_employee($id, $company_id);
         }
     }
-    $json['img_info'] = $employee_photos;
-    $json['success'] = 'Сотрудники загружены';
 
+    $json['img_info'] = $employee_photos;
+    $json['success']  = 'Сотрудники загружены';
     responseJson($json);
 }

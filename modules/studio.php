@@ -451,7 +451,7 @@ $data['specialist'] .= <<<EOF
     <div class="bg"></div>
 
     <div class="window document-photo-window">
-        <img src="" alt="Документ специалиста" class="document-photo-img">
+        <img src="" alt="Акция студии йоги" class="document-photo-img">
 
         <div class="close-slider-btn" title="Закрыть">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -466,7 +466,7 @@ $data['specialist'] .= <<<EOF
     <div class="bg"></div>
 
     <div class="window stuff-photo-window">
-        <img src="" alt="Документ специалиста" class="stuff-photo-img">
+        <img src="" alt="Акция студии йоги" class="stuff-photo-img">
 
         <div class="close-slider-btn" title="Закрыть">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -740,7 +740,7 @@ $renderIcons = function ($items) {
     foreach ($items as $item) {
         if (!empty($item['img'])) {
             if (strpos($item['img'], '<svg') !== false) {
-                $html .= '<div class="studio-mini-icon-item studio-mini-icon-item--svg" title="' . htmlspecialchars($item['name']) . '">' . $item['img'] . '</div>';
+                $html .= '<div class="studio-mini-icon-item studio-mini-icon-item--svg" alt="' . htmlspecialchars($item['name']) . '" title="' . htmlspecialchars($item['name']) . '">' . $item['img'] . '</div>';
             } else {
                 $icon_file = !empty($item['img_pink']) ? $item['img_pink'] : $item['img'];
                 $html .= '<img class="studio-mini-icon-item" src="/assets/img/equipment/' . htmlspecialchars($icon_file) . '" alt="' . htmlspecialchars($item['name']) . '" title="' . htmlspecialchars($item['name']) . '">';
@@ -1236,7 +1236,7 @@ function block_equipment(array $specialist): array
                 if (strpos($item['img'], '<svg') !== false) {
                     $icon_html = $item['img'];
                 } else {
-                    $icon_html = '<img src="/assets/img/equipment/' . htmlspecialchars($item['img']) . '"></img>';
+                    $icon_html = '<img src="/assets/img/equipment/' . htmlspecialchars($item['img']) . '" alt="' . htmlspecialchars($item['name']) . '"></img>';
                 }
             } else {
                 // Резервный вариант (класс по ID)
@@ -1841,7 +1841,7 @@ function block_documents(string $documents): string
             $code .= <<<EOF
                 <div class="item">
                     <div class="img-block">
-                        <img src="/uploads/documents/{$document['file']}" alt="Документ специалиста" loading="lazy">
+                        <img src="/uploads/documents/{$document['file']}" alt="Акция студии йоги" loading="lazy">
                     </div>
                 </div>
             EOF;
@@ -1899,8 +1899,8 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
     $streetAddressStr = implode(', ', $streetAddress);
 
     $sameAs = [];
-    if (!empty($other['tg'])) {
-        $sameAs[] = $other['tg'];
+    if (!empty($other['max'])) {
+        $sameAs[] = $other['max'];
     }
     if (!empty($other['vk'])) {
         $sameAs[] = $other['vk'];
@@ -1914,11 +1914,88 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
         : 0.0;
 
     // Основной объект
+    $studio_slug = !empty($specialist['slug']) ? $specialist['slug'] : 'id' . $specialist['id'];
+
+    // Галерея фото для image
+    $gallery_photos = json_decode($specialist['gallery'] ?? '[]', true) ?: [];
+
+    $imageUrls = [];
+    if (!empty($specialist['photo'])) {
+        $imageUrls[] = "https://yogoort.ru/uploads/avatars/" . $specialist['photo'];
+    }
+    foreach ($gallery_photos as $photo) {
+        $imageUrls[] = "https://yogoort.ru/uploads/gallery/" . $photo;
+    }
+
+    // Удобства и оборудование
+    $all_equipments = get_all_equipment();
+    $selected_equipment = get_specialist_equipment($specialist['id']);
+
+    $amenityFeature = [];
+    foreach ($all_equipments as $item) {
+        if (array_key_exists($item['id'], $selected_equipment)) {
+            $category = trim($item['category']);
+            if (in_array($category, ['equipment', 'equipments', 'amenity', 'amenities'])) {
+                $amenityFeature[] = [
+                    "@type" => "LocationFeatureSpecification",
+                    "name" => trim($item['name']),
+                    "value" => "True"
+                ];
+            }
+        }
+    }
+
+    usort($amenityFeature, function ($a, $b) {
+        return mb_strtolower($a['name']) <=> mb_strtolower($b['name']);
+    });
+
+    // Залы для занятий
+    $specialist_rooms = json_decode($specialist['rooms'] ?? '[]', true) ?: [];
+
+    $containsPlace = [];
+    foreach ($specialist_rooms as $room) {
+        $room_photos = $room['photos'] ?? [];
+
+        if (empty($room_photos) || empty($room['name'])) {
+            continue;
+        }
+
+        $roomImages = array_map(
+            fn($photo) => "https://yogoort.ru/uploads/rooms/" . $photo,
+            $room_photos
+        );
+
+        $containsPlace[] = [
+            "@type" => "Place",
+            "name" => trim($room['name']),
+            "image" => count($roomImages) === 1 ? $roomImages[0] : $roomImages
+        ];
+    }
+
+    // Заполняем документы / сертификаты
+    $offerItems = [];
+    if (!empty($specialist['document'])) {
+        $documents = json_decode($specialist['document'], true) ?: [];
+        foreach ($documents as $doc) {
+            $offerItems[] = [
+                "@type" => "Offer",
+                "name" => $doc['name'] ?? '',
+                "image" => isset($doc['file']) ? "https://yogoort.ru/uploads/documents/" . $doc['file'] : null,
+            ];
+        }
+    }
+
+    $hasOfferCatalog = !empty($offerItems) ? [
+        "@type" => "OfferCatalog",
+        "name" => "Акции в студии",
+        "itemListElement" => $offerItems
+    ] : null;
+
     $jsonLd = [
         "@context" => "https://schema.org",
-        "@type" => "LegalService",
-        "url" => $specialist['url'] ?? "https://urfaq.ru/studio/id{$specialist['id']}",
-        "image" => $specialist['photo'] ? "https://urfaq.ru/uploads/avatars/" . $specialist['photo'] : null,
+        "@type" => "SportsActivityLocation",
+        "url" => $specialist['url'] ?? "https://yogoort.ru/studio/{$studio_slug}",
+        "image" => !empty($imageUrls) ? $imageUrls : null,
         "name" => $specialist['company'] ?? $specialist['name'] . ' ' . $specialist['lastname'],
         "additionalType" => $specialist['classification_name'] ?? $specialist['classification'] ?? "Юрист",
         "description" => strip_tags(htmlspecialchars_decode($specialist['description']) ?? ''),
@@ -1942,11 +2019,13 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
             "reviewCount" => $specialist['count_rating']
         ] : null,
         "knowsAbout" => $knowsAbout,
+        "amenityFeature" => !empty($amenityFeature) ? $amenityFeature : null,
+        "containsPlace" => !empty($containsPlace) ? $containsPlace : null,
         "contactPoint" => [
             "@type" => "ContactPoint",
             "contactType" => "Записаться",
             "telephone" => $specialist['phone'] ?? '',
-            "email" => $specialist['email'] ?? '',
+            "email" => $other['email'] ?? '',
             "url" => $other['site'] ?? '',
             "availableLanguage" => ["Russian"],
             "areaServed" => "RU"
@@ -1961,7 +2040,7 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
             "description" => $specialist['blog']['description'] ?? '',
             "author" => $specialist['company'] ?? $specialist['name'] . ' ' . $specialist['lastname']
         ] : null, */
-        "hasCredential" => []
+        "hasOfferCatalog" => $hasOfferCatalog
     ];
 
     // Заполняем услуги / предложения
@@ -2026,18 +2105,6 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
         }
     }
 
-    // Заполняем документы / сертификаты
-    if (!empty($specialist['document'])) {
-        $documents = json_decode($specialist['document'], true);
-        foreach ($documents as $doc) {
-            $jsonLd['hasCredential'][] = [
-                "@type" => "EducationalOccupationalCredential",
-                "name" => $doc['name'] ?? '',
-                "image" => isset($doc['file']) ? "https://urfaq.ru/uploads/documents/" . $doc['file'] : null,
-            ];
-        }
-    }
-
     if (!empty($specialist['company']) && ($employees = get_company_employees($specialist['company_id'] ?? 0))) {
         $jsonLd['employee'] = [];
         foreach ($employees as $employee) {
@@ -2045,7 +2112,7 @@ function generateSpecialistJsonLd(array $specialist, ?array $other = null): arra
                 "@type" => "Person",
                 "name" => trim(($employee['name'] ?? '') . ' ' . ($employee['lastname'] ?? '')),
                 "jobTitle" => $employee['post'] ?? null,
-                "image" => !empty($employee['photo']) ? "https://urfaq.ru/uploads/employee/" . $employee['photo'] : null
+                "image" => !empty($employee['photo']) ? "https://yogoort.ru/uploads/employee/" . $employee['photo'] : null
             ], function ($v) {
                 return !is_null($v) && $v !== '';
             });
@@ -2095,8 +2162,8 @@ function generateSpecialistBreadcrumbJsonLd(array $specialist): string
         5 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
         6 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
         7 => ['name' => 'Юристы и адвокаты', 'slug' => 'yuristy-i-advokaty'],
-        3 => ['name' => 'Эксперты', 'slug' => 'yoga-studii'],
-        8 => ['name' => 'Эксперты', 'slug' => 'yoga-studii'],
+        3 => ['name' => 'Студии йоги', 'slug' => 'yoga-studii'],
+        8 => ['name' => 'Студии йоги', 'slug' => 'yoga-studii'],
         4 => ['name' => 'Нотариусы', 'slug' => 'notariusy'],
     ];
 
@@ -2183,20 +2250,35 @@ function generateSpecialistReviewsJsonLd(array $specialist): string
 
 function generateSpecialistImageJsonLd(array $specialist): string
 {
-    if (empty($specialist['photo'])) return '';
-
     $name = $specialist['company'] ?? trim(($specialist['name'] ?? '') . ' ' . ($specialist['lastname'] ?? ''));
 
-    $imageLd = [
-        "@context" => "https://schema.org",
-        "@type" => "ImageObject",
-        "contentUrl" => "https://urfaq.ru/uploads/avatars/" . $specialist['photo'],
-        "name" => $name
-    ];
+    $imageUrls = [];
+    if (!empty($specialist['photo'])) {
+        $imageUrls[] = "https://yogoort.ru/uploads/avatars/" . $specialist['photo'];
+    }
 
-    return '<script type="application/ld+json">' . PHP_EOL .
-        json_encode($imageLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
-        PHP_EOL . '</script>';
+    $gallery_photos = json_decode($specialist['gallery'] ?? '[]', true) ?: [];
+    foreach ($gallery_photos as $photo) {
+        $imageUrls[] = "https://yogoort.ru/uploads/gallery/" . $photo;
+    }
+
+    if (empty($imageUrls)) return '';
+
+    $output = '';
+    foreach ($imageUrls as $url) {
+        $imageLd = [
+            "@context" => "https://schema.org",
+            "@type" => "ImageObject",
+            "contentUrl" => $url,
+            "name" => $name
+        ];
+
+        $output .= '<script type="application/ld+json">' . PHP_EOL .
+            json_encode($imageLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
+            PHP_EOL . '</script>' . PHP_EOL;
+    }
+
+    return $output;
 }
 
 $blog = get_specialist_blog($specialist['id']);

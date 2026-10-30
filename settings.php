@@ -46,6 +46,7 @@ define('DB_USERNAME', $_ENV['DB_USERNAME']);
 define('DB_PASSWORD', $_ENV['DB_PASSWORD']);
 
 define('APP_SECRET_KEY', $_ENV['APP_SECRET_KEY']);
+define('TOCHKA_TOKEN', $_ENV['TOCHKA_TOKEN']);
 
 // Город по умолчанию
 if (!isset($_SESSION['city'])) $_SESSION['city'] = [

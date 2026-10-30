@@ -1,5 +1,5 @@
 <footer>
-    <div class="mt-4 pt-2 pb-2 text-center bg-dark-subtle text-white">Urfaq.ru</div>
+    <div class="mt-4 pt-2 pb-2 text-center bg-dark-subtle text-white">Yogoort.ru</div>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
         integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="

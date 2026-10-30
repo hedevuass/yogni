@@ -363,6 +363,35 @@ foreach ($faqs as $faq) {
 
 $data = [];
 
+function generate_request_html(array $request): string
+{
+    if (!$request) {
+        return '';
+    }
+ 
+    // Неразрывный пробел после коротких предлогов, чтобы подпись на мобильных
+    // переносилась как «познакомиться / с сервисом»
+    $note = preg_replace('/(?<!\p{L})(с|в|к|о|у|и|а|на|по|до|за|из|от|со)\s+/iu', '$1&nbsp;', $request['comment_text']);
+ 
+    return '
+    <div class="request-head">
+      <div class="request-head__text">
+        <h2>' . $request['title'] . '</h2>
+        <p>' . $request['description'] . '</p>
+      </div>
+      <div class="request-price">' . $request['price'] . '</div>
+    </div>
+ 
+    <div class="request-start">
+      <div class="request-start__label">' . $request['promo_description'] . '</div>
+      <p class="request-start__note">' . $note . '</p>
+      <img class="request-start__badge" src="../assets/img/cabinet/request_badge.svg" alt="Request badge">
+    </div>
+    ';
+}
+
+$request_html = generate_request_html(get_request_data());
+
 //Тарифы
 $tariffs = [
   'basic' => get_tariff_data(1),
@@ -540,7 +569,7 @@ function generate_option_html($option, $connected_options_map, $specialist_id, $
     ($is_basic_tariff_connected && in_array($option['id'], [1, 2, 3]));
 
   $option_html = '
-    <div class="table-row">
+    <div class="table-row table-row-option">
         <div class="table-cell">' . htmlspecialchars($option['name']) . '</div>
         <div class="table-cell hidden-comp center-status">
           <label class="switch" data-option-id="' . $option['id'] . '" data-specialist-id="' . $specialist_id . '">
@@ -1307,7 +1336,7 @@ $top_cards = '
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор для продвижения</p>
+    <p>Стартовый набор инструментов</p>
     <div class="card-status">
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -1329,7 +1358,7 @@ $top_cards = '
         ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
-    <p>Базовые настройки</p>
+    <p>Гибкие настройки</p>
     <div class="card-status">
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -1354,7 +1383,7 @@ $top_cards_mobile = '
         <h4>Тарифы <span class="status-dot ' . $tariff_status['class'] . '"></span></h4>
         <img src="../assets/img/cabinet/card-tariff.svg" alt="Тарифы">
     </div>
-    <p>Стартовый набор <br>для продвижения</p>
+    <p>Стартовый набор <br>инструментов</p>
     <div class="card-status">
         <span>' . $tariff_status['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -1376,7 +1405,7 @@ $top_cards_mobile = '
         ' . $discount_html . '
         <img src="../assets/img/cabinet/card-options.svg" alt="Опции">
     </div>
-    <p>Базовые настройки</p>
+    <p>Гибкие настройки</p>
     <div class="card-status">
         <span>' . $option_status_data['status'] . '</span>
         <span class="arrow-right"><img src="../assets/img/cabinet/card-arrow.svg" alt="Стрелка"></span>
@@ -1572,5 +1601,8 @@ $data['promo-popup'] = $popup_promo_html;
 $data['forbidden-popup'] = $forbidden_popup;
 $data['second-promo-popup'] = $second_popup_promo_html;
 $data['swiper-tarrif'] = $swiper_tariff;
+
+$data['request_content'] = $request_html;
+$data['mobile_request_content'] = $request_html;
 /* $data['swiper-banner'] = $swiper_banner; */
 $HTML = html_explode($data, $HTML);

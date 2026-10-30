@@ -95,8 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = add_user_request(
         (int) $_POST['specialist_id'],
         $_POST['name'],
-        $_POST['contactInfo'],
-        $_POST['message']
+        $_POST['contactInfo']
     );
 
     $notify_data = [

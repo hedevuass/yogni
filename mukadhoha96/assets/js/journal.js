@@ -209,29 +209,26 @@ let Journal = {
           // Умная обработка вставляемого текста
           paste_preprocess: function (plugin, args) {
             let content = args.content;
-
-            if (!isTitle) {
-              // 1. Превращаем двойные переносы строк в закрытие и открытие абзаца
-              content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
-              // 2. Одиночные переносы строк тоже изолируем в независимые абзацы
-              content = content.replace(/<br\s*\/?>/gi, "</p><p>");
-            }
-
-            // Список разрешенных тегов
-            const allowedTags = isTitle
-              ? "p|br"
-              : "p|br|ul|ol|li|h1|h2|h3|blockquote|img";
-
-            // Очищаем все остальные неразрешенные теги
+  
+            // Списки -> абзацы, чтобы пункты не слипались при последующей очистке тегов
+            content = content.replace(/<\/li>\s*<li[^>]*>/gi, "</p><p>");
+            content = content.replace(/<li[^>]*>/gi, "<p>");
+            content = content.replace(/<\/li>/gi, "</p>");
+            content = content.replace(/<\/?(ul|ol)[^>]*>/gi, "");
+  
+            const allowedTags = "p|br";
             const regex = new RegExp(
               `<(?!\\/?(${allowedTags})(\\s|>))[^>]+>`,
               "gi"
             );
-
+            content = content.replace(regex, "");
+  
+            content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
+            content = content.replace(/<br\s*\/?>/gi, "</p><p>");
+  
             args.content = content
-              .replace(regex, "")
               .replace(/&nbsp;/g, " ")
-              .replace(/<p>\s*<\/p>/g, "") // Вычищаем случайно образовавшиеся пустые абзацы
+              .replace(/<p>\s*<\/p>/g, "")
               .trim();
           },
           // Кнопки строго в порядке как на скриншоте

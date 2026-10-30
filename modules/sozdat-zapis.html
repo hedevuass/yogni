@@ -20,7 +20,7 @@
   <!-- </div>
 	</div> -->
   <div class="field">
-    <div class="field-name">Обложка</div>
+    <div class="field-name">Обложка (jpeg, png)</div>
     <!--data:main_image_input--><!--data:main_image_input-->
   </div>
   <div class="field">
@@ -33,7 +33,7 @@
   </div>
   <!--data:blog_id_input--><!--data:blog_id_input-->
   <!--data:edit_input--><!--data:edit_input-->
-  <button type="submit">Опубликовать</button>
+  <button type="submit" disabled>Опубликовать</button>
 </form>
 
 <div class="popup create-article-popup" data-link-id="">
@@ -162,27 +162,28 @@
         plugins: "lists code",
         paste_as_text: false,
 
-        // Умная обработка вставки (без лишних пустых строк и с разбивкой на <p>)
         paste_preprocess: function (plugin, args) {
           let content = args.content;
 
-          // 1. Превращаем двойные и одиночные переносы строк в абзацы
-          content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
-          content = content.replace(/<br\s*\/?>/gi, "</p><p>");
+          // Списки -> абзацы, чтобы пункты не слипались при последующей очистке тегов
+          content = content.replace(/<\/li>\s*<li[^>]*>/gi, "</p><p>");
+          content = content.replace(/<li[^>]*>/gi, "<p>");
+          content = content.replace(/<\/li>/gi, "</p>");
+          content = content.replace(/<\/?(ul|ol)[^>]*>/gi, "");
 
-          // 2. Список разрешенных тегов пользовательской части
-          const allowedTags = "p|br|ul|ol|li|h1|h2|h3|blockquote|img";
-
-          // 3. Вычищаем запрещенный HTML-мусор
+          const allowedTags = "p|br";
           const regex = new RegExp(
             `<(?!\\/?(${allowedTags})(\\s|>))[^>]+>`,
             "gi"
           );
+          content = content.replace(regex, "");
+
+          content = content.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "</p><p>");
+          content = content.replace(/<br\s*\/?>/gi, "</p><p>");
 
           args.content = content
-            .replace(regex, "")
             .replace(/&nbsp;/g, " ")
-            .replace(/<p>\s*<\/p>/g, "") // Удаляем пустые абзацы
+            .replace(/<p>\s*<\/p>/g, "")
             .trim();
         },
 
@@ -218,6 +219,10 @@
 			  display: block !important; 
 			  margin: 10px 0 !important;
 		  }
+      .mce-content-body[data-mce-placeholder], 
+      .mce-content-body { 
+        margin-left: 17px !important; 
+      }
 		  `,
 
         font_family_formats:
@@ -320,6 +325,12 @@
         },
 
         setup: function (editor) {
+          editor.on(
+            "input keyup change paste cut SetContent undo redo NodeChange",
+            function () {
+              document.dispatchEvent(new CustomEvent("note-form:update"));
+            }
+          );
           // Эмуляция maxlength="7500"
           editor.on("keyup change input", function () {
             const textLen = editor.getContent({ format: "text" }).trim().length;

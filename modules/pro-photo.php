@@ -234,8 +234,8 @@ if (!is_null($specialist['company_id'])) {
             </div>';
 
 
-    $data['add_photo_emp'] = '<div class="add-photo-emp">Добавить съемку сотрудников</div>';
-    $data['add_company_photo'] = '<div class="add-company-photo">Добавить съемку студии</div>';
+    $data['add_photo_emp'] = '<div class="add-photo-emp">Добавить съёмку сотрудников</div>';
+    $data['add_company_photo'] = '<div class="add-company-photo">Добавить съёмку студии</div>';
     $pro_photos = [
         '4_1' => $pro_photo1,
         '4_2' => $pro_photo2,

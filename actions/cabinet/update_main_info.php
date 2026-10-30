@@ -39,6 +39,18 @@ if (isset($_POST['name'])) {
         $data['foundation'] = intval($data['foundation']);
     }
 
+    // ИНН
+    if (isset($data['inn']) && $data['inn'] !== '') {
+        $data['inn'] = preg_replace('/\D/', '', $data['inn']);
+        $inn_len = strlen($data['inn']);
+    
+        if ($inn_len < 10 || $inn_len > 12) {
+            $json['error']['inn'] = 'ИНН (10 или 12 символов)';
+        }
+    } else {
+        $data['inn'] = null;
+    }
+
     $clear_university = [];
     foreach ($data['university'] as $university) {
         if (!$university) continue;

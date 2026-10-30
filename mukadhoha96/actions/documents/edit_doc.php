@@ -6,7 +6,12 @@ include $_SERVER['DOCUMENT_ROOT'] . ADMIN_HREF . 'actions/database/functions.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Очистка и подготовка данных из формы
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        if ($key === 'content') {
+            $val = is_string($value) ? stripslashes(trim($value)) : '';
+            $data[$key] = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+        } else {
+            $data[$key] = clean_elem_form($value);
+        }
     }
 
     if (!isset($data['title']) || !$data['title']) {

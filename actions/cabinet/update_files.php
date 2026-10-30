@@ -19,7 +19,11 @@ if ($is_mobile && !isset($_POST['name'])) {
 if (isset($_POST['name'])) {
     // 1. Собираем и очищаем данные из POST
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        if (in_array($key, ['name'])) {
+            $data[$key] = clean_elem_blog_title($value);
+        } else {
+            $data[$key] = clean_elem_form($value);
+        }
     }
 
     // 2. Достаём документы из БД
@@ -39,7 +43,7 @@ if (isset($_POST['name'])) {
         if (isset($documents[$key])) {
             // — проверяем, что описание не пустое
             if (!$name) {
-                $json['error']["$key"] = 'Укажите наименование документа';
+                $json['error']["$key"] = 'Укажите наименование акции';
                 continue;
             }
 
@@ -68,7 +72,7 @@ if (isset($_POST['name'])) {
         // пропускаем совсем пустые строки
         if ($is_mobile && isset($data['mobile_loaded'][$key]) && $data['mobile_loaded'][$key] != '') {
             if (!$name) {
-                $json['error']["$key"] = 'Укажите наименование документа';
+                $json['error']["$key"] = 'Укажите наименование акции';
                 continue;
             }
             $documents[] = [
@@ -89,7 +93,7 @@ if (isset($_POST['name'])) {
         }
         // если есть файл, но пустое имя — ошибка
         if (!$name && isset($_FILES[$key])) {
-            $json['error']["$key"] = 'Укажите наименование документа';
+            $json['error']["$key"] = 'Укажите наименование акции';
             continue;
         }
 

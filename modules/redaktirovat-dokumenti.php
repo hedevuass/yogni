@@ -19,6 +19,8 @@ EOF;
 
 // Формируем HTML документов
 foreach ($documents as $key => $document) {
+    $safe_name = htmlspecialchars($document['name'], ENT_QUOTES);
+    
     $data['documents'] .= <<<EOF
     <tr style="white-space: nowrap;">
         <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование акции (не более 65 символов)" maxlength="65" value="{$document['name']}"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
@@ -51,7 +53,7 @@ for ($i = 0; $i < $empty_input; $i++) {
         <tr style="white-space: nowrap;" class="mob__empty">
             <td><input type="text" name="name[$key]" data-key="{$key}" placeholder="Наименование акции (не более 65 символов)" maxlength="65"><div class="invalid-feedback" style="display:none;">Превышено допустимое количество символов</div></td>
             <td>
-                <a class="upload" onclick="$(this).siblings('input').click()">Загрузить</a>
+                <a class="upload">Загрузить</a>
                 <input type="file" name="{$key}" hidden>
             </td>
             <td><a class="edit-docs-mobile"></a><a class="delete disabled"></a></td>

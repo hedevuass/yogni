@@ -5,7 +5,7 @@ session_start();
 
 if (isset($_POST['name'])) {
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        $data[$key] = clean_elem_blog_title($value);
     }
 
     foreach ($data['name'] as $key => $name) {

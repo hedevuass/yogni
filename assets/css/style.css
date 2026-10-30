@@ -1911,6 +1911,7 @@ a.custom-link:hover {
   -o-transition: all 0.2s ease;
   transition: all 0.2s ease;
   cursor: pointer;
+  width: 250px;
 }
 
 .index-catalog-block.inner .banner-sidebar .banner:hover {
@@ -1932,19 +1933,19 @@ a.custom-link:hover {
 
 .index-catalog-block.inner .banner-sidebar .banner .text p.title {
   margin-bottom: 8px;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 500;
 }
 
 .index-catalog-block.inner .banner-sidebar .banner .text p.subtitle {
   margin-bottom: 75px;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 300;
   padding: 0 30px;
 }
 
 .index-catalog-block.inner .banner-sidebar .banner .text button {
-  width: 220px;
+  width: 190px;
   height: 40px;
   color: #fff;
   border-radius: 12px;
@@ -1996,7 +1997,7 @@ a.custom-link:hover {
 }
 
 .index-catalog-page-block.inner .filter {
-  padding: 32px;
+  padding: 20px 32px 32px 32px;
   max-width: 200px;
   height: 100vh;
   background-color: #FFF;
@@ -2117,7 +2118,7 @@ a.custom-link:hover {
 .custom-select-scroll {
   max-height: 180px;
   overflow-y: auto;
-  padding: 0 15px;
+  padding: 0 8px;
 }
 
 /* Каждая строчка с чекбоксом */
@@ -2161,7 +2162,7 @@ a.custom-link:hover {
 .custom-select-footer {
   display: flex;
   justify-content: space-between;
-  padding: 0 15px 5px 15px;
+  padding: 0 8px 5px 8px;
   font-size: 14px;
 }
 
@@ -2387,9 +2388,18 @@ a.custom-link:hover {
   transition: all 0.2s ease;
 }
 
-.index-catalog-block .filter .jq-selectbox:hover .jq-selectbox__select-text {
-  background: #e8ecf1 url("../img/select2.svg") no-repeat right 8px top 50%;
-  color: #0f86f3;
+@media (min-width: 769px) {
+  .index-catalog-block .filter .jq-selectbox:hover .jq-selectbox__select-text {
+    background: #e8ecf1 url("../img/select2.svg") no-repeat right 8px top 50%;
+    color: #0f86f3;
+  }
+  .custom-select-trigger:hover {
+    background: #e8ecf1 url("../img/select2.svg") no-repeat right 8px top 50%;
+    color: #0f86f3;
+  }
+  .dropdown-item:hover {
+    color: #0f86f3;
+  }
 }
 
 .index-catalog-block .filter .jq-selectbox .jq-selectbox__dropdown {
@@ -2577,7 +2587,7 @@ input[type="checkbox"][data-checked="true"] {
   min-height: 281px;
 }
 
-.index-catalog-block .comp-catalog .item:not(:last-child) {
+.index-catalog-block .comp-catalog .item {
   margin-bottom: 32px;
 }
 
@@ -3707,6 +3717,7 @@ input[type="checkbox"][data-checked="true"] {
 .mobile-header__title .logo {
   display: flex;
   align-items: center;
+  width: 90%;
   gap: 8px;
   font-weight: 400;
   color: #F8A3AA;
@@ -5062,6 +5073,10 @@ input[type="checkbox"][data-checked="true"] {
   padding: 14px 20px 20px;
 }
 
+.mobile-menu {
+  padding: 18px 20px 20px;
+}
+
 .big-mobile-popup .close,
 .mobile-menu .close {
   position: absolute;
@@ -5071,6 +5086,10 @@ input[type="checkbox"][data-checked="true"] {
   height: 24px;
   background: url("../img/close.svg") center/cover;
   background-size: contain;
+}
+
+.mobile-menu .close {
+  top: 22px;
 }
 
 .big-mobile-popup .close:hover,
@@ -6335,7 +6354,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   position: static;
   width: 100%;
   padding: 32px 0 16px;
-  border-bottom: 1px solid #e8ecf1;
 }
 
 .company-page .contacts-block.mobile-contacts ul {
@@ -6981,7 +6999,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   bottom: 92px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 4;
+  z-index: 10;
   color: #fff;
   width: 200px;
   font-size: 14px;
@@ -7080,7 +7098,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
       row-gap: 14px;
   }
   .studio-equipment__section--spacing {
-    border-bottom: 1px solid #e8ecf1;
+    border-top: 1px solid #e8ecf1;
     padding: 24px 20px;
     margin: 0 -20px;
   }
@@ -7757,8 +7775,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
 /* Карточка со слайдером Swiper */
 .rooms-block .room-item .room-swiper {
   position: relative;
-  width: 100%;
-  margin: 0;
+  width: 100.8%;
+  margin: 0 -0.7%;
   height: 202px;
   border-radius: 16px;
   overflow: hidden;
@@ -7774,11 +7792,10 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   height: 100%;
 }
 
+/* Картинки — без индивидуального нахлёста, только обычная обрезка */
 .rooms-block .room-item .room-swiper .swiper-slide img {
-  width: 100.6%;
-  max-width: none;
-  margin: -0.3% -0.1%;
-  height: 100.6%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
@@ -8353,6 +8370,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     background-color: #F6F6F6;
     border: 0;
     font-size: 16px;
+    font-weight: 300;
     line-height: 19px;
     padding: 0;
     padding-left: 12px;
@@ -8432,9 +8450,9 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .index-catalog-page-block.inner.izbrannoe .top-text {
-    padding: 16px 20px 16px !important;
+    padding: 16px 20px 32px !important;
     background-color: #fff;
-    margin: 0 0 16px;
+    margin: 0 0 32px;
     margin-left: -20px;
     margin-right: -20px;
   }
@@ -8442,7 +8460,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .index-catalog-page-block .mobile-catalog .item {
     padding: 28px 20px 8px 20px;
     border-radius: 30px;
-    margin-bottom: 16px;
+    margin-bottom: 32px;
   }
 
   .index-catalog-page-block .pre-list-text {
@@ -9416,10 +9434,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     height: 222px;
   }
 
-  .index-catalog-block .item:last-child {
-    margin-bottom: 0;
-  }
-
   .grid_flex {
     display: block;
   }
@@ -9770,8 +9784,12 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
     line-height: 18px;
   }
 
+  .company-page .top-info .city:last-child {
+    margin-bottom: 0;
+  }
+  
   .company-page .top-info .year {
-    margin-bottom: 24px;
+    margin-bottom: 0;
     font-size: 16px;
     line-height: 16px;
   }
@@ -9827,7 +9845,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .company-page .ways {
     padding: 24px 20px 24px 20px;
     margin: 0 -20px;
-    border-bottom: 1px solid #e8ecf1;
   }
 
   .company-page .ways .flex {
@@ -9871,7 +9888,7 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .company-page .reviews {
     padding: 24px 20px;
     margin: 0 -20px;
-    border-top: 0;
+    border-top: 1px solid #e8ecf1;
   }
 
   .reviews .item-desctop:nth-last-of-type(2) {
@@ -9960,7 +9977,6 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   .company-page .days {
     padding: 24px 20px 8px;
     margin: 0 -20px;
-    border-bottom: 1px solid #e8ecf1 !important;
   }
 
   .company-page .days .item {
@@ -9973,7 +9989,8 @@ ul.menu-links-mobile li.prochie-vidy-ekspertiz {
   }
 
   .company-page .map {
-    padding: 24px 0;
+    padding: 24px 20px;
+    margin: 0 -20px;
   }
 
   .company-page .map .mmap {

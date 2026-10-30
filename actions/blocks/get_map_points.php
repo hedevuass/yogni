@@ -35,7 +35,7 @@ foreach ($specialists as $s) {
         'lat'     => (float)$lat,
         'lng'     => (float)$lng,
         'balloon' => '<div style="font-weight: 600;">'
-           . '<a target="_blank" href="/specialist/' . ($s['slug'] ?: 'id' . $s['id']) . '" '
+           . '<a target="_blank" href="/studio/' . ($s['slug'] ?: 'id' . $s['id']) . '" '
            . 'style="color: #222222; text-decoration: none;" '
            . 'onmouseover="this.style.color=\'#0f86f3\'" '
            . 'onmouseout="this.style.color=\'inherit\'">'
@@ -44,7 +44,7 @@ foreach ($specialists as $s) {
            . ' <span><i style="color: #F2606C;" class="' . $star . '"></i> '
            . '<span style="color: #F2606C;">' . $rating_f . '</span></span></div>'
            . $map_adress,
-        'url'     => $s['slug'] ? '/specialist/' . $s['slug'] : '/specialist/id' . $s['id'],
+        'url'     => $s['slug'] ? '/studio/' . $s['slug'] : '/studio/id' . $s['id'],
     ];
 }
 

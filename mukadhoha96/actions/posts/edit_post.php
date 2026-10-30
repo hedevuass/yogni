@@ -10,7 +10,12 @@ if (isset($_POST['id'])) {
     $data = [];
 
     foreach ($_POST as $key => $value) {
-        $data[$key] = clean_elem_form($value);
+        if ($key === 'content' || $key === 'title') {
+            $val = is_string($value) ? stripslashes(trim($value)) : '';
+            $data[$key] = htmlspecialchars($val, ENT_QUOTES, 'UTF-8');
+        } else {
+            $data[$key] = clean_elem_form($value);
+        }
     }
 
     if (!isset($data['title']) || !$data['title']) {

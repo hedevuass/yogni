@@ -4,6 +4,14 @@ import { Helper } from "./helper.js";
 
 let photoRemoved = false;
 
+const reqStatusMap = {
+  invoice_sent: { text: "Отправлен счет", cls: "text-primary" },
+  paid: { text: "Оплачена", cls: "text-success" },
+  unpaid: { text: "Не оплачена", cls: "text-warning" },
+};
+const reqStatusClasses =
+  "text-primary text-success text-warning text-secondary text-muted text-danger text-dark";
+
 let Specialists = {
   selectors: {
     pageSelector: "#specialistPage",
@@ -246,6 +254,80 @@ let Specialists = {
       }
     );
 
+    // ===== Вкладка «Заявки» =====
+    const $page = $(this.selectors.pageSelector);
+    const reqRoot = (el) => $(el).closest(".requests-section");
+    Specialists.updateReqControls($(".requests-section"));
+
+    // раскрытие деталей
+    $page.on("click", ".toggle-req-details", function () {
+      $("#req-details-" + $(this).data("request-id")).toggleClass("d-none");
+      Specialists.syncMonthToggle($(this).closest(".req-month"));
+    });
+
+    // «развернуть все» / «скрыть все» в рамках месяца (только видимые заявки)
+    $page.on("click", ".req-toggle-month", function (e) {
+      e.preventDefault();
+      const $link = $(this);
+      const $month = $link.closest(".req-month");
+      const $bodies = $month.find(
+        ".req-item:not(.d-none) .card-body[id^='req-details-']"
+      );
+
+      const open = $bodies.filter(".d-none").length > 0;
+      $bodies.toggleClass("d-none", !open);
+      if (open) {
+        $link.text("(свернуть все)");
+      } else {
+        $link.text("(развернуть все)");
+      }
+
+      Specialists.syncMonthToggle($month);
+    });
+
+    // сброс периода: календарь очищается и показываются все заявки
+    $page.on("click", "#req-period-clear", function () {
+      const picker = $("#req-period")[0]?._flatpickr;
+      if (picker) picker.clear();
+    });
+
+    // выбрать все / сбросить в рамках месяца (только видимые)
+    $page.on("click", ".req-select-all, .req-reset", function (e) {
+      e.preventDefault();
+      const check = $(this).hasClass("req-select-all");
+      const $root = reqRoot(this);
+
+      // Ищем чекбоксы среди всех видимых записей во всех месяцах
+      $root.find(".req-item:not(.d-none) .req-check").prop("checked", check);
+
+      Specialists.updateReqButtons($root);
+    });
+
+    $page.on("change", ".req-check", function () {
+      Specialists.updateReqButtons(reqRoot(this));
+    });
+
+    // фильтр по статусу
+    $page.on("change", "#spec-req-filter", function () {
+      Specialists.applyReqFilters(reqRoot(this));
+    });
+
+    // календарь инициализируем при показе вкладки (контент попапа мог подгрузиться позже)
+    $(document).on("shown.bs.tab", "#tab-requests", function () {
+      const $root = $("#content-requests .requests-section");
+      Specialists.initReqPeriod($root);
+      Specialists.updateReqControls($root);
+    });
+
+    $page.on("click", ".req-invoice", this.requestsInvoiceOpen);
+    $(document).on(
+      "submit",
+      "#requests-invoice-form",
+      this.requestsInvoiceSubmit
+    );
+
+    $page.on("click", ".req-action", this.requestsApplyStatus);
+
     $(this.selectors.pageSelector).on(
       "click",
       ".toggle-banner-details",
@@ -376,7 +458,7 @@ let Specialists = {
 
           // Ищем первый слот галереи, в котором есть хоть что-то (файл или старое фото)
           const $gallerySlots = $(
-            ".admin-gallery-grid .admin-gallery-item"
+            "#content-gallery .admin-gallery-grid .admin-gallery-item"
           ).not(".avatar-slot");
           let $firstActiveGallery = $gallerySlots
             .filter(function () {
@@ -446,21 +528,21 @@ let Specialists = {
 
     // Вспомогательная функция, которая схлопывает пустые места в галерее
     function shiftGallerySlots() {
-      const $gallerySlots = $("#content-gallery .admin-gallery-grid .admin-gallery-item").not(
-        ".avatar-slot"
-      );
-    
+      const $gallerySlots = $(
+        "#content-gallery .admin-gallery-grid .admin-gallery-item"
+      ).not(".avatar-slot");
+
       let activeData = [];
       $gallerySlots.each(function () {
         const file = $(this).find('input[type="file"]')[0]?.files?.[0];
         const existing = $(this).find(".existing-photo-input").val();
         const bg = $(this).find(".image-container").css("background-image");
-    
+
         if (file || existing) {
           activeData.push({ file: file, existing: existing, bg: bg });
         }
       });
-    
+
       $gallerySlots.each(function (i) {
         const $current = $(this);
         if (activeData[i]) {
@@ -468,7 +550,7 @@ let Specialists = {
             .find(".image-container")
             .css("background-image", activeData[i].bg);
           $current.find(".existing-photo-input").val(activeData[i].existing);
-    
+
           if (activeData[i].file) {
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(activeData[i].file);
@@ -495,7 +577,7 @@ let Specialists = {
           .trigger("click");
       }
     );
-    
+
     // 2. Превью выбранного файла
     $(document).on(
       "change",
@@ -504,28 +586,28 @@ let Specialists = {
         const file = e.target.files[0];
         const $slot = $(this).closest(".admin-gallery-item");
         const $container = $slot.find(".image-container");
-    
+
         if (!file) return;
-    
+
         const allowedExtensions = ["jpg", "jpeg", "png", "heic", "jfif"];
         const fileExtension = file.name.split(".").pop().toLowerCase();
-    
+
         if (!allowedExtensions.includes(fileExtension)) {
           alert("Допустимы только форматы: JPG, JPEG, PNG, HEIC, JFIF");
           $(this).val("");
           return false;
         }
-    
+
         const reader = new FileReader();
         reader.onload = function (event) {
           $container.css("background-image", `url('${event.target.result}')`);
         };
         reader.readAsDataURL(file);
-    
+
         $slot.find(".existing-photo-input").val("");
       }
     );
-    
+
     // 3. Удаление фото — схлопывает пустоты ТОЛЬКО внутри своего зала
     $(document).on(
       "click",
@@ -533,36 +615,38 @@ let Specialists = {
       function (e) {
         e.preventDefault();
         const $slot = $(this).closest(".admin-gallery-item");
-    
+
         $slot.find(".image-container").css("background-image", "");
         $slot.find('input[type="file"]').val("");
         $slot.find(".existing-photo-input").val("");
-    
+
         shiftRoomPhotoSlots($slot.closest(".admin-gallery-grid"));
       }
     );
-    
+
     // Схлопывание пустых слотов внутри конкретного зала (принимает именно тот .admin-gallery-grid, где кликнули)
     function shiftRoomPhotoSlots($grid) {
       const $slots = $grid.find(".admin-gallery-item");
-    
+
       let activeData = [];
       $slots.each(function () {
         const file = $(this).find('input[type="file"]')[0]?.files?.[0];
         const existing = $(this).find(".existing-photo-input").val();
         const bg = $(this).find(".image-container").css("background-image");
-    
+
         if (file || existing) {
           activeData.push({ file: file, existing: existing, bg: bg });
         }
       });
-    
+
       $slots.each(function (i) {
         const $current = $(this);
         if (activeData[i]) {
-          $current.find(".image-container").css("background-image", activeData[i].bg);
+          $current
+            .find(".image-container")
+            .css("background-image", activeData[i].bg);
           $current.find(".existing-photo-input").val(activeData[i].existing);
-    
+
           if (activeData[i].file) {
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(activeData[i].file);
@@ -680,23 +764,33 @@ let Specialists = {
     let newDocumentCounter = 0;
 
     $(document).on("click", "#add-document-btn", function () {
-      const newKey = "new_" + newDocumentCounter++;
+      let maxKey = -1;
+      $("#documents-container [data-document]").each(function () {
+        let key = parseInt($(this).attr("data-document"));
+        if (!isNaN(key) && key > maxKey) {
+          maxKey = key;
+        }
+      });
+
+      const nextKey = maxKey + 1;
+
       const newDocumentHtml = `
-    <div class="row align-items-center mb-3" data-document="${newKey}">
-      <div class="col-7">
-        <label class="form-label">Название акции</label>
-        <input type="text" name="documents[${newKey}][name]" class="form-control">
+      <div class="row align-items-center mb-3" data-document="${nextKey}">
+        <div class="col-7">
+          <label class="form-label">Название акции</label>
+          <input type="text" name="documents[${nextKey}][name]" class="form-control">
+        </div>
+        <div style="width:28%;flex: 0 0 auto;">
+          <label class="form-label">Файл</label>
+          <input type="file" name="documents[${nextKey}][file]" class="form-control">
+        </div>
+        <div style="margin-top:30px;" class="col-1 d-flex align-items-end">
+          <button type="button" class="btn btn-sm btn-danger delete-document-btn me-2">Удалить</button>
+        </div>
       </div>
-      <div style="width:28%;flex: 0 0 auto;">
-        <label class="form-label">Файл</label>
-        <input type="file" name="documents[${newKey}][file]" class="form-control">
-      </div>
-      <div style="margin-top:30px;" class="col-1 d-flex align-items-end">
-        <button type="button" class="btn btn-sm btn-danger delete-document-btn me-2">Удалить</button>
-      </div>
-    </div>
-    <hr>
-  `;
+      <hr>
+      `;
+
       $("#documents-container").append(newDocumentHtml);
     });
 
@@ -1191,6 +1285,7 @@ let Specialists = {
         // === ВЕТКА ТАРИФОВ ===
         var specialistId = parseInt($btn.data("specialist-id"), 10);
         var tariffId = $btn.data("id");
+        var inn = $btn.data("inn") || "";
         var price = parseFloat($btn.data("price")) || 0;
         var durationName = $btn.data("duration-checkbox"); // “duration_{id}”
         var $chk = $(`input[name="${durationName}"]:checked`);
@@ -1212,7 +1307,7 @@ let Specialists = {
         $("#period").val(months + " мес.");
         $("#place").val("");
         $("#amount").val(payAmount + " руб.");
-        $("#inn").val("");
+        $("#inn").val(inn);
 
         // Скрытые поля
         $form.append(
@@ -1257,7 +1352,7 @@ let Specialists = {
         $("#period").val(months + " мес.");
         $("#place").val("");
         $("#amount").val(payAmount + " руб.");
-        $("#inn").val("");
+        $("#inn").val(inn);
 
         // Скрытые поля
         $form.append(
@@ -1356,7 +1451,7 @@ let Specialists = {
         $("#period").val(period);
         $("#place").val(placeText);
         $("#amount").val(amount + " руб.");
-        $("#inn").val("");
+        $("#inn").val(inn);
 
         // Скрытые поля промо
         $form.append(
@@ -1403,7 +1498,7 @@ let Specialists = {
       var customerType =
         inn.length === 12 ? "ip" : inn.length === 10 ? "company" : null;
       if (!customerType) {
-        return alert("ИНН должен быть 10 или 12 цифр");
+        return alert("ИНН должен состоять из 10 или 12 символов");
       }
 
       // Добавляем поля юр.лица
@@ -1574,6 +1669,71 @@ let Specialists = {
         $("#input-classification-company_id").val(selectedVal);
       }
     );
+  },
+  updateReqButtons: function ($root) {
+    const any = $root.find(".req-check:checked").length > 0;
+    $root.find(".req-action, .req-invoice").prop("disabled", !any);
+  },
+
+  initReqPeriod: function ($root) {
+    const input = $root.find("#req-period")[0];
+    if (!input || input._flatpickr) return; // уже инициализирован
+
+    flatpickr(input, {
+      mode: "range",
+      locale: "ru",
+      dateFormat: "d.m.Y",
+      onChange: (dates) => {
+        // применяем только полный диапазон или полный сброс
+        if (dates.length === 2 || dates.length === 0) {
+          Specialists.applyReqFilters($root);
+        }
+        Specialists.updateReqControls($root);
+      },
+    });
+  },
+
+  // общий фильтр: период + статус
+  applyReqFilters: function ($root) {
+    const moderationByFilter = { published: "1", spam: "2" };
+    const filter = $root.find("#spec-req-filter").val();
+
+    const picker = $root.find("#req-period")[0]?._flatpickr;
+    const dates = picker ? picker.selectedDates : [];
+    const start = dates.length === 2 ? dates[0] : null;
+    const end = dates.length === 2 ? dates[1] : null;
+
+    $root.find(".req-item").each(function () {
+      const d = new Date($(this).data("date") + "T00:00:00");
+      const inPeriod = (!start || d >= start) && (!end || d <= end);
+      const inStatus =
+        filter === "all" || $(this).attr("data-status") === filter;
+      const visible = inPeriod && inStatus;
+
+      $(this).toggleClass("d-none", !visible);
+      if (!visible) $(this).find(".req-check").prop("checked", false);
+    });
+
+    let anyVisible = false;
+    $root.find(".req-month").each(function () {
+      const has = $(this).find(".req-item:not(.d-none)").length > 0;
+      $(this).toggleClass("d-none", !has);
+      if (has) anyVisible = true;
+    });
+
+    // сообщение «Ничего не найдено» создаётся при необходимости
+    let $empty = $root.find("#req-empty");
+    if (!$empty.length) {
+      $empty = $(
+        '<p class="text-muted d-none" id="req-empty">Ничего не найдено</p>'
+      );
+      $root.append($empty);
+    }
+    $empty.toggleClass("d-none", anyVisible);
+
+    Specialists.updateReqButtons($root);
+
+    Specialists.updateReqControls($root);
   },
   handleClassificationChange: function () {
     let self = this;
@@ -1770,35 +1930,37 @@ let Specialists = {
     formData.append("lastname", $("#input-lastname").val());
     formData.append("slug", $("#input-slug").val());
 
-     // --- ГАЛЕРЕЯ ---
-    $("#content-gallery .admin-gallery-grid .admin-gallery-item").each(function (index) {
-      let $slot = $(this);
-      let fileInput = $slot.find('input[type="file"]')[0];
-      let file = fileInput?.files?.[0];
-      let existingFilename = $slot.find(".existing-photo-input").val();
+    // --- ГАЛЕРЕЯ ---
+    $("#content-gallery .admin-gallery-grid .admin-gallery-item").each(
+      function (index) {
+        let $slot = $(this);
+        let fileInput = $slot.find('input[type="file"]')[0];
+        let file = fileInput?.files?.[0];
+        let existingFilename = $slot.find(".existing-photo-input").val();
 
-      if ($slot.hasClass("avatar-slot")) {
-        // --- АВАТАР ---
-        if (file) {
-          formData.append("photo", file);
-        } else if (existingFilename) {
-          formData.append("existing_photos[0]", existingFilename);
-        }
-        if (photoRemoved) {
-          formData.append("remove_photo", "1");
-        }
-      } else {
-        let galleryIndex = index - 1; // 0 - 10
-
-        if (file) {
-          formData.append(`gallery_files[${galleryIndex}]`, file);
-        } else if (existingFilename) {
-          formData.append(`existing_photos[${index}]`, existingFilename);
+        if ($slot.hasClass("avatar-slot")) {
+          // --- АВАТАР ---
+          if (file) {
+            formData.append("photo", file);
+          } else if (existingFilename) {
+            formData.append("existing_photos[0]", existingFilename);
+          }
+          if (photoRemoved) {
+            formData.append("remove_photo", "1");
+          }
         } else {
-          formData.append(`existing_photos[${index}]`, "");
+          let galleryIndex = index - 1; // 0 - 10
+
+          if (file) {
+            formData.append(`gallery_files[${galleryIndex}]`, file);
+          } else if (existingFilename) {
+            formData.append(`existing_photos[${index}]`, existingFilename);
+          } else {
+            formData.append(`existing_photos[${index}]`, "");
+          }
         }
       }
-    });
+    );
 
     // --- ЗАЛЫ ---
     $("#admin-rooms-list .admin-room-block").each(function () {
@@ -1808,25 +1970,34 @@ let Specialists = {
 
       formData.append(`rooms[${roomKey}][name]`, roomName);
 
-      $room.find(".admin-gallery-grid .admin-gallery-item").each(function (photoIndex) {
-        let $slot = $(this);
-        let fileInput = $slot.find('input[type="file"]')[0];
-        let file = fileInput?.files?.[0];
-        let existingFilename = $slot.find(".existing-photo-input").val();
+      $room
+        .find(".admin-gallery-grid .admin-gallery-item")
+        .each(function (photoIndex) {
+          let $slot = $(this);
+          let fileInput = $slot.find('input[type="file"]')[0];
+          let file = fileInput?.files?.[0];
+          let existingFilename = $slot.find(".existing-photo-input").val();
 
-        if (file) {
-          formData.append(`rooms[${roomKey}][photos][${photoIndex}]`, file);
-        } else if (existingFilename) {
-          formData.append(`rooms[${roomKey}][existing_photos][${photoIndex}]`, existingFilename);
-        } else {
-          formData.append(`rooms[${roomKey}][existing_photos][${photoIndex}]`, "");
-        }
-      });
+          if (file) {
+            formData.append(`rooms[${roomKey}][photos][${photoIndex}]`, file);
+          } else if (existingFilename) {
+            formData.append(
+              `rooms[${roomKey}][existing_photos][${photoIndex}]`,
+              existingFilename
+            );
+          } else {
+            formData.append(
+              `rooms[${roomKey}][existing_photos][${photoIndex}]`,
+              ""
+            );
+          }
+        });
     });
     formData.append("city_id", $("#input-city_id").val());
     formData.append("email", $("#input-email").val());
     formData.append("phone", $("#input-phone").val());
     formData.append("password", $("#input-password").val());
+    formData.append("inn", $("#input-inn").val());
     formData.append("type", $("#input-type").val());
     formData.append("classification_id", $("#input-classification_id").val());
 
@@ -2033,6 +2204,16 @@ let Specialists = {
     $(".js-equipment-checkbox:checked").each(function () {
       formData.append(`equipment[${$(this).val()}]`, $(this).val());
     });
+
+    const requestChanges = {};
+    $(".requests-section .req-item").each(function () {
+      if (this.dataset.status === this.dataset.initialStatus) return;
+      const id = $(this).find(".req-check").val();
+      if (id) requestChanges[id] = this.dataset.status;
+    });
+    if (Object.keys(requestChanges).length) {
+      formData.append("request_statuses", JSON.stringify(requestChanges));
+    }
 
     $.ajax({
       type: "POST",
@@ -2513,6 +2694,171 @@ let Specialists = {
         alert("Ошибка при отправке запроса на сервер.");
       },
     });
+  },
+  requestsApplyStatus: function () {
+    const $root = $(this).closest(".requests-section");
+    const status = $(this).attr("data-status");
+    const st = reqStatusMap[status];
+    if (!st) return;
+
+    $root.find(".req-check:checked").each(function () {
+      const $item = $(this).closest(".req-item");
+      $item.attr("data-status", status);
+      $item
+        .find(".req-status")
+        .removeClass(reqStatusClasses)
+        .addClass(st.cls)
+        .text(st.text);
+      // рамка у несохранённых изменений (необязательно, можно удалить строку)
+      $item
+        .find(".card")
+        .toggleClass(
+          "border-primary",
+          status !== $item.attr("data-initial-status")
+        );
+      $(this).prop("checked", false);
+    });
+
+    Specialists.applyReqFilters($root); // перефильтрует и пересчитает доступность кнопок
+  },
+  requestsInvoiceOpen: function () {
+    const $root = $(this).closest(".requests-section");
+    const $checked = $root.find(".req-check:checked");
+    if (!$checked.length) return;
+
+    // период = от самой ранней до самой поздней из выбранных заявок
+    const dates = $checked
+      .map(function () {
+        return $(this).closest(".req-item").attr("data-date");
+      })
+      .get()
+      .sort();
+    const fmt = (s) => s.split("-").reverse().join(".");
+    const period =
+      dates[0] === dates[dates.length - 1]
+        ? fmt(dates[0])
+        : fmt(dates[0]) + " - " + fmt(dates[dates.length - 1]);
+
+    const price = parseFloat($root.attr("data-request-price")) || 0;
+
+    const $form = $("#requests-invoice-form");
+    $form[0].reset();
+    $form.find("input[type=hidden]").remove();
+    $("#ri-alert").addClass("d-none");
+    $("#ri-inn").removeClass("is-invalid");
+
+    $("#ri-period").val(period);
+    $("#ri-count").val($checked.length);
+    $("#ri-amount").val((price * $checked.length).toFixed(2) + " руб.");
+    $("#ri-inn").val($root.attr("data-inn") || ""); // пусто, если ИНН нет в базе
+
+    const hidden = (name, value) =>
+      $("<input>", { type: "hidden", name: name, value: value }).appendTo(
+        $form
+      );
+    hidden("specialist_id", $root.attr("data-specialist-id"));
+    hidden("specialist_email", $root.attr("data-login-email") || "");
+    $checked.each(function () {
+      hidden("ids[]", this.value);
+    });
+
+    bootstrap.Modal.getOrCreateInstance(
+      document.getElementById("requestsInvoiceModal")
+    ).show();
+  },
+
+  requestsInvoiceSubmit: function (e) {
+    e.preventDefault();
+    const $form = $(this);
+    const $btn = $form.find('button[type="submit"]');
+    const btnHtml = $btn.html();
+    const $alert = $("#ri-alert");
+    const inn = $("#ri-inn").val().trim();
+
+    if (!/^\d{10}$|^\d{12}$/.test(inn)) {
+      $("#ri-inn").addClass("is-invalid");
+      return;
+    }
+    $("#ri-inn").removeClass("is-invalid");
+    $alert.addClass("d-none");
+
+    $.ajax({
+      type: "POST",
+      url: "../actions/payment/tochka_invoice_requests.php",
+      dataType: "json",
+      data: $form.serialize(),
+      beforeSend: function () {
+        $btn
+          .prop("disabled", true)
+          .html(
+            '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
+          );
+      },
+      success: function (res) {
+        if (!res.success) {
+          $alert
+            .text(res.error || "Ошибка при отправке счёта")
+            .removeClass("d-none");
+          return;
+        }
+
+        // письмо специалисту
+        $.post("../actions/mail/send_mail_requests_invoice.php", {
+          email: $form.find("[name=specialist_email]").val() || "",
+          specialist_id: $form.find("[name=specialist_id]").val(),
+          download_url: res.download_url,
+          requests_count: res.count,
+        }).fail(function () {
+          alert("Счёт выставлен, но письмо специалисту отправить не удалось");
+        });
+
+        // обновляем строки: и текущий, и «исходный» статус, чтобы общая кнопка сохранения не пересылала их повторно
+        const $root = $("#content-requests .requests-section");
+        const st = reqStatusMap.invoice_sent;
+        res.updated.forEach(function (id) {
+          const $item = $root
+            .find('.req-check[value="' + id + '"]')
+            .closest(".req-item");
+          $item.attr({
+            "data-status": "invoice_sent",
+            "data-initial-status": "invoice_sent",
+          });
+          $item
+            .find(".req-status")
+            .removeClass(reqStatusClasses)
+            .addClass(st.cls)
+            .text(st.text);
+          $item.find(".card").removeClass("border-primary");
+          $item.find(".req-check").prop("checked", false);
+        });
+        Specialists.applyReqFilters($root);
+
+        bootstrap.Modal.getOrCreateInstance(
+          document.getElementById("requestsInvoiceModal")
+        ).hide();
+      },
+      error: function (xhr) {
+        $alert
+          .text(xhr.responseJSON?.error || "Неизвестная ошибка")
+          .removeClass("d-none");
+      },
+      complete: function () {
+        $btn.prop("disabled", false).html(btnHtml);
+      },
+    });
+  },
+
+  updateReqControls: function ($root) {
+    $root.find(".req-controls").addClass("d-none");
+
+    $root
+      .find(".req-month")
+      .filter(function () {
+        return $(this).find(".req-item:not(.d-none)").length > 0;
+      })
+      .first()
+      .find(".req-controls")
+      .removeClass("d-none");
   },
 };
 
